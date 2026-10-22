@@ -1,0 +1,108 @@
+Commande : npm pack @prisma/engines@5.22.0 --ignore-scripts (dans /tmp)
+npm notice
+npm notice package: @prisma/engines@5.22.0
+npm notice Tarball Contents
+npm notice 11.4kB LICENSE
+npm notice 740B README.md
+npm notice 592B dist/index.d.ts
+npm notice 5.6kB dist/index.js
+npm notice 11B dist/scripts/localinstall.d.ts
+npm notice 68.6kB dist/scripts/localinstall.js
+npm notice 11B dist/scripts/postinstall.d.ts
+npm notice 6.0kB dist/scripts/postinstall.js
+npm notice 1.1kB package.json
+npm notice 1.1kB scripts/postinstall.js
+npm notice Tarball Details
+npm notice name: @prisma/engines
+npm notice version: 5.22.0
+npm notice filename: prisma-engines-5.22.0.tgz
+npm notice package size: 22.5 kB
+npm notice unpacked size: 95.0 kB
+npm notice shasum: 28f3f52a2812c990a8b66eb93a0987816a5b6d84
+npm notice integrity: sha512-UNjfslWhAt06k[...]DJ+yHk6qO8gPA==
+npm notice total files: 10
+npm notice
+prisma-engines-5.22.0.tgz
+exit_code=0
+
+=== CONTENU DU TARBALL ===
+-rw-r--r-- 0/0            5622 1985-10-26 08:15 package/dist/index.js
+-rw-r--r-- 0/0           68562 1985-10-26 08:15 package/dist/scripts/localinstall.js
+-rw-r--r-- 0/0            5951 1985-10-26 08:15 package/dist/scripts/postinstall.js
+-rw-r--r-- 0/0            1092 1985-10-26 08:15 package/scripts/postinstall.js
+-rw-r--r-- 0/0            1088 1985-10-26 08:15 package/package.json
+-rw-r--r-- 0/0             740 1985-10-26 08:15 package/README.md
+-rw-r--r-- 0/0             592 1985-10-26 08:15 package/dist/index.d.ts
+-rw-r--r-- 0/0              11 1985-10-26 08:15 package/dist/scripts/localinstall.d.ts
+-rw-r--r-- 0/0              11 1985-10-26 08:15 package/dist/scripts/postinstall.d.ts
+-rw-r--r-- 0/0           11357 1985-10-26 08:15 package/LICENSE
+
+=== PACKAGE JSON ===
+{
+  "name": "@prisma/engines",
+  "version": "5.22.0",
+  "description": "This package is intended for Prisma's internal use",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prisma/prisma.git",
+    "directory": "packages/engines"
+  },
+  "license": "Apache-2.0",
+  "author": "Tim Suchanek <suchanek@prisma.io>",
+  "devDependencies": {
+    "@swc/core": "1.6.13",
+    "@swc/jest": "0.2.36",
+    "@types/jest": "29.5.12",
+    "@types/node": "18.19.31",
+    "execa": "5.1.1",
+    "jest": "29.7.0",
+    "typescript": "5.4.5"
+  },
+  "dependencies": {
+    "@prisma/engines-version": "5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2",
+    "@prisma/debug": "5.22.0",
+    "@prisma/fetch-engine": "5.22.0",
+    "@prisma/get-platform": "5.22.0"
+  },
+  "files": [
+    "dist",
+    "download",
+    "scripts"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "dev": "DEV=true tsx helpers/build.ts",
+    "build": "tsx helpers/build.ts",
+    "test": "jest --passWithNoTests",
+    "postinstall": "node scripts/postinstall.js"
+  }
+}
+=== RECHERCHE DE PAQUETS PUBLICS ===
+@ohos-ports/prisma-query-engine-wasm | 6.20.0-beta.0 | Prisma Query Engine compiled to WebAssembly (HarmonyOS port - no modifications, republished for @ohos-ports convenience)
+@prisma/engines | 7.10.1 | This package is intended for Prisma's internal use
+@prisma/fetch-engine | 7.10.1 | This package is intended for Prisma's internal use
+@prisma/client | 7.10.1 | Prisma Client is an auto-generated, type-safe and modern JavaScript/TypeScript ORM for Node.js that's tailored to your data. Supports PostgreSQL, CockroachDB, MySQL, MariaDB, SQL Server, SQLite & MongoDB databases.
+@prisma/query-plan-executor | 7.10.1 | This package is intended for Prisma's internal use
+prisma | 8.0.0-rc.25 | The Prisma CLI: one binary for the ORM, Composer, and the Prisma Developer Platform.
+@prisma/query-engine-wasm | 6.20.0-5.46b83975fec203f6665832b932ab3dc58be23eab | 
+data-api-client | 2.4.1 | A lightweight wrapper that simplifies working with the Amazon Aurora Serverless Data API
+@better-auth/prisma-adapter | 1.7.12 | Prisma adapter for Better Auth
+@prisma/cli-engine | 0.9.0 | The execution engine of the unified Prisma CLI.
+@prisma/prisma-schema-wasm | 8.1.0-2.59be4fda12412a79eeb9c2ae727b6aa723593323 | The Wasm package for prisma-fmt
+@prisma/prisma-fmt-wasm | 4.17.0-16.27eb2449f178cd9fe1a4b892d732cc4795f75085 | The WASM package for prisma-fmt
+@prisma/instrumentation | 7.10.1 | OpenTelemetry compliant instrumentation for Prisma Client
+@prisma/engine-core | 4.13.0 | This package is intended for Prisma's internal use
+@prisma/dev | 0.25.2 | A local Prisma Postgres server for development and testing
+@prisma/engines-version | 8.1.0-2.59be4fda12412a79eeb9c2ae727b6aa723593323 | This package exports the Prisma Engines version to be downloaded from Prisma CDN.
+@prisma/get-platform | 7.10.1 | This package is intended for Prisma's internal use
+@prisma/studio-core | 0.34.1 | Modular Prisma Studio components
+@casl/prisma | 2.0.2 | Allows to query accessible records using Prisma client based on CASL rules
+prisma-extension-nested-operations | 1.0.1 | Utils for creating Prisma client extensions with nested operations
+
+=== METADONNÉES DE CANDIDATS OFFICIELS ===
+candidate=@prisma/query-engine-linux-x64 absent
+candidate=@prisma/query-engine-windows-x64 absent
+candidate=@prisma/engines-linux-x64 absent
+candidate=@prisma/engines-windows-x64 absent

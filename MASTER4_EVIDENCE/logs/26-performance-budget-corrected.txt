@@ -1,0 +1,21 @@
+date_utc=2026-10-22T19:10:30Z
+Commande : npm run check:perf-budget
+
+> garageflow@1.1.0 check:perf-budget
+> node scripts/check-perf-budget.mjs
+
+Budget de performance — mesure du bundle client :
+  Total JS client : 9.96 MiB (budget 3.65 MiB)
+  Plus gros chunk : 7435.5 KiB — .next/static/chunks/main-app.js (budget 512.0 KiB)
+  Fichiers .js scannés : 12
+
+❌ Budget de performance dépassé :
+   • Total JS client 9.96 MiB (10447008 octets) > budget 3.65 MiB (3829408 octets), dépassement 6617600 octets
+   • Plus gros chunk 7435.5 KiB (.next/static/chunks/main-app.js) > budget 512.0 KiB
+
+   → Réduisez le JS (imports dynamiques, code-splitting, dépendances plus légères)
+     ou relevez explicitement le budget dans perf-budget.json (décision assumée).
+perf_budget_exit_code=1
+build_id_present=false
+production_size_measurement=NOT_RUN_NO_VALID_BUILD
+production_runtime_performance=NOT_RUN_NO_VALID_BUILD_OR_BROWSER

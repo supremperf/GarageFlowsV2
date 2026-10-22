@@ -1,0 +1,43 @@
+Diagnostic isolé de la seule suite de mock non classée.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/home/user/GarageFlowsV2[39m
+
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — version (GF-027)[2m > [22mREFUSE une version qui n’est pas du SemVer
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — version (GF-027)[2m > [22mREFUSE « 1.2 »
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — version (GF-027)[2m > [22mREFUSE « latest »
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — version (GF-027)[2m > [22mREFUSE « v1.2.0 »
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — version (GF-027)[2m > [22mREFUSE « 1.2.0.0 »
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — version (GF-027)[2m > [22mREFUSE «  »
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — version (GF-027)[2m > [22mACCEPTE une version SemVer, avec pré-version
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — cohérence avec le manifeste signé (GF-027)[2m > [22mREFUSE un manifeste dont la version diffère de la version saisie
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — cohérence avec le manifeste signé (GF-027)[2m > [22mREFUSE un manifeste dont l’empreinte ne correspond pas au fichier
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — cohérence avec le manifeste signé (GF-027)[2m > [22mACCEPTE un installeur et son manifeste cohérents
+ [2m[90m↓[39m[22m src/integration/publication-mise-a-jour.test.ts[2m > [22mpublication d’une mise à jour — cohérence avec le manifeste signé (GF-027)[2m > [22mpublier SANS manifeste reste possible, mais le dit
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/integration/publication-mise-a-jour.test.ts[2m [ src/integration/publication-mise-a-jour.test.ts ][22m
+[31m[1mError[22m: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock[39m
+[36m [2m❯[22m src/app/api/admin/updates/route.ts:[2m9:1[22m[39m
+    [90m  7|[39m [35mimport[39m { createHash } [35mfrom[39m [32m'crypto'[39m
+    [90m  8|[39m [35mimport[39m { [33mReadable[39m } [35mfrom[39m [32m'stream'[39m
+    [90m  9|[39m [35mimport[39m { isAdminSession } [35mfrom[39m [32m'@/lib/api-helpers'[39m
+    [90m   |[39m [31m^[39m
+    [90m 10|[39m
+    [90m 11|[39m [90m/**
+
+[31m[1mCaused by: Error[22m: Cannot find package '@/generated/server-client' imported from /home/user/GarageFlowsV2/src/lib/db.ts[39m
+[36m [2m❯[22m src/lib/db.ts:[2m18:1[22m[39m
+[90m [2m❯[22m src/lib/auth.ts:[2m4:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ code: 'ERR_MODULE_NOT_FOUND' }[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [33m11 skipped[39m[90m (11)[39m
+[2m   Start at [22m 18:15:34
+[2m   Duration [22m 692ms[2m (transform 149ms, setup 0ms, import 100ms, tests 204ms, environment 0ms)[22m
+
+vitest_exit_code=1

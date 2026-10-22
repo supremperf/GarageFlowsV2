@@ -1,0 +1,255 @@
+Commande : npm run test:keygen
+
+> garageflow@1.1.0 test:keygen
+> python3 scripts/test_keygen.py && python3 scripts/test_keygen_hwid_binding.py && python3 scripts/test_keygen_v2.py && python3 scripts/test_secret_scan.py
+
+test_count_must_be_int (__main__.KeygenCliValidationTests.test_count_must_be_int) ... ERROR
+test_count_must_be_positive (__main__.KeygenCliValidationTests.test_count_must_be_positive) ... ERROR
+test_count_respects_max (__main__.KeygenCliValidationTests.test_count_respects_max) ... ERROR
+test_parent_cannot_be_mechanic (__main__.KeygenCliValidationTests.test_parent_cannot_be_mechanic) ... ERROR
+test_parent_must_exist (__main__.KeygenCliValidationTests.test_parent_must_exist) ... ERROR
+test_too_many_names (__main__.KeygenCliValidationTests.test_too_many_names) ... ERROR
+test_valid_request (__main__.KeygenCliValidationTests.test_valid_request) ... ERROR
+test_existing_private_key_is_never_overwritten (__main__.KeygenInitNeverReplacesTests.test_existing_private_key_is_never_overwritten) ... ERROR
+test_existing_public_key_also_blocks (__main__.KeygenInitNeverReplacesTests.test_existing_public_key_also_blocks) ... ERROR
+test_first_init_creates_pair (__main__.KeygenInitNeverReplacesTests.test_first_init_creates_pair) ... ERROR
+test_audit_log_no_full_token (__main__.KeygenMechanicTests.test_audit_log_no_full_token) ... ERROR
+test_db_stores_parent_and_children (__main__.KeygenMechanicTests.test_db_stores_parent_and_children) ... ERROR
+test_garage_only (__main__.KeygenMechanicTests.test_garage_only) ... ERROR
+test_garage_plus_five_unique (__main__.KeygenMechanicTests.test_garage_plus_five_unique) ... ERROR
+test_garage_plus_one_mechanic (__main__.KeygenMechanicTests.test_garage_plus_one_mechanic) ... ERROR
+test_individual_revocation (__main__.KeygenMechanicTests.test_individual_revocation) ... ERROR
+test_is_mechanic_payload (__main__.KeygenMechanicTests.test_is_mechanic_payload) ... ERROR
+test_make_license_rejects_mechanic_type (__main__.KeygenMechanicTests.test_make_license_rejects_mechanic_type) ... ERROR
+test_mechanic_requires_parent (__main__.KeygenMechanicTests.test_mechanic_requires_parent) ... ERROR
+test_suspend_then_reactivate (__main__.KeygenMechanicTests.test_suspend_then_reactivate) ... ERROR
+
+======================================================================
+ERROR: test_count_must_be_int (__main__.KeygenCliValidationTests.test_count_must_be_int)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 149, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_count_must_be_positive (__main__.KeygenCliValidationTests.test_count_must_be_positive)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 149, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_count_respects_max (__main__.KeygenCliValidationTests.test_count_respects_max)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 149, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_parent_cannot_be_mechanic (__main__.KeygenCliValidationTests.test_parent_cannot_be_mechanic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 149, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_parent_must_exist (__main__.KeygenCliValidationTests.test_parent_must_exist)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 149, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_too_many_names (__main__.KeygenCliValidationTests.test_too_many_names)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 149, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_valid_request (__main__.KeygenCliValidationTests.test_valid_request)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 149, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_existing_private_key_is_never_overwritten (__main__.KeygenInitNeverReplacesTests.test_existing_private_key_is_never_overwritten)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/keygen.py", line 39, in <module>
+    from cryptography.hazmat.primitives.asymmetric import ec
+ModuleNotFoundError: No module named 'cryptography'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 208, in setUp
+    import keygen
+  File "/home/user/GarageFlowsV2/scripts/keygen.py", line 44, in <module>
+    sys.exit(1)
+SystemExit: 1
+
+======================================================================
+ERROR: test_existing_public_key_also_blocks (__main__.KeygenInitNeverReplacesTests.test_existing_public_key_also_blocks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/keygen.py", line 39, in <module>
+    from cryptography.hazmat.primitives.asymmetric import ec
+ModuleNotFoundError: No module named 'cryptography'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 208, in setUp
+    import keygen
+  File "/home/user/GarageFlowsV2/scripts/keygen.py", line 44, in <module>
+    sys.exit(1)
+SystemExit: 1
+
+======================================================================
+ERROR: test_first_init_creates_pair (__main__.KeygenInitNeverReplacesTests.test_first_init_creates_pair)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/keygen.py", line 39, in <module>
+    from cryptography.hazmat.primitives.asymmetric import ec
+ModuleNotFoundError: No module named 'cryptography'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 208, in setUp
+    import keygen
+  File "/home/user/GarageFlowsV2/scripts/keygen.py", line 44, in <module>
+    sys.exit(1)
+SystemExit: 1
+
+======================================================================
+ERROR: test_audit_log_no_full_token (__main__.KeygenMechanicTests.test_audit_log_no_full_token)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 35, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_db_stores_parent_and_children (__main__.KeygenMechanicTests.test_db_stores_parent_and_children)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 35, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_garage_only (__main__.KeygenMechanicTests.test_garage_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 35, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_garage_plus_five_unique (__main__.KeygenMechanicTests.test_garage_plus_five_unique)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 35, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_garage_plus_one_mechanic (__main__.KeygenMechanicTests.test_garage_plus_one_mechanic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 35, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_individual_revocation (__main__.KeygenMechanicTests.test_individual_revocation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 35, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_is_mechanic_payload (__main__.KeygenMechanicTests.test_is_mechanic_payload)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 35, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_make_license_rejects_mechanic_type (__main__.KeygenMechanicTests.test_make_license_rejects_mechanic_type)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 35, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_mechanic_requires_parent (__main__.KeygenMechanicTests.test_mechanic_requires_parent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 35, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+======================================================================
+ERROR: test_suspend_then_reactivate (__main__.KeygenMechanicTests.test_suspend_then_reactivate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/scripts/test_keygen.py", line 35, in setUp
+    core.generate_keys("")
+  File "/home/user/GarageFlowsV2/scripts/keygen_core.py", line 151, in generate_keys
+    raise RuntimeError("Module 'cryptography' introuvable. Lancez: pip install cryptography")
+RuntimeError: Module 'cryptography' introuvable. Lancez: pip install cryptography
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.010s
+
+FAILED (errors=20)
+Missing dependency. Install with:  pip install cryptography
+Missing dependency. Install with:  pip install cryptography
+Missing dependency. Install with:  pip install cryptography
+exit_code=1

@@ -1,0 +1,46 @@
+Commande 1 : npm run check:perf-budget
+
+> garageflow@1.1.0 check:perf-budget
+> node scripts/check-perf-budget.mjs
+
+Budget de performance — mesure du bundle client :
+  Total JS client : 3.49 MiB (budget 3.65 MiB)
+  Plus gros chunk : 322.3 KiB — .next/static/chunks/164f4fb6.f11ea67e0ec94950.js (budget 512.0 KiB)
+  Fichiers .js scannés : 242
+
+✅ Budget de performance respecté.
+perf_exit_code=0
+
+Commande 2 : node scripts/check-artifact-secrets.mjs .next/standalone
+🔎 check:artifact-secrets — 1 valeur(s) secrète(s) traquée(s)
+  ✓ dossier inspecté : standalone (2826 fichiers)
+
+✅ check:artifact-secrets — aucune clé privée, aucune valeur de secret dans l’artefact.
+artifact_secret_scan_exit_code=0
+
+Commande 3 : npm run preflight:release
+
+> garageflow@1.1.0 preflight:release
+> node scripts/preflight-release.cjs
+
+
+🔎 Contrôles avant empaquetage
+   Node 22.22.3 — linux/x64
+   Cible : Windows x64 (NSIS) — installeur utilisateur, sans droits administrateur
+   Version empaquetée : 1.1.0
+
+⚠️  Empaquetage demandé depuis un système non-Windows.
+     Le résultat dépend de Wine et de NSIS : la validation finale de l’installeur
+     doit être faite sur Windows (installation, désinstallation, lancement).
+✅ Prérequis réunis — poursuite de la construction.
+
+preflight_exit_code=0
+
+Commande 4 : npm run verify:installer (artefact absent attendu)
+
+> garageflow@1.1.0 verify:installer
+> node scripts/verify-installer.cjs
+
+❌ Aucun dossier dist/ : la construction n’a pas été exécutée.
+   Correctif : `npm run dist`.
+installer_verify_exit_code=1

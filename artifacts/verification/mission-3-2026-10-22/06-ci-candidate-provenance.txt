@@ -1,0 +1,14 @@
+Candidat CI run 39574514977, commit a3bf498572395f8c10d153a0b141f083c9154a6f ; lecture seule.
+download_package.json_exit_code=0
+download_package-lock.json_exit_code=0
+candidate_direct {"prisma":"^5.16.1","client":"^5.16.1","electron":"41.10.6","next":"15.5.27","playwright":"^1.62.1"}
+candidate_lock_engine_version 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
+candidate_lock_prisma 5.22.0
+candidate_lock_electron 41.10.6
+current_lock_engine_version 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
+
+=== TÉLÉCHARGEMENT DU PETIT REÇU CI OFFICIEL ===
+error downloading garageflows-windows-validation: Get "https://productionresultssa15.blob.core.windows.net/[signed-artifact-url-redacted]": EOF
+validation_download_exit_code=1
+
+signed_artifact_url_redacted=true

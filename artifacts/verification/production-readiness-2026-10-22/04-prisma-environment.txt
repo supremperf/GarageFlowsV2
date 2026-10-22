@@ -1,0 +1,50 @@
+date_utc=2026-10-22T16:51:51Z
+node=v22.22.3 npm=10.9.8 platform=linux arch=x64 openssl=3.5.6
+prisma 5.22.0
+@prisma/client 5.22.0
+@prisma/engines 5.22.0
+@prisma/engines-version 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
+@prisma/fetch-engine 5.22.0
+env_presence HTTP_PROXY unset
+env_presence HTTPS_PROXY unset
+env_presence ALL_PROXY unset
+env_presence NO_PROXY unset
+env_presence NODE_EXTRA_CA_CERTS unset
+env_presence SSL_CERT_FILE unset
+env_presence SSL_CERT_DIR unset
+env_presence PRISMA_ENGINES_MIRROR unset
+env_presence PRISMA_QUERY_ENGINE_LIBRARY unset
+env_presence PRISMA_QUERY_ENGINE_BINARY unset
+env_presence PRISMA_SCHEMA_ENGINE_BINARY unset
+env_presence PRISMA_CLI_BINARY_TARGETS unset
+env_presence PRISMA_GENERATE_NO_ENGINE unset
+env_presence PRISMA_HOME unset
+env_presence XDG_CACHE_HOME unset
+tls_root_certificates 145
+npm proxy unset
+npm https-proxy unset
+npm strict-ssl true
+npm registry https://registry.npmjs.org/
+npm cache /home/user/.npm
+
+=== GENERATEURS ===
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
+}
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../src/generated/server-client"
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+=== CACHES PRISMA (NOMS SEULEMENT) ===
+directory=/home/user/.cache/prisma
+absent=/home/user/.prisma
+absent=node_modules/.cache/prisma
+
+=== MOTEURS NATIFS FICHIERS ===
+
+=== NPM CACHE PRISMA ===
+make-fetch-happen:request-cache:https://registry.npmjs.org/@prisma/engines/-/engines-5.22.0.tgz
+make-fetch-happen:request-cache:https://registry.npmjs.org/@prisma%2fengines

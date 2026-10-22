@@ -1,0 +1,71 @@
+{
+  "licenseEntries": 131,
+  "thirdPartyNames": 130,
+  "noticeNames": 98,
+  "currentSbomComponents": 97,
+  "missingFromNotice": [
+    "@img/colour",
+    "@img/sharp-libvips-linux-x64",
+    "@img/sharp-libvips-linuxmusl-x64",
+    "@img/sharp-linux-x64",
+    "@img/sharp-linuxmusl-x64",
+    "@playwright/test",
+    "@types/node",
+    "@types/prop-types",
+    "@types/react",
+    "ansi-regex",
+    "ansi-styles",
+    "caniuse-lite",
+    "color-convert",
+    "color-name",
+    "csstype",
+    "detect-libc",
+    "get-caller-file",
+    "is-fullwidth-code-point",
+    "js-tokens",
+    "loose-envify",
+    "lru-cache",
+    "nanoid",
+    "path-exists",
+    "picocolors",
+    "playwright",
+    "playwright-core",
+    "postcss",
+    "require-directory",
+    "semver",
+    "sharp",
+    "source-map-js",
+    "strip-ansi",
+    "tslib",
+    "undici-types",
+    "yallist"
+  ],
+  "extraInNotice": [
+    "@emnapi/runtime",
+    "@img/sharp-wasm32",
+    "@next/swc-linux-x64-musl"
+  ],
+  "versionMismatches": [
+    {
+      "name": "@next/env",
+      "notice": "15.5.27",
+      "installed": [
+        "15.5.28"
+      ]
+    },
+    {
+      "name": "@next/swc-linux-x64-gnu",
+      "notice": "15.5.27",
+      "installed": [
+        "15.5.28"
+      ]
+    },
+    {
+      "name": "next",
+      "notice": "15.5.27",
+      "installed": [
+        "15.5.28"
+      ]
+    }
+  ]
+}

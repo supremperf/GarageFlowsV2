@@ -1,0 +1,42 @@
+third_party_names_excluding_root 131
+notice_names_not_matched_excluding_root 33
+unmatched @img/colour
+unmatched @img/sharp-libvips-linux-x64
+unmatched @img/sharp-libvips-linuxmusl-x64
+unmatched @img/sharp-linux-x64
+unmatched @img/sharp-linuxmusl-x64
+unmatched @playwright/test
+unmatched @types/prop-types
+unmatched @types/react
+unmatched ansi-regex
+unmatched ansi-styles
+unmatched caniuse-lite
+unmatched color-convert
+unmatched color-name
+unmatched csstype
+unmatched detect-libc
+unmatched get-caller-file
+unmatched is-fullwidth-code-point
+unmatched js-tokens
+unmatched loose-envify
+unmatched lru-cache
+unmatched nanoid
+unmatched path-exists
+unmatched picocolors
+unmatched playwright
+unmatched playwright-core
+unmatched postcss
+unmatched require-directory
+unmatched semver
+unmatched source-map-js
+unmatched strip-ansi
+unmatched tslib
+unmatched undici-types
+unmatched yallist
+
+Outils de scan/build alternatifs (présence seulement) :
+go=absent
+docker=absent
+podman=absent
+gitleaks=absent
+tesseract=absent

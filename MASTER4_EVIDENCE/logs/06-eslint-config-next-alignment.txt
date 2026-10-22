@@ -1,0 +1,34 @@
+date_utc=2026-10-22T18:52:22Z
+Commande : npm view eslint-config-next@15.5.28 version engines dist.integrity --json
+{
+  "version": "15.5.28",
+  "dist.integrity": "sha512-FQkDceHNJVfMa2rKbBQKyVILq7nG/zd2TxKsjecJAIv/dOcqaZynK5shwQCt6qrZFFae/EukOFggSP0jtNSLAA=="
+}
+npm_view_exit_code=0
+
+Commande : npm install --save-dev --save-exact eslint-config-next@15.5.28
+
+added 1 package, changed 2 packages, and audited 763 packages in 3s
+
+211 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm_install_exit_code=0
+installed_next=15.5.28
+installed_eslint_config_next=15.5.28
+package_spec=15.5.28
+lock_spec=15.5.28
+
+Commande : npm run lint
+
+> garageflow@1.1.0 lint
+> eslint src --ext .ts,.tsx
+
+lint_exit_code=0
+
+Commande : node scripts/audit-ci.js
+LOW=0 MODERATE=0 HIGH=0 CRITICAL=0 TOTAL=0
+audit_exit_code=0
+env_unchanged=true
+dev_db_unchanged=true

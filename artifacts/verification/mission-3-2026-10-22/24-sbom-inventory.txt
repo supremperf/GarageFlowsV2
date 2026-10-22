@@ -1,0 +1,95 @@
+Commande : npx --yes license-checker@25.0.1 --production --json
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm warn deprecated readdir-scoped-modules@1.1.0: This functionality has been moved to @npmcli/fs
+npm warn deprecated debuglog@1.0.1: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm warn deprecated osenv@0.1.5: This package is no longer supported.
+npm warn deprecated read-package-json@2.1.2: This package is no longer supported. Please use @npmcli/package-json instead.
+npm warn deprecated read-installed@4.0.3: This package is no longer supported.
+license_checker_exit_code=0
+Commande : npx --yes npm@11.16.0 sbom --omit=dev --sbom-format cyclonedx
+npm_sbom_exit_code=0
+license_entries_root_included 132
+third_party_unique_names 131
+notice_inventory_names 98
+cyclonedx_components_current 96
+notice_missing_exact_count 35
+notice_missing @img/colour
+notice_missing @img/sharp-libvips-linux-x64
+notice_missing @img/sharp-libvips-linuxmusl-x64
+notice_missing @img/sharp-linux-x64
+notice_missing @img/sharp-linuxmusl-x64
+notice_missing @playwright/test
+notice_missing @types/node
+notice_missing @types/prop-types
+notice_missing @types/react
+notice_missing ansi-regex
+notice_missing ansi-styles
+notice_missing caniuse-lite
+notice_missing color-convert
+notice_missing color-name
+notice_missing csstype
+notice_missing detect-libc
+notice_missing get-caller-file
+notice_missing is-fullwidth-code-point
+notice_missing js-tokens
+notice_missing loose-envify
+notice_missing lru-cache
+notice_missing nanoid
+notice_missing path-exists
+notice_missing picocolors
+notice_missing playwright
+notice_missing playwright-core
+notice_missing postcss
+notice_missing require-directory
+notice_missing semver
+notice_missing sharp
+notice_missing source-map-js
+notice_missing strip-ansi
+notice_missing tslib
+notice_missing undici-types
+notice_missing yallist
+notice_extra_exact_count 2
+notice_extra @emnapi/runtime
+notice_extra @img/sharp-wasm32
+current_sbom_missing_vs_license_checker_count 35
+current_sbom_missing @img/colour
+current_sbom_missing @img/sharp-libvips-linux-x64
+current_sbom_missing @img/sharp-libvips-linuxmusl-x64
+current_sbom_missing @img/sharp-linux-x64
+current_sbom_missing @img/sharp-linuxmusl-x64
+current_sbom_missing @playwright/test
+current_sbom_missing @types/node
+current_sbom_missing @types/prop-types
+current_sbom_missing @types/react
+current_sbom_missing ansi-regex
+current_sbom_missing ansi-styles
+current_sbom_missing caniuse-lite
+current_sbom_missing color-convert
+current_sbom_missing color-name
+current_sbom_missing csstype
+current_sbom_missing detect-libc
+current_sbom_missing get-caller-file
+current_sbom_missing is-fullwidth-code-point
+current_sbom_missing js-tokens
+current_sbom_missing loose-envify
+current_sbom_missing lru-cache
+current_sbom_missing nanoid
+current_sbom_missing path-exists
+current_sbom_missing picocolors
+current_sbom_missing playwright
+current_sbom_missing playwright-core
+current_sbom_missing postcss
+current_sbom_missing require-directory
+current_sbom_missing semver
+current_sbom_missing sharp
+current_sbom_missing source-map-js
+current_sbom_missing strip-ansi
+current_sbom_missing tslib
+current_sbom_missing undici-types
+current_sbom_missing yallist
+missing_notice_with_license_file 35
+missing_notice_without_license_file none
+reconciliation_exit_code=0
+windows_package_available=false
+reconciliation_verdict=BLOQUE — paquet Windows absent

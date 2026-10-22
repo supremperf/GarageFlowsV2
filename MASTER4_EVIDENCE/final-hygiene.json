@@ -1,0 +1,14 @@
+{
+  "requiredReports": "14/14",
+  "missing": [],
+  "journalMarkers": "14/14",
+  "aqSections": "ABCDEFGHIJKLMNOPQ",
+  "aqSequenceValid": true,
+  "finalLine": "NON PRÊT POUR LA PRODUCTION",
+  "evidenceAndChangedFiles": 82,
+  "textFiles": 82,
+  "jsonFiles": 16,
+  "secretFindings": [],
+  "devDbMatchesInitial": true,
+  "scope": "Targeted hygiene only; does not replace Gitleaks or history scan"
+}

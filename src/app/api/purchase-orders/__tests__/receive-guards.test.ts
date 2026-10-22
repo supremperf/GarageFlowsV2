@@ -1,8 +1,21 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { serializePoLinesJsonV2 } from '@/lib/money-json'
 
+type ReceiveTx = {
+  part: {
+    findMany: Mock<() => Promise<Array<{ id: string }>>>
+    updateMany: Mock<() => Promise<{ count: number }>>
+  }
+  purchaseOrder: {
+    updateMany: Mock<() => Promise<{ count: number }>>
+  }
+  stockMovement: {
+    create: Mock<() => Promise<{ id: string }>>
+  }
+}
+
 const h = vi.hoisted(() => {
-  const tx = {
+  const tx: ReceiveTx = {
     part: {
       findMany: vi.fn(async () => [{ id: 'part-a' }]),
       updateMany: vi.fn(async () => ({ count: 1 })),
@@ -24,7 +37,7 @@ const h = vi.hoisted(() => {
       linesJson: '[]',
     },
     orderFindFirst: vi.fn(),
-    transaction: vi.fn(async (work: (tx: typeof tx) => Promise<unknown>) => work(tx)),
+    transaction: vi.fn(async (work: (tx: ReceiveTx) => Promise<unknown>) => work(tx)),
     tx,
   }
 })

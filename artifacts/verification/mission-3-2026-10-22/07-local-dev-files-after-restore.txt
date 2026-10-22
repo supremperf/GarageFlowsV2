@@ -1,0 +1,6 @@
+Avant npm ci : .env absent et prisma/dev.db absent (sha256sum No such file).
+Le postinstall officiel les a créés ; aucun fichier existant n a été écrasé.
+.env_mode=600 .env_bytes=28573
+dev_db_bytes=909312
+dev_db_matches_template=true
+Aucune valeur de .env ni contenu de base journalisé.

@@ -11,17 +11,27 @@
  *
  * Les budgets et la mesure de référence sont dans `perf-budget.json`.
  *
- * Fail-closed : si `.next/static` est absent, le contrôle ÉCHOUE (il faut
- * lancer `next build` d'abord) — on ne « passe » jamais un budget non mesuré.
+ * Fail-closed : si `.next/BUILD_ID` est absent/vide ou si `.next/static` est
+ * absent, le contrôle ÉCHOUE avant toute mesure — on ne « passe » jamais un
+ * budget non mesuré et on ne mesure jamais les assets mutables de `next dev`.
  *
  * Usage : node scripts/check-perf-budget.mjs   (après `npm run build`)
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..')
+const args = process.argv.slice(2)
+const rootIndex = args.indexOf('--root')
+if (rootIndex >= 0 && !args[rootIndex + 1]) {
+  console.error('❌ --root exige un répertoire de build.')
+  process.exit(1)
+}
+const ROOT = rootIndex >= 0
+  ? resolve(args[rootIndex + 1])
+  : join(fileURLToPath(new URL('.', import.meta.url)), '..')
+const BUILD_ID_FILE = join(ROOT, '.next', 'BUILD_ID')
 const STATIC_DIR = join(ROOT, '.next', 'static')
 const CHUNKS_DIR = join(STATIC_DIR, 'chunks')
 const BUDGET_FILE = join(ROOT, 'perf-budget.json')
@@ -38,6 +48,13 @@ const MAX_TOTAL = budget.totalClientJsBytes
 const MAX_CHUNK = budget.largestChunkBytes
 if (!Number.isInteger(MAX_TOTAL) || !Number.isInteger(MAX_CHUNK)) {
   console.error('❌ perf-budget.json : totalClientJsBytes et largestChunkBytes doivent être des entiers (octets).')
+  process.exit(1)
+}
+
+const hasBuildId = existsSync(BUILD_ID_FILE) && statSync(BUILD_ID_FILE).isFile() &&
+  readFileSync(BUILD_ID_FILE, 'utf8').trim().length > 0
+if (!hasBuildId) {
+  console.error(`❌ ${relative(ROOT, BUILD_ID_FILE)} absent ou vide — sortie de production non démontrée ; aucune mesure d'assets de développement (fail-closed).`)
   process.exit(1)
 }
 

@@ -1,0 +1,26 @@
+Copie du rapport JSON produit par la porte finale, sans modification.
+copy_exit_code=0
+{
+  "next": "15.5.28",
+  "files": 365,
+  "passedFiles": 281,
+  "failedFiles": 84,
+  "conditionallySkippedFiles": 5,
+  "totalTests": 4389,
+  "passedTests": 3517,
+  "failedTests": 3,
+  "pendingTests": 869,
+  "success": false
+}
+post_patch_test_parse_exit_code=0
+
+Commande : npm run readiness:final
+
+> garageflow@1.1.0 readiness:final
+> node scripts/production-readiness.cjs
+
+GarageFlows — contrôle final de production
+Manifeste : artifacts/verification/production-readiness.json
+Contrôles : 11 pass, 22 bloquant(s), 33 total
+NON PRÊT POUR LA PRODUCTION
+readiness_final_exit_code=1

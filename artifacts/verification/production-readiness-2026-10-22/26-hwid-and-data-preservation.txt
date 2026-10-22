@@ -1,0 +1,24 @@
+Commande 1 : git diff --exit-code HEAD -- electron src/lib/license
+hwid_license_tree_diff_exit_code=0
+
+Ancres de fonctions (noms seulement) :
+HEAD:electron/main.js:681:// cadence bloquée. La V1 était pire encore : `collectHwidFieldsV1` appelait
+HEAD:electron/main.js:821:function collectHwidFieldsV1() {
+HEAD:electron/main.js:850:function getHwidV1() {
+HEAD:electron/main.js:857:  const fields = collectHwidFieldsV1()
+HEAD:electron/main.js:955:  // `getHwidV1()` n'avait AUCUN appelant. Une licence liée avec l'empreinte
+HEAD:electron/main.js:960:    ? String(getHwidV1()).trim().toLowerCase()
+HEAD:src/lib/__tests__/licence-p3.test.ts:18: *   par le serveur et documenté comme canonique ; `getHwidV1()` n'avait aucun
+HEAD:src/lib/__tests__/licence-p3.test.ts:110:    expect(s).toContain('getHwidV1()')
+HEAD:src/lib/__tests__/licence-p3.test.ts:111:    // `getHwidV1` n'était appelé nulle part : c'était du code mort.
+HEAD:src/lib/__tests__/licence-p3.test.ts:112:    expect(s.match(/getHwidV1\(\)/g)?.length).toBeGreaterThanOrEqual(1)
+HEAD:src/lib/__tests__/poste-windows.test.ts:143:    expect(extrait(MAIN, 'function getHwidV1()', 8)).toMatch(/empreinteV1/)
+HEAD:src/lib/__tests__/poste-windows.test.ts:147:    const c = sansCommentaires(extrait(MAIN, 'function collectHwidFieldsV1', 30), '//')
+
+Commande 2 : état des fichiers locaux sans afficher leur contenu
+2434c43f0333a3be258a88157cd60109fcc10cc7857fb177c95e5bd8aff2c757  prisma/dev.db
+f871b7550b40859b99f48239cf140f79914bda8aa9da0b0a421b6b878d85797a  .env
+.env_mode=600
+dev_db_size=909312
+
+Clés privées suivies dans le checkout : aucune

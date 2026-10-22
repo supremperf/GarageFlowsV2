@@ -1,0 +1,302 @@
+date_utc=2026-10-22T18:48:46Z
+repository=/home/user/GarageFlowsV2
+branch=arena/388085e0-garageflowsv2
+head=150654535ca0b3b417e96be057ba674a119c512f
+requested_remote_head=150654535ca0b3b417e96be057ba674a119c512f
+node=v22.22.3 npm=10.9.8
+
+=== GIT STATUS ===
+## arena/388085e0-garageflowsv2
+ M docs/CONFIG_REPOSITORY_AUDIT.md
+ M package-lock.json
+ M package.json
+ M scripts/config-audit.cjs
+ M scripts/final-release-gate.mjs
+ M scripts/secrets.js
+ M scripts/setup-dev.js
+ M scripts/verify-standalone-build.cjs
+ M src/app/api/purchase-orders/__tests__/receive-guards.test.ts
+ M src/lib/__tests__/secrets.test.ts
+ M src/lib/__tests__/toolchain-node-version.test.ts
+ M tests/build-dist-chain.test.cjs
+?? ACTIONS_MANUELLES_RESTANTES.md
+?? AUDIT_COMPLET.md
+?? BLOCKERS_REMAINING.md
+?? BUILD_OFFICIAL_REPORT.md
+?? BUILD_OFFICIEL.md
+?? COMMANDS_EXECUTED.md
+?? CONFIGURATION.md
+?? CORRECTIONS_EFFECTUEES.md
+?? DATABASE_RUNTIME_REPORT.md
+?? DATABASE_VALIDATION.md
+?? FINAL_EVIDENCE_INDEX.md
+?? GITLEAKS_AND_HISTORY_REPORT.md
+?? INSTALLATION_WINDOWS.md
+?? MASTER4_EVIDENCE/
+?? MISSION_3_DIAGNOSTIC.md
+?? MISSION_3_FINAL_VERDICT.md
+?? PLAYWRIGHT_EXECUTION_REPORT.md
+?? PLAYWRIGHT_VALIDATION.md
+?? PRISMA_RUNTIME_VALIDATION.md
+?? PRISMA_TLS_REPAIR.md
+?? PRODUCTION_READINESS.md
+?? PRODUCTION_READINESS_FINAL.md
+?? SBOM_AND_LICENSES.md
+?? SBOM_WINDOWS_FINAL.md
+?? SECURITE.md
+?? SECURITY_FINAL.md
+?? STAGING_VALIDATION.md
+?? TESTS_ET_VALIDATIONS.md
+?? VITEST_REPAIR_REPORT.md
+?? WINDOWS_INSTALLATION_TEST.md
+?? WINDOWS_INSTALLER_REPORT.md
+?? WINDOWS_INSTALLER_VALIDATION.md
+?? artifacts/verification/audit-2026-10-22/
+?? artifacts/verification/mission-3-2026-10-22/
+?? artifacts/verification/production-readiness-2026-10-22/
+?? artifacts/verification/production-readiness.json
+?? scripts/production-readiness.cjs
+?? tests/final-release-gate-verdict.test.cjs
+?? tests/production-readiness.test.cjs
+?? tests/setup-dev-permissions.test.cjs
+
+=== TRACKED DIFF STAT ===
+ docs/CONFIG_REPOSITORY_AUDIT.md                    | 75 +++++++++++++-------
+ package-lock.json                                  | 82 +++++++++++-----------
+ package.json                                       |  7 +-
+ scripts/config-audit.cjs                           |  3 +-
+ scripts/final-release-gate.mjs                     | 53 ++++++++++----
+ scripts/secrets.js                                 |  6 +-
+ scripts/setup-dev.js                               | 11 ++-
+ scripts/verify-standalone-build.cjs                | 15 +++-
+ .../__tests__/receive-guards.test.ts               | 19 ++++-
+ src/lib/__tests__/secrets.test.ts                  | 17 +++++
+ src/lib/__tests__/toolchain-node-version.test.ts   |  2 +-
+ tests/build-dist-chain.test.cjs                    | 14 ++++
+ 12 files changed, 214 insertions(+), 90 deletions(-)
+
+=== DIFF CHECK ===
+git_diff_check_exit_code=0
+
+=== UNTRACKED FILES ===
+ACTIONS_MANUELLES_RESTANTES.md
+AUDIT_COMPLET.md
+BLOCKERS_REMAINING.md
+BUILD_OFFICIAL_REPORT.md
+BUILD_OFFICIEL.md
+COMMANDS_EXECUTED.md
+CONFIGURATION.md
+CORRECTIONS_EFFECTUEES.md
+DATABASE_RUNTIME_REPORT.md
+DATABASE_VALIDATION.md
+FINAL_EVIDENCE_INDEX.md
+GITLEAKS_AND_HISTORY_REPORT.md
+INSTALLATION_WINDOWS.md
+MASTER4_EVIDENCE/logs/00-initial-safety-inventory.txt
+MISSION_3_DIAGNOSTIC.md
+MISSION_3_FINAL_VERDICT.md
+PLAYWRIGHT_EXECUTION_REPORT.md
+PLAYWRIGHT_VALIDATION.md
+PRISMA_RUNTIME_VALIDATION.md
+PRISMA_TLS_REPAIR.md
+PRODUCTION_READINESS.md
+PRODUCTION_READINESS_FINAL.md
+SBOM_AND_LICENSES.md
+SBOM_WINDOWS_FINAL.md
+SECURITE.md
+SECURITY_FINAL.md
+STAGING_VALIDATION.md
+TESTS_ET_VALIDATIONS.md
+VITEST_REPAIR_REPORT.md
+WINDOWS_INSTALLATION_TEST.md
+WINDOWS_INSTALLER_REPORT.md
+WINDOWS_INSTALLER_VALIDATION.md
+artifacts/verification/audit-2026-10-22/01-official-build-prisma-failure.txt
+artifacts/verification/audit-2026-10-22/02-next-build-no-engine.txt
+artifacts/verification/audit-2026-10-22/03-postbuild.txt
+artifacts/verification/audit-2026-10-22/04-verify-standalone.txt
+artifacts/verification/audit-2026-10-22/05-standalone-secret-scan.txt
+artifacts/verification/audit-2026-10-22/06-preflight-release.txt
+artifacts/verification/audit-2026-10-22/07-standalone-smoke.txt
+artifacts/verification/audit-2026-10-22/08-standalone-server.txt
+artifacts/verification/audit-2026-10-22/09-vitest-final.txt
+artifacts/verification/audit-2026-10-22/10-node-tests.txt
+artifacts/verification/audit-2026-10-22/11-keygen-python.txt
+artifacts/verification/audit-2026-10-22/12-python-vitest.txt
+artifacts/verification/audit-2026-10-22/13-release-safety.txt
+artifacts/verification/audit-2026-10-22/14-config-auto-tests.txt
+artifacts/verification/audit-2026-10-22/15-audit-strict.txt
+artifacts/verification/audit-2026-10-22/16-desktop-audit.txt
+artifacts/verification/audit-2026-10-22/17-perf-budget.txt
+artifacts/verification/audit-2026-10-22/18-secrets-regression-before.txt
+artifacts/verification/audit-2026-10-22/19-setup-regression-before.txt
+artifacts/verification/audit-2026-10-22/20-setup-after-fix.txt
+artifacts/verification/audit-2026-10-22/21-license-inventory.txt
+artifacts/verification/audit-2026-10-22/22-keygen-e2e-no-target.txt
+artifacts/verification/audit-2026-10-22/23-evidence-secret-scan.txt
+artifacts/verification/audit-2026-10-22/24-source-working-tree-secret-scan.txt
+artifacts/verification/audit-2026-10-22/25-standalone-engine-before-after.txt
+artifacts/verification/audit-2026-10-22/26-standalone-engine-validation.txt
+artifacts/verification/audit-2026-10-22/README.md
+artifacts/verification/audit-2026-10-22/SHA256SUMS
+artifacts/verification/mission-3-2026-10-22/00-repository-and-previous-evidence.txt
+artifacts/verification/mission-3-2026-10-22/01-prisma-network-recheck.txt
+artifacts/verification/mission-3-2026-10-22/02-github-actions-artifact-discovery.txt
+artifacts/verification/mission-3-2026-10-22/03-ci-job-outcomes.txt
+artifacts/verification/mission-3-2026-10-22/04-other-ci-artifact-discovery.txt
+artifacts/verification/mission-3-2026-10-22/05-dependency-restore-npm-ci.txt
+artifacts/verification/mission-3-2026-10-22/06-ci-candidate-provenance.txt
+artifacts/verification/mission-3-2026-10-22/07-local-dev-files-after-restore.txt
+artifacts/verification/mission-3-2026-10-22/08-prisma-diagnostic-after-restore.txt
+artifacts/verification/mission-3-2026-10-22/09-official-native-package-search.txt
+artifacts/verification/mission-3-2026-10-22/10-ci-e2e-log-access.txt
+artifacts/verification/mission-3-2026-10-22/11-prisma-noengine-test-bootstrap.txt
+artifacts/verification/mission-3-2026-10-22/12-playwright-chromium-install.txt
+artifacts/verification/mission-3-2026-10-22/13-system-browser-and-gitleaks-tools.txt
+artifacts/verification/mission-3-2026-10-22/14-vitest-baseline-no-generated-client.txt
+artifacts/verification/mission-3-2026-10-22/15-python-toolchain-restore.txt
+artifacts/verification/mission-3-2026-10-22/16-python-locked-install.txt
+artifacts/verification/mission-3-2026-10-22/17-python-vitest-targeted.txt
+artifacts/verification/mission-3-2026-10-22/18-vitest-publication-mock-diagnostic.txt
+artifacts/verification/mission-3-2026-10-22/19-gitleaks-npm-channel.txt
+artifacts/verification/mission-3-2026-10-22/20-vitest-final-full.txt
+artifacts/verification/mission-3-2026-10-22/21-playwright-list-and-run.txt
+artifacts/verification/mission-3-2026-10-22/22-official-build-and-standalone.txt
+artifacts/verification/mission-3-2026-10-22/23-windows-build-attempt.txt
+artifacts/verification/mission-3-2026-10-22/24-sbom-inventory.txt
+artifacts/verification/mission-3-2026-10-22/25-database-runtime-and-access.txt
+artifacts/verification/mission-3-2026-10-22/26-playwright-measured-summary.txt
+artifacts/verification/mission-3-2026-10-22/27-gitleaks-execution-attempt.txt
+artifacts/verification/mission-3-2026-10-22/28-final-release-gate.txt
+artifacts/verification/mission-3-2026-10-22/29-readiness-final.txt
+artifacts/verification/mission-3-2026-10-22/30-npm-audit-critical-diagnostic.txt
+artifacts/verification/mission-3-2026-10-22/31-typescript-diagnostic.txt
+artifacts/verification/mission-3-2026-10-22/32-perf-gate-regression-before.txt
+artifacts/verification/mission-3-2026-10-22/33-ci-typecheck-annotations.txt
+artifacts/verification/mission-3-2026-10-22/34-next-patch-metadata.txt
+artifacts/verification/mission-3-2026-10-22/35-perf-gate-regression-after.txt
+artifacts/verification/mission-3-2026-10-22/36-next-targeted-patch.txt
+artifacts/verification/mission-3-2026-10-22/37-audits-after-next-patch.txt
+artifacts/verification/mission-3-2026-10-22/38-release-safety-after-fixes.txt
+artifacts/verification/mission-3-2026-10-22/39-sbom-after-next-patch.txt
+artifacts/verification/mission-3-2026-10-22/40-final-release-gate-after-fixes.txt
+artifacts/verification/mission-3-2026-10-22/41-post-patch-tests-and-readiness.txt
+artifacts/verification/mission-3-2026-10-22/42-final-classification-and-preservation.txt
+artifacts/verification/mission-3-2026-10-22/43-deliverable-hygiene.txt
+artifacts/verification/mission-3-2026-10-22/44-final-static-consistency.txt
+artifacts/verification/mission-3-2026-10-22/45-final-static-consistency-after-metadata.txt
+artifacts/verification/mission-3-2026-10-22/SHA256SUMS
+artifacts/verification/mission-3-2026-10-22/licenses-production-final.json
+artifacts/verification/mission-3-2026-10-22/licenses-production.json
+artifacts/verification/mission-3-2026-10-22/sbom-current-linux.cdx.json
+artifacts/verification/mission-3-2026-10-22/sbom-final-linux.cdx.json
+artifacts/verification/mission-3-2026-10-22/sbom-reconciliation-final.json
+artifacts/verification/mission-3-2026-10-22/sbom-reconciliation.json
+artifacts/verification/mission-3-2026-10-22/typescript-errors.txt
+artifacts/verification/mission-3-2026-10-22/vitest-baseline-results.json
+artifacts/verification/mission-3-2026-10-22/vitest-final-results.json
+artifacts/verification/mission-3-2026-10-22/vitest-post-patch-results.json
+artifacts/verification/mission-3-2026-10-22/vitest-python-targeted-results.json
+artifacts/verification/production-readiness-2026-10-22/00-initial-state.txt
+artifacts/verification/production-readiness-2026-10-22/01-previous-evidence-verification.txt
+artifacts/verification/production-readiness-2026-10-22/02-branch-references.txt
+artifacts/verification/production-readiness-2026-10-22/03-prisma-tls-diagnostic.txt
+artifacts/verification/production-readiness-2026-10-22/04-prisma-environment.txt
+artifacts/verification/production-readiness-2026-10-22/05-previous-fixes-regression.txt
+artifacts/verification/production-readiness-2026-10-22/06-node-config-regression.txt
+artifacts/verification/production-readiness-2026-10-22/07-prisma-npm-channel.txt
+artifacts/verification/production-readiness-2026-10-22/08-prisma-github-channel.txt
+artifacts/verification/production-readiness-2026-10-22/09-prisma-fetch-internals.txt
+artifacts/verification/production-readiness-2026-10-22/10-playwright-browser-channels.txt
+artifacts/verification/production-readiness-2026-10-22/11-static-security-regression.txt
+artifacts/verification/production-readiness-2026-10-22/12-keygen-python-regression.txt
+artifacts/verification/production-readiness-2026-10-22/13-playwright-install.txt
+artifacts/verification/production-readiness-2026-10-22/14-keygen-python-corrected.txt
+artifacts/verification/production-readiness-2026-10-22/15-vitest-baseline.txt
+artifacts/verification/production-readiness-2026-10-22/16-supply-chain-audit-corrected.txt
+artifacts/verification/production-readiness-2026-10-22/17-python-vitest-corrected.txt
+artifacts/verification/production-readiness-2026-10-22/18-official-and-partial-build.txt
+artifacts/verification/production-readiness-2026-10-22/19-python-vitest-correct-paths.txt
+artifacts/verification/production-readiness-2026-10-22/20-playwright-inventory-and-launch.txt
+artifacts/verification/production-readiness-2026-10-22/21-environment-access-inventory.txt
+artifacts/verification/production-readiness-2026-10-22/22-readiness-gate-before.txt
+artifacts/verification/production-readiness-2026-10-22/23-readiness-gate-after.txt
+artifacts/verification/production-readiness-2026-10-22/24-production-readiness-tests.txt
+artifacts/verification/production-readiness-2026-10-22/25-artifact-static-checks.txt
+artifacts/verification/production-readiness-2026-10-22/26-hwid-and-data-preservation.txt
+artifacts/verification/production-readiness-2026-10-22/27-license-sbom-inventory.txt
+artifacts/verification/production-readiness-2026-10-22/28-license-sbom-corrected.txt
+artifacts/verification/production-readiness-2026-10-22/29-standalone-server.txt
+artifacts/verification/production-readiness-2026-10-22/30-standalone-server-local-config.txt
+artifacts/verification/production-readiness-2026-10-22/31-standalone-smoke.txt
+artifacts/verification/production-readiness-2026-10-22/32-sbom-notice-delta.txt
+artifacts/verification/production-readiness-2026-10-22/33-final-node-release-safety.txt
+artifacts/verification/production-readiness-2026-10-22/34-final-static-security.txt
+artifacts/verification/production-readiness-2026-10-22/35-production-readiness-required-ocr-tests.txt
+artifacts/verification/production-readiness-2026-10-22/36-final-static-with-master2-docs.txt
+artifacts/verification/production-readiness-2026-10-22/37-config-inventory-final.txt
+artifacts/verification/production-readiness-2026-10-22/38-source-working-tree-secret-scan.txt
+artifacts/verification/production-readiness-2026-10-22/39-production-readiness-verdict.txt
+artifacts/verification/production-readiness-2026-10-22/40-evidence-secret-scan.txt
+artifacts/verification/production-readiness-2026-10-22/SHA256SUMS
+artifacts/verification/production-readiness.json
+scripts/production-readiness.cjs
+tests/final-release-gate-verdict.test.cjs
+tests/production-readiness.test.cjs
+tests/setup-dev-permissions.test.cjs
+
+=== PROTECTED HWID/LICENSE/KEYS ===
+protected_paths_diff_exit=0
+electron/main.js
+src/lib/license/__tests__/hwid-v1.test.ts
+src/lib/license/__tests__/license-keygen-e2e.test.ts
+src/lib/license/hwid-v1.ts
+src/lib/license/verify.ts
+
+=== LOCAL ENV/DATA PRESENCE ONLY ===
+.env_present=true mode=600 bytes=28573
+ee0fe74d7df61896a41f49037d8406ef141b9c524b86f51daf299c96e834b736  .env
+dev_db_present=true mode=644 bytes=909312
+2434c43f0333a3be258a88157cd60109fcc10cc7857fb177c95e5bd8aff2c757  prisma/dev.db
+
+=== DEPENDENCY VERSIONS ===
+next spec=15.5.28 lock=15.5.28 installed=15.5.28
+prisma spec=^5.16.1 lock=5.22.0 installed=5.22.0
+@prisma/client spec=^5.16.1 lock=5.22.0 installed=5.22.0
+playwright spec=null lock=1.62.1 installed=1.62.1
+@playwright/test spec=^1.62.1 lock=1.62.1 installed=1.62.1
+electron spec=44.9.3 lock=44.9.3 installed=44.9.3
+electron-builder spec=26.15.3 lock=26.15.3 installed=26.15.3
+vitest spec=4.1.12 lock=4.1.12 installed=4.1.12
+typescript spec=^5 lock=5.9.3 installed=5.9.3
+pg spec=null lock=absent installed=absent
+redis spec=null lock=absent installed=absent
+nodemailer spec=10.1.1 lock=10.1.1 installed=10.1.1
+
+=== PREVIOUS EVIDENCE INTEGRITY ===
+master3_sha_exit=0 ok=57 failures=0
+master2_sha_exit=0 ok=41 failures=0
+
+=== MASTER3 DELIVERABLES ===
+MISSION_3_DIAGNOSTIC.md bytes=4536 mtime_utc=2026-10-22 18:43:28.304374636 +0000
+6f2e9245b04a9c9a3a26487c29bf1153cd5ddb8db6cd64ee8fabb3bfccdf8211  MISSION_3_DIAGNOSTIC.md
+PRISMA_TLS_REPAIR.md bytes=3459 mtime_utc=2026-10-22 18:43:28.708376677 +0000
+d7544936e54291b1e63f990794ded395dbc54d3d1bc88c0a1a2aa78c4dfa9515  PRISMA_TLS_REPAIR.md
+VITEST_REPAIR_REPORT.md bytes=3518 mtime_utc=2026-10-22 18:43:29.208379201 +0000
+84026f9e50c26a379eacbcf49225930c53969f4615a51e2703cc2351248b7c98  VITEST_REPAIR_REPORT.md
+PLAYWRIGHT_EXECUTION_REPORT.md bytes=2398 mtime_utc=2026-10-22 18:43:29.712381747 +0000
+0a07e5059ef8b39c70fed689055d87fcbef5b84c64b50de54cbfb77e64b30010  PLAYWRIGHT_EXECUTION_REPORT.md
+BUILD_OFFICIAL_REPORT.md bytes=1895 mtime_utc=2026-10-22 18:43:30.140383909 +0000
+b1ab433768c861a49fa0c0a65492d21c38aaa4e016fafb90b0bddd0df602705f  BUILD_OFFICIAL_REPORT.md
+DATABASE_RUNTIME_REPORT.md bytes=2038 mtime_utc=2026-10-22 18:43:30.608386274 +0000
+cb76e93396c0882a4e3cc54b880d7d7725d62648bc6ceffebfb34b65b6fabfba  DATABASE_RUNTIME_REPORT.md
+WINDOWS_INSTALLER_REPORT.md bytes=1664 mtime_utc=2026-10-22 18:43:31.092388719 +0000
+80e5962f0a34dbc401e917b98a0f1c8bb4ccc20bbf0a7a36ee15760e41f534f4  WINDOWS_INSTALLER_REPORT.md
+WINDOWS_INSTALLATION_TEST.md bytes=1582 mtime_utc=2026-10-22 18:43:31.516390859 +0000
+0394da7febcab394fd94c50c5453d641aba401e6d1cbc5b0d85db4657c32a294  WINDOWS_INSTALLATION_TEST.md
+SBOM_WINDOWS_FINAL.md bytes=2976 mtime_utc=2026-10-22 18:43:31.932392960 +0000
+d41910da6a533e55ff2af04486a023dcdeb6fc6969cac0351e8a28245057d497  SBOM_WINDOWS_FINAL.md
+GITLEAKS_AND_HISTORY_REPORT.md bytes=2006 mtime_utc=2026-10-22 18:43:32.388395265 +0000
+0fa9bced0dca4b3ceb1f4c50d43a5fec32f3a5b7b5239847e841cc1dabcc799c  GITLEAKS_AND_HISTORY_REPORT.md
+MISSION_3_FINAL_VERDICT.md bytes=9455 mtime_utc=2026-10-22 18:43:32.808397388 +0000
+097f4bb2e4e82de492e2c6603f646294aabfa4d4a8596df5b2c75f866ed8eb25  MISSION_3_FINAL_VERDICT.md

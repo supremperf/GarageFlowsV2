@@ -1,0 +1,29 @@
+Commande officielle : npm run build
+
+> garageflow@1.1.0 build
+> prisma generate && prisma generate --schema prisma/server/schema.prisma && node scripts/next-build.cjs
+
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+official_build_exit_code=1
+
+Commande : npm run verify:standalone
+
+> garageflow@1.1.0 verify:standalone
+> node scripts/verify-standalone-build.cjs
+
+
+❌ Sortie autonome Next.js inutilisable pour l’empaquetage.
+   Dossier .next/standalone absent : la compilation Next.js n'a pas produit de sortie autonome (output: 'standalone').
+
+   Cause la plus fréquente : une racine de workspace différente de celle du
+   projet (un package-lock.json dans le dossier utilisateur suffit à Next.js pour
+   l’adopter) décale toute la sortie d’un niveau.
+   Correctif : garder `outputFileTracingRoot` dans next.config.mjs, puis
+              supprimer .next et relancer `npm run build`.
+
+verify_standalone_exit_code=1
+dev_db_unchanged=true
+
+=== ARTEFACTS ===
+next_build_id_present=false
+standalone_server_present=false

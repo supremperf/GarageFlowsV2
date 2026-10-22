@@ -92,6 +92,12 @@ function verifierFichier(chemin, description) {
   return true
 }
 
+function prismaQueryEngines(clientDir) {
+  let entries
+  try { entries = fs.readdirSync(clientDir, { withFileTypes: true }) } catch { return [] }
+  return entries.filter((entry) => entry.isFile() && /^(?:libquery_engine-.+\.node|query_engine-.+\.node|query-engine-.+)$/.test(entry.name))
+}
+
 function main() {
   // ⚠️ `inspectStandaloneLayout` attend la RACINE DU PROJET et ajoute lui-même
   // `.next/standalone`. Lui passer `STANDALONE` construisait
@@ -160,12 +166,17 @@ function main() {
     PROBLEMES.push('keys/public.pem introuvable (nécessaire à la vérification des mises à jour)')
   }
 
-  // Coquilles qui feraient échouer Prisma au premier accès.
+  // Coquilles qui feraient échouer Prisma au premier accès. Le dossier et le
+  // client JS ne suffisent pas : une génération noEngine/Data Proxy ou une
+  // copie interrompue laisse ces fichiers présents sans moteur local utilisable.
   if (!fs.existsSync(path.join(appDir, 'prisma', 'schema.prisma'))) {
     PROBLEMES.push('prisma/schema.prisma absent de la sortie : Prisma ne pourra pas se localiser')
   }
-  if (!fs.existsSync(path.join(appDir, 'node_modules', '.prisma', 'client'))) {
+  const prismaClientDir = path.join(appDir, 'node_modules', '.prisma', 'client')
+  if (!fs.existsSync(prismaClientDir)) {
     PROBLEMES.push('moteur Prisma absent : lancez `npx prisma generate` avant `npm run build`')
+  } else if (prismaQueryEngines(prismaClientDir).length === 0) {
+    PROBLEMES.push('moteur Prisma natif absent : aucune bibliothèque query_engine/libquery_engine (.node) ni binaire query-engine dans node_modules/.prisma/client ; régénérez sans noEngine pour la cible empaquetée')
   }
 
   if (PROBLEMES.length) {

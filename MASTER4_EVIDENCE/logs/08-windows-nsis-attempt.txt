@@ -1,0 +1,131 @@
+date_utc=2026-10-22T18:53:10Z
+host=Linux 6.1.158+ x86_64
+wine=absent
+windows_host_access=false
+builder_config:
+{
+  "version": "1.1.0",
+  "electron": "44.9.3",
+  "electronBuilder": "26.15.3",
+  "build": {
+    "appId": "com.garageflow.app",
+    "productName": "GarageFlows",
+    "copyright": "Copyright © 2026 GarageFlows",
+    "afterPack": "scripts/afterPack.js",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/.prisma/client/query_engine-windows*",
+      "node_modules/@prisma/engines/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json",
+      "THIRD_PARTY_NOTICES.md",
+      "!**/*.before-*",
+      "!**/*.bak",
+      "!**/*.backup",
+      "!**/*.old",
+      "!**/*.orig",
+      "!**/*.rej",
+      "!**/*~",
+      "!**/*.tmp",
+      "!**/.env*",
+      "!**/*.pem",
+      "!**/*.key",
+      "!**/*.log",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": ".next/standalone",
+        "to": "standalone"
+      },
+      {
+        "from": "prisma",
+        "to": "prisma",
+        "filter": [
+          "schema.prisma",
+          "garageflow-template.db"
+        ]
+      },
+      {
+        "from": "keys",
+        "to": "keys",
+        "filter": [
+          "public.pem"
+        ]
+      },
+      {
+        "from": "icon.ico",
+        "to": "icon.ico"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": false,
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico",
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "GarageFlows",
+      "include": "scripts/installer.nsh",
+      "warningsAsErrors": false,
+      "artifactName": "GarageFlows-Setup.exe",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}
+
+Commande : npm run dist:win
+
+> garageflow@1.1.0 dist:win
+> npm run dist
+
+
+> garageflow@1.1.0 dist
+> npm run preflight:release && cross-env GF_PACKAGE_DESKTOP=1 npm run build && npm run verify:standalone && electron-builder --win --x64 --publish never && npm run check:artifact-secrets && npm run check:artifact-fuses && npm run verify:installer
+
+
+> garageflow@1.1.0 preflight:release
+> node scripts/preflight-release.cjs
+
+
+🔎 Contrôles avant empaquetage
+   Node 22.22.3 — linux/x64
+   Cible : Windows x64 (NSIS) — installeur utilisateur, sans droits administrateur
+   Version empaquetée : 1.1.0
+
+⚠️  Empaquetage demandé depuis un système non-Windows.
+     Le résultat dépend de Wine et de NSIS : la validation finale de l’installeur
+     doit être faite sur Windows (installation, désinstallation, lancement).
+✅ Prérequis réunis — poursuite de la construction.
+
+
+> garageflow@1.1.0 build
+> prisma generate && prisma generate --schema prisma/server/schema.prisma && node scripts/next-build.cjs
+
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+dist_win_exit_code=1
+
+=== ARTIFACTS ===
+setup_exe_present=false
+win_unpacked_present=false
+real_install_launch_uninstall_update_tests=NOT_RUN_NO_WINDOWS

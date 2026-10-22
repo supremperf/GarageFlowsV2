@@ -1,0 +1,61 @@
+date_utc=2026-10-22T16:50:53Z
+repository_root=/home/user/GarageFlowsV2
+origin=https://github.com/supremperf/GarageFlowsV2.git
+branch=arena/388085e0-garageflowsv2
+head=150654535ca0b3b417e96be057ba674a119c512f
+requested_branch_by_user=arena/84940ac2-garageflowsv2
+arena_session_branch=arena/388085e0-garageflowsv2
+node=v22.22.3
+npm=10.9.8
+platform=linux
+arch=x64
+openssl=3.5.6
+
+=== GIT STATUS ===
+ M docs/CONFIG_REPOSITORY_AUDIT.md
+ M package.json
+ M scripts/config-audit.cjs
+ M scripts/secrets.js
+ M scripts/setup-dev.js
+ M scripts/verify-standalone-build.cjs
+ M src/app/api/purchase-orders/__tests__/receive-guards.test.ts
+ M src/lib/__tests__/secrets.test.ts
+ M src/lib/__tests__/toolchain-node-version.test.ts
+ M tests/build-dist-chain.test.cjs
+?? ACTIONS_MANUELLES_RESTANTES.md
+?? AUDIT_COMPLET.md
+?? CONFIGURATION.md
+?? CORRECTIONS_EFFECTUEES.md
+?? INSTALLATION_WINDOWS.md
+?? PRODUCTION_READINESS.md
+?? SECURITE.md
+?? TESTS_ET_VALIDATIONS.md
+?? artifacts/verification/audit-2026-10-22/
+?? artifacts/verification/production-readiness-2026-10-22/
+?? tests/setup-dev-permissions.test.cjs
+
+=== TRACKED DIFF STAT ===
+ docs/CONFIG_REPOSITORY_AUDIT.md                    | 75 ++++++++++++++--------
+ package.json                                       |  2 +-
+ scripts/config-audit.cjs                           |  3 +-
+ scripts/secrets.js                                 |  6 +-
+ scripts/setup-dev.js                               | 11 +++-
+ scripts/verify-standalone-build.cjs                | 15 ++++-
+ .../__tests__/receive-guards.test.ts               | 19 +++++-
+ src/lib/__tests__/secrets.test.ts                  | 17 +++++
+ src/lib/__tests__/toolchain-node-version.test.ts   |  2 +-
+ tests/build-dist-chain.test.cjs                    | 14 ++++
+ 10 files changed, 129 insertions(+), 35 deletions(-)
+
+=== DIFF CHECK ===
+
+=== REQUIRED PREVIOUS REPORTS ===
+OK AUDIT_COMPLET.md bytes=29193
+OK CORRECTIONS_EFFECTUEES.md bytes=6554
+OK SECURITE.md bytes=7162
+OK CONFIGURATION.md bytes=7298
+OK PRODUCTION_READINESS.md bytes=6576
+OK TESTS_ET_VALIDATIONS.md bytes=7994
+OK INSTALLATION_WINDOWS.md bytes=6722
+OK ACTIONS_MANUELLES_RESTANTES.md bytes=5727
+OK docs/CONFIG_REPOSITORY_AUDIT.md bytes=16236

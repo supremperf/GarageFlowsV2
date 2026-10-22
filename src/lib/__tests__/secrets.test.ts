@@ -46,6 +46,23 @@ describe('scripts/secrets — génération sûre des secrets', () => {
     expect(content).toMatch(/NEXTAUTH_SECRET="[^"]{16,}"/)
   })
 
+  it('ne prend jamais le commentaire SUIVANT pour un secret lorsque la valeur est vide', () => {
+    const separator = `# ${'-'.repeat(70)}`
+    const env = `NEXTAUTH_SECRET=\n\n${separator}\nGARAGEFLOW_API_KEY=\n`
+    const { content, changed } = ensureEnvSecret(env, 'NEXTAUTH_SECRET')
+    expect(changed).toBe(true)
+    const value = content.match(/^NEXTAUTH_SECRET="([^"]+)"$/m)?.[1] ?? ''
+    expect(isWeakValue(value)).toBe(false)
+    expect(content).toContain(`\n\n${separator}\n`)
+  })
+
+  it('préserve les fins de ligne CRLF lors du remplacement', () => {
+    const { content, changed } = ensureEnvSecret('NEXTAUTH_SECRET=""\r\nDATABASE_URL="file:./dev.db"\r\n', 'NEXTAUTH_SECRET')
+    expect(changed).toBe(true)
+    expect(content).toMatch(/^NEXTAUTH_SECRET="[^"]{16,}"\r\nDATABASE_URL=/m)
+    expect(content.endsWith('\r\n')).toBe(true)
+  })
+
   it('deux exécutions sur des .env vides donnent des secrets différents', () => {
     const a = ensureEnvSecret('', 'NEXTAUTH_SECRET').content
     const b = ensureEnvSecret('', 'NEXTAUTH_SECRET').content

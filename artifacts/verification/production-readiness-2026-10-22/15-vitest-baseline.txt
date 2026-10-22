@@ -1,0 +1,3340 @@
+Commande : npm test (suite complète, bases temporaires du projet)
+
+> garageflow@1.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/GarageFlowsV2
+
+ ❯ src/test-utils/__tests__/prepare-test-db.test.ts (4 tests | 3 failed) 10097ms
+     × produit une base exploitable, et le modèle porte l’empreinte du schéma 3377ms
+     × le second appel réutilise le modèle au lieu de reconstruire 3330ms
+     × une base déjà présente est REMPLACÉE, jamais réutilisée telle quelle 3363ms
+     ✓ plus aucune suite ne lance le CLI Prisma dans son amorçage 24ms
+ ❯ src/integration/licence-admin-durcissement.test.ts (3 tests | 3 skipped) 3345ms
+     ↓ refuse toute transition depuis active, même avec clé partagée
+     ↓ refuse toute transition depuis revoked, même avec clé partagée
+     ↓ refuse toute transition depuis suspended, même avec clé partagée
+ ❯ src/integration/copilot-cout-achat.test.ts (5 tests | 5 skipped) 3368ms
+     ↓ MECHANIC et rôle inconnu : refus 403 avant toute lecture de stock
+     ↓ RECEPTIONIST autorisé : quoi commander et combien, jamais le coût
+     ↓ un OWNER, lui, voit le coût — la donnée n’est pas supprimée, elle est réservée
+     ↓ un MECHANIC n’obtient ni coût par pièce ni total
+     ↓ un MANAGER conserve l’accès complet
+ ❯ src/integration/tenant-idor-patch.test.ts (4 tests | 4 skipped) 3370ms
+     ↓ REFUSE de rattacher le véhicule à un client d'un autre garage
+     ↓ ACCEPTE un client du même garage
+     ↓ REFUSE d'assigner un mécanicien d'un autre garage
+     ↓ ACCEPTE un mécanicien du même garage
+ ❯ src/integration/synchro-voie-de-retour.test.ts (24 tests | 24 skipped) 3361ms
+     ↓ une photo ANCIENNE ne retient plus le curseur des commentaires
+     ↓ un commentaire RÉCENT ne fait pas sauter des photos
+     ↓ un garage neuf ne demande AUCUN curseur (tout depuis l’origine)
+     ↓ `since` reste envoyé pour un serveur pas encore à jour
+     ↓ en dessous du plafond, rien n’est annoncé tronqué
+     ↓ au plafond, le serveur l’ANNONCE — sinon le poste croit avoir tout reçu
+     ↓ aucune intervention dans la fenêtre : forme stable, jamais d’exception
+     ↓ les trois curseurs sont lus séparément
+     ↓ un poste ANCIEN, qui n’envoie que `since`, fonctionne comme avant
+     ↓ une valeur illisible n’est jamais prise pour un instant
+     ↓ la passerelle SERT une photo stockée en fichier
+     ↓ une photo stockée en colonne continue de passer
+     ↓ ni colonne ni fichier : refus explicite, sans détail technique
+     ↓ la photo d’un AUTRE garage reste introuvable
+     ↓ le magasin relit un fichier écrit
+     ↓ refuse de sortir du dossier des photos
+     ↓ un fichier absent ne rend rien plutôt qu’une exception
+     ↓ un poste EN AVANCE réapplique quand même le travail du mécanicien
+     ↓ un poste EN RETARD n’écrase plus ses propres saisies avec un miroir périmé
+     ↓ sans `syncedAt`, le comportement reste EXACTEMENT celui d’avant
+     ↓ le premier passage demande tout, le suivant seulement le nouveau
+     ↓ le curseur des interventions ne contamine pas le repli `since`
+     ↓ une réponse tronquée demande un nouveau passage
+     ↓ sans PROGRÈS, on ne repasse pas — pas de boucle sur un cloud bloqué
+ ❯ src/integration/portail-lien-revoque-a-la-republication.test.ts (8 tests | 8 skipped) 3354ms
+     ↓ MAC absent → publication refusée sans créer un instantané
+     ↓ publication simple : le lien est lisible
+     ↓ DEUX publications concurrentes (QR + lien « copier ») : les DEUX jetons restent lisibles
+     ↓ republication séquentielle : le lien déjà distribué survit
+     ↓ une seule publication VIVANTE par intervention (pas d’accumulation sans borne)
+     ↓ la rétractation fonctionne : le contenu retiré disparaît AUSSI de l’ancien lien
+     ↓ un instantané périmé reste refusé
+     ↓ l’instantané d’un autre garage n’est jamais servi
+ ❯ src/integration/client-email-garage-portail.test.ts (16 tests | 16 skipped) 3446ms
+     ↓ la fiche ET l'identifiant de connexion changent ensemble
+     ↓ la preuve de vérification ne suit PAS la nouvelle adresse (§23)
+     ↓ un lien de confirmation part sur la NOUVELLE adresse, et il fonctionne
+     ↓ les sessions ouvertes tombent — l'identifiant a changé (§21)
+     ↓ le mot de passe n'est pas touché : seul l'identifiant change
+     ↓ modifier le nom ou le téléphone ne touche ni au compte ni aux sessions
+     ↓ réenregistrer la MÊME adresse ne coupe rien
+     ↓ un client SANS accès portail se modifie sans effet de bord
+     ↓ deux clients du même garage ne peuvent pas partager un identifiant portail
+     ↓ la même adresse dans un AUTRE garage n'est pas un conflit
+     ↓ une demande du client encore en attente est ANNULÉE par la correction du garage
+     ↓ le journal d'audit dit ce qui a été annulé (§26)
+     ↓ la confirmation du client remonte toujours à la fiche du garage
+     ↓ un client d'un AUTRE garage est introuvable, pas refusé
+     ↓ un mécanicien ne modifie pas une fiche client
+     ↓ une adresse invalide est refusée avant toute écriture
+ ❯ src/app/api/sync/__tests__/invoice-publication.test.ts (13 tests | 13 skipped) 3376ms
+     ↓ publier une facture ne crée AUCUN mouvement de stock
+     ↓ publier une facture ne décrémente AUCUNE pièce
+     ↓ la ligne ne garde AUCUN lien vers une pièce non publiée
+     ↓ l’engagement du stock est recopié tel quel — c’est un fait daté
+     ↓ crée la facture sous l’identifiant du poste
+     ↓ recopie les montants ENTIERS sans les recalculer
+     ↓ republier NE CRÉE PAS une seconde facture
+     ↓ une ligne SUPPRIMÉE sur le poste disparaît de la facture publiée
+     ↓ une facture d’un AUTRE garage n’est jamais écrasée
+     ↓ un numéro déjà pris par une AUTRE facture est refusé explicitement
+     ↓ un refus n’empêche pas les AUTRES factures du lot de passer
+     ↓ le garageId vient de la LICENCE, jamais du corps
+     ↓ une licence refusée ne laisse rien s’écrire
+ ❯ src/integration/portal-token-isolation.test.ts (5 tests | 5 skipped) 3357ms
+     ↓ jeton valide (jobId+garageId de A) → 200 sur le job de A
+     ↓ jeton {jobId de B, garageId de A} → 404 (le scope garageId empêche l'accès croisé)
+     ↓ jeton de mauvais type → 403
+     ↓ jeton signé avec un autre secret → rejeté (403/erreur, jamais 200)
+     ↓ jeton illisible → rejeté (jamais 200)
+ ❯ src/lib/sync/__tests__/mechanic-rattrapage.test.ts (9 tests | 9 skipped) 3372ms
+     ↓ le rattrapage rejoue le STATUT, pas seulement les attributions
+     ↓ une suspension aussi
+     ↓ confirmée par le cloud, elle cesse d’être en attente
+     ↓ refusée par le cloud, elle RESTE en attente
+     ↓ la clé révoquée passe avant la clé active quand le plafond est de 1
+     ↓ le canal ATTRIBUTION est utilisé pour une clé active
+     ↓ une clé active SANS titulaire n’a rien à annoncer
+     ↓ pushMechanicStatus confirme en base ce que le cloud a accepté
+     ↓ révoquer une clé DÉJÀ synchronisée la remet en attente
+ ❯ src/integration/part-deletion-history.test.ts (3 tests | 3 skipped) 3379ms
+     ↓ refuse la suppression et CONSERVE les mouvements
+     ↓ laisse supprimer une pièce jamais mouvementée (cas courant, non entravé)
+     ↓ restitue ce qui existe, ignore ce qui n’existe plus, et n’échoue pas
+ ❯ src/lib/sync/__tests__/passe-lecture-seule.test.ts (5 tests | 5 skipped) 3370ms
+     ↓ la première remontée pousse, la seconde passe en LECTURE SEULE
+     ↓ une MODIFICATION locale fait repartir une vraie poussée
+     ↓ une intervention AJOUTÉE fait repartir une vraie poussée
+     ↓ une suppression en attente interdit la lecture seule
+     ↓ la voie de retour continue d’être demandée en lecture seule
+ ❯ src/integration/portal-email-sync.test.ts (12 tests | 12 skipped) 3362ms
+     ↓ met l'adresse EN ATTENTE et envoie la confirmation sur la NOUVELLE
+     ↓ exige le mot de passe — un cookie volé ne suffit pas
+     ↓ refuse une adresse invalide ou identique
+     ↓ refuse une adresse déjà utilisée DANS LE GARAGE, sans attendre la confirmation
+     ↓ la même adresse dans un AUTRE garage n'est pas un conflit
+     ↓ un échec d'envoi est DIT, pas masqué
+     ↓ l'adresse devient l'identifiant ET remonte à la fiche garage
+     ↓ le lien ne fonctionne qu'une fois
+     ↓ une collision survenue ENTRE la demande et la confirmation ne casse rien
+     ↓ un jeton inconnu est refusé
+     ↓ le message d'ouverture d'accès contient le mot de passe — et lui seul le contient
+     ↓ la route d'accès portail ne journalise jamais le mot de passe
+ ❯ src/integration/portal-account-takeover-v15.test.ts (2 tests | 2 skipped) 3350ms
+     ↓ l'inscription avec l'email d'un client existant NE lie PAS le compte au Client
+     ↓ le rattachement au Client n’a lieu qu’APRÈS vérification de l’email (possession prouvée)
+ ❯ src/integration/messagerie-client-garage.test.ts (16 tests | 16 skipped) 3354ms
+     ↓ le message du client arrive dans la boîte du garage
+     ↓ la réponse du garage revient au client, et le statut change de camp
+     ↓ une relance du client remet la balle chez le garage
+     ↓ le véhicule choisi par le client est rattaché au fil
+     ↓ le garage clôt ; le client ne peut plus écrire, mais peut rouvrir
+     ↓ le client clôt de son côté ; le garage peut rouvrir
+     ↓ le garage ne peut pas répondre à un fil clos
+     ↓ un garage voisin ne voit rien de cette conversation
+     ↓ un autre client du MÊME garage n'atteint pas ce fil
+     ↓ un véhicule qui n'appartient pas au client est refusé
+     ↓ un mécanicien ne lit pas la boîte du garage
+     ↓ un mécanicien ne lit ni ne répond à une conversation
+     ↓ le comptoir, lui, y a bien accès
+     ↓ un sujet ou un message vide est refusé
+     ↓ une catégorie inconnue retombe sur « general » plutôt que de passer telle quelle
+     ↓ sans session portail, rien n'est lisible
+ ❯ src/lib/sync/__tests__/quote-return.test.ts (10 tests | 10 skipped) 3413ms
+     ↓ enregistre la preuve ET fait avancer le devis
+     ↓ un refus client est appliqué comme une acceptation
+     ↓ rejouer le passage n’empile AUCUN doublon
+     ↓ un devis déjà CONVERTI garde son statut, mais reçoit la preuve
+     ↓ une preuve dont le devis est INCONNU localement est ignorée
+     ↓ un devis d’un AUTRE garage n’est pas touché
+     ↓ un cloud injoignable n’écrit rien et le dit
+     ↓ premier passage : aucun curseur — le poste ne détient rien
+     ↓ passages suivants : curseur RECULÉ d’une minute sur la dernière preuve
+     ↓ remonte l’arriéré annoncé par le cloud
+ ❯ src/integration/invoice-document-integrity-p3.test.ts (15 tests | 15 skipped) 3363ms
+     ↓ refuse une plaque hors bornes au lieu de la persister
+     ↓ accepte une valeur légitime
+     ↓ facture sent : le nom du client n’est plus modifiable
+     ↓ facture paid : le nom du client n’est plus modifiable
+     ↓ facture overdue : le nom du client n’est plus modifiable
+     ↓ facture émise : clientEmail est également scellé
+     ↓ facture émise : clientPhone est également scellé
+     ↓ facture émise : clientAddress est également scellé
+     ↓ facture émise : vehicleModel est également scellé
+     ↓ facture émise : licensePlate est également scellé
+     ↓ un BROUILLON reste librement modifiable
+     ↓ les champs NON identitaires restent modifiables sur une facture émise
+     ↓ le devis redevient accepté, sans pointeur mort, et reconvertible
+     ↓ un devis d’un AUTRE garage n’est jamais touché
+     ↓ crée une entrée nommant l’auteur et le devis d’origine
+ ❯ src/integration/finance-margin.test.ts (1 test | 1 skipped) 3399ms
+     ↓ coût des pièces = pièces des factures PAYÉES uniquement (MO, brouillons et consommations exclus)
+ ❯ src/integration/dashboard.test.ts (3 tests | 3 skipped) 3406ms
+     ↓ renders a no-data margin as neutral, not a false critical, on a new garage
+     ↓ computes revenue and margin from real paid invoices
+     ↓ scopes strictly to the session garage (no cross-tenant leakage)
+ ❯ src/lib/einvoicing/__tests__/desktop-bridge.test.ts (20 tests | 20 skipped) 3388ms
+     ↓ sans licence garage : refus explicite, aucun appel réseau
+     ↓ réseau absent : 503, et la facture reste enregistrée
+     ↓ délai dépassé : 503 également
+     ↓ un refus de la plateforme est rendu TEL QUEL, motif et statut compris
+     ↓ la licence accompagne chaque appel : l’identité ne vient pas du corps
+     ↓ une lecture aboutie reçoit la donnée que seul le poste connaît
+     ↓ un refus ressort intact — rien n’y est ajouté
+     ↓ une facture d’un autre garage est introuvable localement
+     ↓ la route refuse 404 sans déranger le service en ligne
+     ↓ l’envoi d’une facture est relayé, pas refusé
+     ↓ un brouillon est refusé LOCALEMENT, sans aller-retour inutile
+     ↓ la relecture de statut est relayée sur l’action correspondante
+     ↓ la déclaration « non parvenue » a sa propre action
+     ↓ sans transmissionId : 400, sans appel réseau
+     ↓ la lecture des transmissions ajoute le droit d’émettre, calculé ici
+     ↓ le test de connexion est relayé, pas refusé
+     ↓ le corpus est exempt de SERVER_ONLY
+     ↓ l’enregistrement d’une connexion est RELAYÉ, pas refusé
+     ↓ les drapeaux affichés sont ceux du SERVICE, pas ceux du poste
+     ↓ service injoignable : on le DIT, on ne prétend pas que c’est désactivé
+ ❯ src/integration/copilot-portee-et-porte-financiere.test.ts (18 tests | 18 skipped) 3368ms
+     ↓ « revenue_today » est refusé à un RECEPTIONIST
+     ↓ « margin » est refusé à un RECEPTIONIST
+     ↓ « top_clients » est refusé à un RECEPTIONIST
+     ↓ « forecast » est refusé à un RECEPTIONIST
+     ↓ « revenue_today » est refusé à un MECHANIC
+     ↓ « margin » est refusé à un MECHANIC
+     ↓ « top_clients » est refusé à un MECHANIC
+     ↓ « forecast » est refusé à un MECHANIC
+     ↓ « revenue_today » répond VRAIMENT à un OWNER
+     ↓ « margin » répond VRAIMENT à un OWNER
+     ↓ « top_clients » répond VRAIMENT à un OWNER
+     ↓ « forecast » répond VRAIMENT à un OWNER
+     ↓ les devis en attente sont ceux du garage de la session
+     ↓ les meilleurs clients n’agrègent pas ceux d’un autre garage
+     ↓ la marge ne mélange pas deux garages
+     ↓ les mécaniciens disponibles sont ceux du garage
+     ↓ les véhicules en retard sont ceux du garage
+     ↓ vu depuis le garage B, ce sont les données de B — et elles seules
+ ❯ src/lib/sync/__tests__/messages-voie-de-retour.test.ts (9 tests | 9 skipped) 3349ms
+     ↓ la conversation et ses messages sont créés localement
+     ↓ rejouer un passage ne duplique ni la conversation ni les messages
+     ↓ une réponse du garage venue du cloud s’ajoute à la conversation
+     ↓ sans licence garage : aucun appel réseau
+     ↓ l’auteur inconnu est créé avec un haché VIDE
+     ↓ un compte local EXISTANT n’est jamais écrasé
+     ↓ la réponse remonte avec son texte et son auteur
+     ↓ hors ligne : la remontée échoue et le DIT
+     ↓ la clôture remonte aussi
+ ❯ src/integration/catalog.test.ts (9 tests | 9 skipped) 3404ms
+     ↓ returns ranked text-search results from the seed catalogue
+     ↓ caps results by limit while total reports the full (pre-limit) match count
+     ↓ ranks an exact reference first and surfaces a transitive cross-reference
+     ↓ annotates inStock/stockQuantity, aggregating refs that normalise equal
+     ↓ resolves the vehicle from a stored plate, scoped per garage
+     ↓ guards a non-numeric year param to null (never NaN)
+     ↓ scopes the in-stock join per garage
+     ↓ returns the cross-reference equivalence class (action=equivalents)
+     ↓ 400s on equivalents with no reference, and serves the category tree
+ ❯ src/integration/reglages-enfin-lus.test.ts (8 tests | 8 skipped) 3356ms
+     ↓ une garantie SANS durée suit le réglage du garage
+     ↓ une durée EXPLICITE reste prioritaire sur le réglage
+     ↓ un garage qui n’a rien réglé garde 12 mois
+     ↓ le réglage ne franchit pas la frontière du garage
+     ↓ le formulaire de garantie s’ouvre sur la durée réglée
+     ↓ l’entrée « véhicules de prêt » suit `loanerEnabled`
+     ↓ le panneau lui-même n’est PAS démonté
+     ↓ le repli est l’activation — un réglage indisponible ne fait rien disparaître
+ ❯ src/integration/rendez-vous-client-garage.test.ts (16 tests | 16 skipped) 3360ms
+     ↓ le créneau proposé arrive dans la liste du garage, en ATTENTE
+     ↓ la confirmation du garage est visible par le client
+     ↓ les heures d'ouverture accompagnent la liste du client
+     ↓ un rendez-vous confirmé puis honoré se clôt
+     ↓ un créneau hors des heures d'ouverture est refusé
+     ↓ un créneau dans le passé est refusé
+     ↓ un motif vide est refusé
+     ↓ un véhicule qui n'appartient pas au client est refusé
+     ↓ déplacer un créneau CONFIRMÉ le remet en attente
+     ↓ le nouveau créneau est validé comme le premier
+     ↓ le client annule le sien
+     ↓ un rendez-vous terminé ne se déplace ni ne s'annule plus
+     ↓ on ne confirme pas deux fois
+     ↓ on ne clôt pas une demande jamais confirmée
+     ↓ un mécanicien ne s'engage pas à la place du comptoir
+     ↓ un garage voisin ne voit ni ne touche ce rendez-vous
+ ❯ src/integration/mechanic-avatar-sync.test.ts (11 tests | 11 skipped) 3344ms
+     ↓ enregistre l'image, écrit le fichier et rend une URL
+     ↓ l'horodatage du poste fait foi pour la date de mise à jour
+     ↓ refuse une image invalide, même annoncée comme valide
+     ↓ un poste ne peut pas poser de photo sur un mécanicien d'un AUTRE garage
+     ↓ un refus d'authentification bloque tout
+     ↓ un mécanicien inconnu du cloud ne se crée pas par une simple photo
+     ↓ une photo INCHANGÉE ne réécrit rien et garde la même URL
+     ↓ une propagation RETARDÉE n'écrase pas une photo plus récente
+     ↓ une photo plus RÉCENTE remplace bien l'ancienne et nettoie le disque
+     ↓ supprimer la photo sur le poste la retire du cloud et du disque
+     ↓ retirer une photo déjà absente est sans effet
+ ❯ src/integration/portail-2fa-idor.test.ts (11 tests | 11 skipped) 3347ms
+     ↓ setup : A ne déclenche pas d'enrôlement pour B
+     ↓ enable : aucun code, ni de A ni de B, n'active quoi que ce soit chez B
+     ↓ disable : A ne désactive pas le 2FA de B, même avec SON propre mot de passe
+     ↓ recovery : un code de secours de B ne sert pas à A, et reste intact
+     ↓ le secret de A ne valide pas le challenge de B
+     ↓ aucune route 2FA ne lit d'identifiant d'utilisateur fourni par le client
+     ↓ la vérification du second facteur part du challenge SIGNÉ, pas d'un identifiant
+     ↓ deux requêtes simultanées avec le MÊME code : une seule ouvre une session
+     ↓ deux codes DIFFÉRENTS simultanés : les deux ouvrent, et aucun ne ressuscite
+     ↓ compte les comptes enrôlés et ceux devenus illisibles
+     ↓ ne compte pas les comptes NON enrôlés
+ ❯ src/integration/rbac-enforcement-e2e.test.ts (5 tests | 5 skipped) 3363ms
+     ↓ users POST (créer un compte, potentiellement admin) → 403
+     ↓ garages PATCH (modifier les paramètres du garage) → 403
+     ↓ mechanic-licenses register (gérer les licences mécanicien) → 403
+     ↓ users POST → succès + persistance
+     ↓ garages PATCH → succès + persistance
+ ❯ src/app/api/sync/__tests__/quote-publication.test.ts (11 tests | 11 skipped) 3425ms
+     ↓ crée le devis avec l’IDENTIFIANT DU POSTE et rend un lien
+     ↓ recopie les montants ENTIERS sans les recalculer
+     ↓ ne publie NI client NI véhicule : les clés étrangères restent nulles
+     ↓ republier NE CRÉE PAS un second devis
+     ↓ republier MET À JOUR le devis existant
+     ↓ une ligne SUPPRIMÉE sur le poste disparaît du devis publié
+     ↓ un devis appartenant à un AUTRE garage n’est jamais écrasé
+     ↓ un numéro déjà pris par un AUTRE devis est refusé explicitement
+     ↓ un devis déjà accepté ou converti ne se republie pas
+     ↓ le garageId vient de la LICENCE, jamais du corps de la requête
+     ↓ une licence refusée ne laisse rien s’écrire
+ ❯ src/integration/copilot-ecusson-verifie.test.ts (9 tests | 9 skipped) 3357ms
+     ↓ une réponse chiffrée tirée de la base est marquée vérifiée
+     ↓ la provenance du texte cesse d’être indevinable
+     ↓ une panne de lecture n’est pas une réponse vérifiée
+     ↓ une demande de VIN n’est pas une réponse vérifiée
+     ↓ une demande de précision de diagnostic n’est pas une réponse vérifiée
+     ↓ une reformulation inventée est rejetée, et la réponse reste vérifiée
+     ↓ une reformulation ancrée est acceptée et signalée comme telle
+     ↓ l’écusson ne se déduit plus de la simple présence de `phrasing`
+     ↓ l’écusson vient du verdict serveur `ancrage.verifie`
+ ❯ src/integration/devis-signature-depuis-un-poste.test.ts (9 tests | 9 skipped) 3408ms
+     ↓ sans licence garage active : refuse explicitement, sans rien laisser fuir
+     ↓ publie le devis au cloud et rend le lien QUE LE CLOUD a émis
+     ↓ la charge publiée porte les montants ENTIERS, à l’unité près
+     ↓ cloud injoignable : 503, aucun courriel, devis intact
+     ↓ publication refusée par le cloud : 409, aucun faux succès
+     ↓ ne fait PAS basculer le devis en « envoyé »
+     ↓ n’envoie AUCUN courriel
+     ↓ produit le lien, marque le devis « envoyé » et l’envoie au client
+     ↓ le jeton produit est bien celui que la page de signature accepte
+ ❯ src/integration/pulse-boucle-de-synchronisation.test.ts (6 tests | 6 skipped) 3375ms
+     ↓ le battement DÉCLENCHE la voie de retour cloud → poste
+     ↓ l’empreinte est stable quand rien ne change
+     ↓ un changement de STATUT d’intervention change l’empreinte
+     ↓ un COMMENTAIRE de mécanicien change l’empreinte
+     ↓ une PHOTO de mécanicien change l’empreinte
+     ↓ l’empreinte ne divulgue ni volumétrie ni horodatage
+ ❯ src/integration/planning-journee-complete.test.ts (5 tests | 5 skipped) 3388ms
+     ↓ sans `limit`, la journée complète arrive (c’est l’appel du planning)
+     ↓ les interventions de FIN de journée sont bien là
+     ↓ rien n’est servi au-delà du plafond de sécurité
+     ↓ une limite explicite reste respectée
+     ↓ une liste SANS date reste paginée à 20 (comportement inchangé)
+ ❯ src/integration/tenant-isolation-matrix.test.ts (42 tests | 42 skipped) 3370ms
+     ↓ vehicles : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ jobs : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ invoices : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ quotes : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ work-orders : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ purchase-orders : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ parts : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ appointments : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ inspections : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ loaner-vehicles : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ loaner-reservations : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ warranties : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ labor-operations : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ mechanics : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ clients : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ tickets : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+     ↓ vehicles : une opération non destructive sur la ressource de A réussit
+     ↓ jobs : une opération non destructive sur la ressource de A réussit
+     ↓ invoices : une opération non destructive sur la ressource de A réussit
+     ↓ quotes : une opération non destructive sur la ressource de A réussit
+     ↓ work-orders : une opération non destructive sur la ressource de A réussit
+     ↓ purchase-orders : une opération non destructive sur la ressource de A réussit
+     ↓ parts : une opération non destructive sur la ressource de A réussit
+     ↓ appointments : une opération non destructive sur la ressource de A réussit
+     ↓ inspections : une opération non destructive sur la ressource de A réussit
+     ↓ loaner-vehicles : une opération non destructive sur la ressource de A réussit
+     ↓ loaner-reservations : une opération non destructive sur la ressource de A réussit
+     ↓ warranties : une opération non destructive sur la ressource de A réussit
+     ↓ labor-operations : une opération non destructive sur la ressource de A réussit
+     ↓ mechanics : une opération non destructive sur la ressource de A réussit
+     ↓ clients : une opération non destructive sur la ressource de A réussit
+     ↓ tickets : une opération non destructive sur la ressource de A réussit
+     ↓ jobs : la liste de A contient l'objet de A et jamais celui de B
+     ↓ invoices : la liste de A contient l'objet de A et jamais celui de B
+     ↓ quotes : la liste de A contient l'objet de A et jamais celui de B
+     ↓ work-orders : la liste de A contient l'objet de A et jamais celui de B
+     ↓ appointments : la liste de A contient l'objet de A et jamais celui de B
+     ↓ inspections : la liste de A contient l'objet de A et jamais celui de B
+     ↓ loaner-vehicles : la liste de A contient l'objet de A et jamais celui de B
+     ↓ warranties : la liste de A contient l'objet de A et jamais celui de B
+     ↓ labor-operations : la liste de A contient l'objet de A et jamais celui de B
+     ↓ mechanics : la liste de A contient l'objet de A et jamais celui de B
+ ❯ src/lib/__tests__/stock-double-deduction.int.test.ts (6 tests | 6 skipped) 3354ms
+     ↓ un DEVIS ne consomme rien ; la validation consomme exactement une fois
+     ↓ DIX validations concurrentes de la même facture ne débitent qu’une unité
+     ↓ l’annulation restitue intégralement, et son rejeu ne restitue pas deux fois
+     ↓ stock insuffisant → refus 409, et la quantité ne devient JAMAIS négative
+     ↓ un échec APRÈS le décrément annule aussi le décrément (atomicité)
+     ↓ le stock final s’explique EXACTEMENT par le journal des mouvements
+ ❯ src/integration/suppliers.test.ts (21 tests | 21 skipped) 3353ms
+     ↓ returns an explicit unavailable response instead of estimated price/stock/lead time
+     ↓ returns 501 for confirm=false and persists nothing
+     ↓ returns 501 for confirm=true and persists nothing
+     ↓ previews a transition without writing
+     ↓ confirms draft→sent and stamps sentAt without touching stock
+     ↓ confirms →received and atomically increments part stock, once
+     ↓ serialises two concurrent receipts: exactly one applies
+     ↓ rejects an illegal transition (draft→received) even with confirm
+     ↓ returns 404 for an order belonging to another garage
+     ↓ rejects 'empty order' without persisting an empty/unreceivable order
+     ↓ rejects 'blank article' without persisting an empty/unreceivable order
+     ↓ rejects 'zero quantity' without persisting an empty/unreceivable order
+     ↓ rejects 'fractional stock quantity' without persisting an empty/unreceivable order
+     ↓ rejects a part ID from another garage without persisting the order
+     ↓ creates through the saved-order API, then transitions and receives V2 lines
+     ↓ RECEPTIONIST may request supplier availability but receives no fabricated quote
+     ↓ RECEPTIONIST cannot create or transition stock orders
+     ↓ MECHANIC cannot create or transition stock orders
+     ↓ undefined cannot create or transition stock orders
+     ↓ OWNER passes the write permission but cannot get a simulated order
+     ↓ MANAGER passes the write permission but cannot get a simulated order
+ ❯ src/integration/copilot-conversation.test.ts (9 tests | 9 skipped) 3369ms
+     ↓ scopes a fresh dossier lookup and returns no financial/private notes
+     ↓ rereads changed data instead of trusting conversation contents
+     ↓ does not turn sourced help into a verified financial answer or a write
+     ↓ rejects forged tenant/history and malformed JSON
+     ↓ reports readiness after a garage-scoped database probe without calling a model
+     ↓ rejects oversized streamed bodies
+     ↓ executes two fresh authorized reads and leaves the database unchanged
+     ↓ does not report operational for a garage absent from the actual database
+     ↓ asks for a supported period instead of reporting today as last year
+ ❯ src/app/api/clients/__tests__/portal-access-publication.test.ts (14 tests | 14 skipped) 3368ms
+     ↓ ouvrir un accès le publie, avec le haché — jamais le mot de passe en clair
+     ↓ l’identité vient de la LICENCE, jamais du corps
+     ↓ publié : l’accès est annoncé prêt, et le client est prévenu
+     ↓ la réponse dit que l’accès n’est PAS en ligne, et pourquoi
+     ↓ aucun e-mail n’est envoyé : il porterait un lien vers un refus
+     ↓ sans licence garage : dit LICENCE_ABSENTE, sans appel réseau
+     ↓ adresse déjà prise en ligne : le motif est rendu tel quel
+     ↓ l’accès reste créé LOCALEMENT : c’est lui qu’une republication renverra
+     ↓ une réinitialisation republie ET coupe les sessions en ligne
+     ↓ une réinitialisation rattrape une ouverture faite hors ligne
+     ↓ désactiver coupe aussi les sessions en ligne
+     ↓ une désactivation qui n’atteint pas le service ne coupe RIEN, et le dit
+     ↓ réactiver ne coupe pas de sessions
+     ↓ l’e-mail porte ?garage=<slug>
+ ❯ src/app/api/parts/__tests__/parts-pagination.test.ts (4 tests | 4 skipped) 3370ms
+     ↓ ?limit=10 → au plus 10 résultats
+     ↓ ?page=2&limit=10 → page suivante disjointe
+     ↓ sans limite → cap de sécurité appliqué (≤ 5000), tout le petit catalogue rendu
+     ↓ limite excessive bornée au maximum (5000)
+ ❯ src/app/api/sync/__tests__/portal-account-publication.test.ts (9 tests | 9 skipped) 3383ms
+     ↓ une licence refusée n’écrit rien
+     ↓ le garage du compte créé est celui de la LICENCE
+     ↓ la fiche client n’est pas publiée : aucun lien pendant
+     ↓ un AUTRE compte du même garage avec la même adresse : refus 409
+     ↓ la même adresse dans un AUTRE garage ne gêne pas
+     ↓ deux publications successives ne créent qu’un compte
+     ↓ le verrouillage par échecs de connexion est levé à la republication
+     ↓ `revoquerAppareils` révoque les appareils encore actifs
+     ↓ sans le drapeau, les sessions restent ouvertes
+ ❯ src/integration/portail-mot-de-passe-provisoire.test.ts (6 tests | 6 skipped) 3356ms
+     ↓ la connexion réussit, mais annonce que le mot de passe doit être défini
+     ↓ toute route du portail refuse avec un code exploitable par l'interface
+     ↓ définir son mot de passe rouvre tout le portail
+     ↓ le nouveau mot de passe est celui qui sert désormais à se connecter
+     ↓ le mot de passe actuel reste exigé, même provisoire
+     ↓ reprendre le mot de passe provisoire ne définit rien
+ ❯ src/app/api/sync/__tests__/appointments-sync.test.ts (6 tests | 6 skipped) 3394ms
+     ↓ les demandes d’un autre garage ne sortent pas
+     ↓ une licence refusée ne lit rien
+     ↓ confirmer une demande en attente aboutit
+     ↓ une transition impossible est REFUSÉE
+     ↓ la demande d’un autre garage est INTROUVABLE, pas refusée
+     ↓ un mode inconnu est refusé
+ ❯ src/integration/portal-rbac-p3.test.ts (15 tests | 15 skipped) 3363ms
+     ↓ RECEPTIONIST : ne reçoit PAS la liste des comptes
+     ↓ MECHANIC : ne reçoit PAS la liste des comptes
+     ↓ undefined : ne reçoit PAS la liste des comptes
+     ↓ OWNER : conserve l’annuaire
+     ↓ MANAGER : conserve l’annuaire
+     ↓ le mot de passe SMTP n’est jamais exposé, quel que soit le rôle
+     ↓ deux inscriptions sur la même adresse rendent la MÊME réponse
+     ↓ aucun second compte n’est créé, et le titulaire légitime est prévenu
+     ↓ le mot de passe existant n’est jamais réécrit par une seconde tentative
+     ↓ les redirections conservent le garage
+     ↓ un compte non rattaché est signalé, au lieu d’un « Aucune facture » trompeur
+     ↓ la règle existe en un seul endroit et couvre protocole et domaine
+     ↓ le téléchargeur l’applique à CHAQUE saut
+     ↓ il suit `settings:manage`, pas la permission d’accès mécaniciens
+     ↓ la route, elle, exigeait déjà settings:manage — les deux concordent enfin
+ ❯ src/integration/portal-password-enforcement.test.ts (10 tests | 10 skipped) 3387ms
+     ↓ une route protégée est refusée avec un code exploitable
+     ↓ la route de CHANGEMENT reste accessible — sinon la contrainte serait indépassable
+     ↓ une fois le mot de passe défini, les données sont servies
+     ↓ exige le mot de passe ACTUEL, même quand il est temporaire
+     ↓ refuse de réutiliser le mot de passe temporaire
+     ↓ refuse un mot de passe trop court ou absurde
+     ↓ révoque les AUTRES sessions mais conserve la sienne
+     ↓ la session en cours cesse immédiatement de valoir
+     ↓ même la route de changement de mot de passe est fermée
+     ↓ réactiver ne suffit pas : la session révoquée reste morte
+ ❯ src/integration/portal-access-lifecycle.test.ts (15 tests | 15 skipped) 3340ms
+     ↓ crée l'accès et rend le mot de passe temporaire UNE fois
+     ↓ la relecture ne redonne JAMAIS le mot de passe
+     ↓ refuse un client sans adresse e-mail, avec une consigne claire
+     ↓ refuse d'ouvrir deux fois le même accès
+     ↓ deux ouvertures CONCURRENTES ne créent qu'un seul accès
+     ↓ remet un mot de passe temporaire DIFFÉRENT et coupe les sessions
+     ↓ débloque un compte verrouillé par des échecs de connexion
+     ↓ refuse pour un client sans accès
+     ↓ désactiver coupe l'accès ET les sessions ouvertes
+     ↓ le CLIENT MÉTIER et son historique survivent à la désactivation
+     ↓ réactiver rend l'accès sans ressusciter les anciennes sessions
+     ↓ `actif` doit être un booléen
+     ↓ le garage A ne peut pas ouvrir d'accès pour un client du garage B
+     ↓ le garage A ne peut ni lire, ni réinitialiser, ni désactiver l'accès d'un client du garage B
+     ↓ un rôle sans gestion ne peut rien modifier
+ ❯ src/integration/mechanic-scope-realtime.test.ts (14 tests | 14 skipped) 3375ms
+     ↓ le planning ne contient que les interventions attribuées
+     ↓ l’intervention d’un COLLÈGUE du même garage est inaccessible (404)
+     ↓ l’intervention d’un AUTRE GARAGE est inaccessible (404)
+     ↓ sans session → 401 et aucune donnée
+     ↓ ?mechanicId= d’un collègue est IGNORÉ
+     ↓ ?garageId= d’un autre garage est IGNORÉ
+     ↓ un mechanicId injecté dans le CORPS n’ouvre aucun accès
+     ↓ une note écrite sur SON intervention porte l’identité de la SESSION
+     ↓ une intervention créée puis affectée apparaît au rafraîchissement suivant
+     ↓ RÉAFFECTATION A → B : A perd l’accès, B le gagne, sans reconnexion
+     ↓ après réaffectation, l’ancien mécanicien ne peut plus écrire
+     ↓ le planning n’expose ni prix, ni coût, ni marge, ni identifiant de mécanicien
+     ↓ le détail d’intervention n’expose aucun montant
+     ↓ les réponses mécanicien sont marquées NON CACHABLES (aucune donnée figée)
+ ❯ src/integration/portail-instantane-borne.test.ts (5 tests | 5 skipped) 3379ms
+     ↓ une photo de mécanicien LOURDE n’envoie plus un instantané refusable
+     ↓ vingt-quatre photos moyennes tiennent encore dans le plafond
+     ↓ des photos LÉGÈRES passent toutes — la borne ne bride pas le cas normal
+     ↓ aucun chemin de fichier du poste ne part vers le cloud
+     ↓ l’intervention d’un AUTRE garage reste inaccessible
+ ❯ src/integration/mechanic-avatar-archive.test.ts (19 tests | 19 skipped) 3404ms
+     ↓ enregistre l'image, écrit le fichier et rend une URL servable
+     ↓ la photo est réellement servie par la route authentifiée
+     ↓ refuse un contenu qui n'est pas une image, sans rien écrire
+     ↓ remplacer une photo change l'URL et retire l'ancien fichier
+     ↓ supprimer la photo revient au repli et nettoie le disque
+     ↓ supprimer une photo absente est sans effet, pas une erreur
+     ↓ le garage A ne peut pas poser de photo sur un mécanicien du garage B
+     ↓ le garage A ne peut pas supprimer la photo d'un mécanicien du garage B
+     ↓ le garage A ne peut pas LIRE la photo d'un mécanicien du garage B
+     ↓ le garage A ne voit pas le mécanicien du garage B dans sa liste
+     ↓ la traversée de chemin est refusée
+     ↓ un rôle sans gestion ne peut pas modifier une photo
+     ↓ la suppression d'un mécanicien AYANT un historique est refusée, avec la marche à suivre
+     ↓ archiver le retire du planning SANS toucher à son historique
+     ↓ réactiver le fait réapparaître, sans le marquer absent
+     ↓ un mécanicien SANS historique peut être réellement supprimé
+     ↓ un rôle sans gestion ne peut pas archiver
+     ↓ `archived` doit être un booléen — pas une date choisie par le client
+     ↓ le garage A ne peut pas archiver un mécanicien du garage B
+ ❯ src/integration/document-integrity-v15.test.ts (3 tests | 3 skipped) 3377ms
+     ↓ 1re signature → 200 ; 2e signature → 409 ; sceau d’origine préservé
+     ↓ signature concurrente : une seule scelle (updateMany conditionnel atomique)
+     ↓ facture « sent » : édition financière refusée (409), lignes inchangées
+ ❯ src/integration/purchase-order-receive-returned.test.ts (7 tests | 7 skipped) 3368ms
+     ↓ incrémente le stock exactement une fois
+     ↓ un second appel sur le MÊME bon n'incrémente pas une seconde fois
+     ↓ un bon RETOURNÉ ne peut pas être réceptionné — le défaut corrigé
+     ↓ un bon annulé reste refusé
+     ↓ deux réceptions CONCURRENTES du même bon n'incrémentent qu'une fois
+     ↓ un bon d'un AUTRE garage est introuvable
+     ↓ le panneau Fournisseurs appelle réellement la route de réception
+ ❯ src/integration/business-workflow-e2e.test.ts (15 tests | 15 skipped) 3364ms
+     ↓ 1. équipe : création du mécanicien via l’API
+     ↓ 2. client + véhicule (rattachement contrôlé)
+     ↓ 2b. ÉCHEC contrôlé : véhicule rattaché au client d’un AUTRE garage → refus
+     ↓ 3. rendez-vous persisté puis intervention créée via l’API
+     ↓ 4. stock : pièce créée, consommée sur l’intervention, décrément vérifié en base
+     ↓ 4b. ÉCHEC contrôlé : consommation au-delà du stock → 409, stock intact
+     ↓ 5. devis numéroté DEV-…-001, lignes MO + pièce, montants exacts en base
+     ↓ 5b. ÉCHEC contrôlé : devis pointant le client d’un autre garage → refus
+     ↓ 6. acceptation du devis puis conversion en facture FAC-…-001
+     ↓ 6b. ÉCHEC contrôlé : double conversion du même devis → refus, pas de 2e facture
+     ↓ 7. cycle de paiement : draft → sent → paid, persisté
+     ↓ 8. IMMUABILITÉ : retour en brouillon → 409 ; suppression → 409 ; base inchangée
+     ↓ 9. numérotation contiguë : 2e devis converti → FAC-…-002
+     ↓ 10. portail client : lien tokenisé du job → 200 ; jeton falsifié → refus
+     ↓ 11. bilan de persistance : toutes les entités du parcours existent en base, scopées au garage
+ ❯ src/integration/portail-2fa-cycle.test.ts (20 tests | 20 skipped) 3404ms
+     ↓ la colonne ne contient PAS le secret en clair
+     ↓ le secret EN ATTENTE est protégé lui aussi
+     ↓ un enrôlement abandonné ne protège PAS faussement le compte
+     ↓ rend de quoi configurer une application d'authentification
+     ↓ un code faux n'active rien
+     ↓ activer sans avoir commencé l'enrôlement est refusé
+     ↓ le secret n'est plus jamais rendu après activation
+     ↓ le mot de passe seul ne crée AUCUNE session
+     ↓ le bon code ouvre la session
+     ↓ un mauvais code, un challenge inventé ou absent sont refusés
+     ↓ un code d'une fenêtre trop ancienne est refusé
+     ↓ dix codes sont remis une seule fois, et stockés hachés
+     ↓ un code de secours ouvre la session, et ne resert JAMAIS
+     ↓ exige le mot de passe — une session ne suffit pas
+     ↓ efface le secret ET les codes de secours
+     ↓ un secret remis EN CLAIR dans la colonne ne valide plus rien
+     ↓ un chiffré ALTÉRÉ ne valide rien non plus
+     ↓ mais le compte n'est PAS enfermé : le code de secours fonctionne encore
+     ↓ un enrôlement EN COURS au format clair ne s'active pas
+     ↓ le secret d'un compte ne valide pas la connexion d'un autre
+ ❯ src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts (10 tests | 10 skipped) 3378ms
+     ↓ une demande inconnue est créée localement
+     ↓ aucun lien pendant vers une fiche client non publiée
+     ↓ rejouer le même passage ne crée pas de doublon
+     ↓ le curseur repart de ce que le poste détient RÉELLEMENT
+     ↓ sans licence garage : aucun appel réseau
+     ↓ une confirmation locale n’est pas effacée par un rapatriement
+     ↓ mais le texte de la demande, lui, est mis à jour
+     ↓ une demande encore « requested » localement suit le cloud
+     ↓ l’ACTION est transmise, pas le statut
+     ↓ hors ligne : la remontée échoue et le DIT
+ ❯ src/integration/loaner-availability.test.ts (41 tests | 41 skipped) 3357ms
+     ↓ refuse une seconde réservation qui chevauche la première
+     ↓ refuse une période englobante
+     ↓ refuse une période incluse
+     ↓ refuse une période débordant à gauche
+     ↓ refuse une période débordant à droite
+     ↓ accepte une période strictement ADJACENTE (aucun chevauchement)
+     ↓ une réservation ANNULÉE ou RENDUE libère le véhicule
+     ↓ un AUTRE véhicule reste réservable sur la même période
+     ↓ deux réservations CONCURRENTES du même véhicule : une seule aboutit
+     ↓ refuse une période inversée
+     ↓ refuse une date illisible plutôt que de persister « Invalid Date »
+     ↓ accepte le prêt d’une journée (fin = début) — cas d’usage réel
+     ↓ mais cette journée OCCUPE bien le véhicule (pas d’intervalle vide)
+     ↓ le lendemain reste libre après un prêt d’une journée
+     ↓ affiche une réservation qui englobe la semaine consultée
+     ↓ affiche une réservation qui commence le DERNIER jour de la fenêtre
+     ↓ n’affiche pas une réservation hors fenêtre
+     ↓ refuse tarif journalier non numérique au lieu de l’enregistrer à 0 €
+     ↓ refuse caution non numérique au lieu de l’enregistrer à 0 €
+     ↓ refuse tarif négatif au lieu de l’enregistrer à 0 €
+     ↓ enregistre exactement un montant valide
+     ↓ accepte l’absence de montant (champs facultatifs)
+     ↓ refuse un statut hors énumération au lieu de l’écrire verbatim
+     ↓ accepte le statut légitime reserved
+     ↓ accepte le statut légitime active
+     ↓ accepte le statut légitime returned
+     ↓ accepte le statut légitime cancelled
+     ↓ refuse de déplacer une réservation sur une période déjà occupée (§64 sur le chemin PATCH)
+     ↓ ranimer une réservation annulée qui recouvre une autre est refusé
+     ↓ déplacer une réservation sur une période LIBRE reste possible
+     ↓ ne se déclare pas en conflit avec elle-même (mise à jour sans changement de période)
+     ↓ refuse période inversée
+     ↓ refuse date illisible
+     ↓ refuse tarif non numérique
+     ↓ refuse caution négative
+     ↓ refuse kilométrage non numérique
+     ↓ borne les montants au domaine des colonnes Int (pas de dépassement 32 bits)
+     ↓ enregistre un statut « returned » avec son horodatage
+     ↓ refuse de supprimer un véhicule qui a un historique, et le dit
+     ↓ le contournement par statut inventé est fermé de bout en bout
+     ↓ un véhicule sans aucun prêt reste supprimable
+ ❯ src/integration/invoice-authz.test.ts (7 tests | 7 skipped) 3388ms
+     ↓ un RECEPTIONIST ne peut pas créer de facture
+     ↓ un RECEPTIONIST ne peut ni modifier ni supprimer une facture
+     ↓ un RECEPTIONIST ne peut pas contourner en convertissant un devis
+     ↓ un MANAGER conserve tous ses droits de facturation
+     ↓ un RECEPTIONIST lit la facture mais SANS le coût d’achat
+     ↓ un MANAGER (financial:read) voit bien le coût d’achat
+     ↓ un OWNER voit également le coût d’achat
+ ❯ src/app/api/sync/__tests__/einvoicing-tunnel.test.ts (13 tests | 13 skipped) 3384ms
+     ↓ une licence refusée ne déclenche AUCUN travail
+     ↓ la facture d’un AUTRE garage est introuvable, pas refusée
+     ↓ la lecture des transmissions est bornée au garage de la licence
+     ↓ le poste ne choisit pas son environnement
+     ↓ émission désactivée : refus, sans appel à la plateforme
+     ↓ une facture en BROUILLON ne part pas
+     ↓ une facture ANNULÉE ne part pas
+     ↓ connexions désactivées : la DESTRUCTION des identifiants est bloquée
+     ↓ fonctionnalité globalement coupée : tout est refusé
+     ↓ une action inconnue est refusée avant tout accès base
+     ↓ les lignes arrivent avec les entiers exacts, pas des flottants
+     ↓ l’identité transmise est celle de la licence
+     ↓ l’auteur reste nul : inventer une correspondance ferait mentir l’audit
+ ❯ src/integration/quote-acceptance-proof.test.ts (10 tests | 10 skipped) 3364ms
+     ↓ accepter enregistre une signature liée au contenu, datée et circonstanciée
+     ↓ refuser produit également une trace opposable
+     ↓ le statut et la preuve sont posés dans la MÊME transaction
+     ↓ la lecture distingue un accord CLIENT d’un statut posé par le garage
+     ↓ le garage ne peut PAS ramener un devis accepté en « envoyé »
+     ↓ transformer un accord en REFUS invalide la preuve d’accord
+     ↓ rouvrir un devis REFUSÉ invalide la preuve de refus
+     ↓ convertir un devis accepté CONSERVE la preuve (suite naturelle de l’accord)
+     ↓ un contenu modifié après accord se voit : la preuve ne correspond plus
+     ↓ une nouvelle réponse après réouverture crée une preuve neuve
+ ❯ src/integration/statistiques-au-centime.test.ts (9 tests | 9 skipped) 3386ms
+     ↓ sept journées de 1 h 30 font 682,50 €, pas 686 €
+     ↓ chaque journée porte le montant EXACT, pas un euro rond
+     ↓ une marge pièces de moins d’un euro ne disparaît plus
+     ↓ aucune intervention : tout reste à zéro, sans NaN
+     ↓ une facture payée n’efface plus l’activité de l’atelier
+     ↓ une grosse facture l’emporte sur un planning vide
+     ↓ trois graphies d’un même client rattaché ne font qu’une entrée
+     ↓ sans plaque, le repli sur le nom reste — et tolère la casse
+     ↓ deux clients DIFFÉRENTS restent deux entrées
+ ❯ src/integration/quotes-generate.test.ts (7 tests | 7 skipped) 3377ms
+     ↓ previews without writing anything when confirm is absent
+     ↓ persists a draft quote with labour + part lines when confirmed
+     ↓ la ligne de pièce PORTE son rattachement au stock (GF-040)
+     ↓ une pièce hors catalogue reste sans rattachement
+     ↓ drops a clientId that belongs to another garage (tenant isolation)
+     ↓ does not double-count a duplicated repair type
+     ↓ rejects an unknown repair type with 400
+ ❯ src/integration/pwa-fenetre-et-photos.test.ts (13 tests | 13 skipped) 3370ms
+     ↓ une intervention DANS la fenêtre s’affiche
+     ↓ une intervention trop ANCIENNE n’est plus servie
+     ↓ une intervention trop LOINTAINE n’est plus servie
+     ↓ les bornes de la fenêtre elles-mêmes passent
+     ↓ une DATE demandée hors fenêtre est refusée explicitement
+     ↓ la réponse annonce toujours la fenêtre servie
+     ↓ ouvrir une fiche hors fenêtre est refusé aussi
+     ↓ l’intervention d’un AUTRE mécanicien reste invisible
+     ↓ components/JobPhotos.tsx passe par la réduction partagée
+     ↓ components/InspectionModal.tsx passe par la réduction partagée
+     ↓ app/mechanic/jobs/[id]/page.tsx passe par la réduction partagée
+     ↓ le module partagé fixe des bornes explicites
+     ↓ le poids DÉCODÉ d’une data-URL est mesuré correctement
+ ❯ src/integration/intervention-rattache-client-vehicule.test.ts (8 tests | 8 skipped) 3371ms
+     ↓ crée le client, le véhicule, et RATTACHE l’intervention
+     ↓ la MÊME plaque écrite autrement ne crée pas un second véhicule
+     ↓ le même client écrit avec une autre casse ou un accent n’est pas dupliqué
+     ↓ un véhicule connu ne CHANGE PAS de propriétaire sur une saisie différente
+     ↓ sans plaque, le client est créé mais aucun véhicule inventé
+     ↓ un `vehicleId` explicite est respecté tel quel
+     ↓ compléter la plaque APRÈS coup rattache aussi
+     ↓ le rattachement reste cloisonné au garage
+ ❯ src/integration/stock-tracabilite-et-suppression.test.ts (10 tests | 10 skipped) 3383ms
+     ↓ le décrément est journalisé, et le journal reconstitue le stock
+     ↓ retirer la pièce journalise la restitution — mouvements symétriques
+     ↓ un stock INSUFFISANT n’écrit aucun mouvement
+     ↓ SUPPRIMER l’intervention rend les pièces au stock, et le dit
+     ↓ plusieurs pièces sur la même intervention sont TOUTES rendues
+     ↓ une intervention d’un AUTRE garage ne rend rien chez nous
+     ↓ un brouillon reste supprimable — le correctif ne bloque rien
+     ↓ une facture émise AVANT l’appel est refusée (contrôle existant)
+     ↓ émise PENDANT la transaction : refus, et rien n’est perdu
+     ↓ le devis source n’est PAS déconverti quand la suppression échoue
+ ❯ src/integration/reglages-logo-et-cout-achat.test.ts (14 tests | 14 skipped) 3376ms
+     ↓ `website: ""` n’est pas une adresse invalide, c’est l’absence d’adresse
+     ↓ une adresse web réellement saisie reste vérifiée
+     ↓ 8 h 30 → 18 h 30 est accepté et persisté
+     ↓ une minute hors demi-heure est refusée
+     ↓ une fermeture AVANT l’ouverture est refusée, minutes comprises
+     ↓ une amplitude de moins d’une heure est refusée
+     ↓ un atelier ouvert 24 h/24 reste possible
+     ↓ importer un logo le range dans un FICHIER
+     ↓ un enregistrement ORDINAIRE ne touche pas au logo
+     ↓ remplacer le logo retire l’ancien fichier
+     ↓ la suppression EXPLICITE (les deux champs vides) efface bien tout
+     ↓ OWNER (financial:read) voit le coût d’achat
+     ↓ RECEPTIONIST ne le voit NI sur la ligne NI sur la pièce imbriquée
+     ↓ MANAGER (financial:read) le voit
+(node:31015) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/app/api/internal/__tests__/backup-coherent.test.ts (9 tests | 9 skipped) 3356ms
+     ↓ le fichier écrit passe le contrôle d’intégrité et contient les données
+     ↓ reste cohérente quand des écritures ont lieu PENDANT la sauvegarde
+     ↓ refuse une remontée de dossier
+     ↓ refuse un chemin absolu ailleurs
+     ↓ refuse une extension inattendue
+     ↓ n’écrase jamais une sauvegarde existante
+     ↓ sans clé interne : 401, et rien n’est écrit
+     ↓ avec une mauvaise clé : 401
+     ↓ une requête relayée par un proxy est refusée
+ ❯ src/integration/stock-suppression-et-entrees.test.ts (8 tests | 8 skipped) 3462ms
+     ↓ une pièce jamais utilisée reste librement supprimable
+     ↓ une pièce POSÉE sur une intervention : refus métier, pas une 500
+     ↓ une ligne de FACTURE est déliée, jamais laissée orpheline
+     ↓ une ligne de DEVIS est déliée elle aussi
+     ↓ une pièce AVEC HISTORIQUE de mouvements reste protégée
+     ↓ une pièce d’un AUTRE garage reste introuvable
+     ↓ la réception d’un bon de commande écrit son mouvement
+     ↓ une réception REJOUÉE n’écrit pas un second mouvement
+ ❯ src/integration/invoice-stock-sync.test.ts (29 tests | 29 skipped) 3374ms
+     ↓ stock 10, facture de 2 → stock 8, un mouvement SALE de −2
+     ↓ 2 → 3 retire 1 de plus (stock 8 → 7), pas 3 à nouveau
+     ↓ 3 → 1 restitue 2 (stock 7 → 9)
+     ↓ suppression de la ligne restitue tout
+     ↓ l’API REFUSE de modifier les lignes d’une facture émise (règle légale préservée)
+     ↓ facture annulée → stock revenu à 10, mouvement CANCEL de +2
+     ↓ annuler DEUX fois ne restitue pas deux fois
+     ↓ « cancelled » est TERMINAL : impossible de réactiver pour re-décrémenter
+     ↓ stock 1, deux factures de 1 validées simultanément → une seule réussit
+     ↓ stock insuffisant dès la validation → 409 et AUCUN mouvement (rollback total)
+     ↓ main-d’œuvre seule : aucun mouvement
+     ↓ ligne libre (pièce commandée spécialement) : aucun mouvement
+     ↓ facture mixte : seule la ligne de stock bouge
+     ↓ une ligne marquée main-d’œuvre ne peut PAS engager de stock même avec un partId
+     ↓ un devis n’engage jamais le stock
+     ↓ devis → facture → validation : le stock ne bouge QU’UNE fois
+     ↓ valider une facture du garage A ne touche pas la pièce homonyme du garage B
+     ↓ IDOR — référencer la pièce d’un AUTRE garage est refusé (400), stock intact
+     ↓ IDOR — la facture d’un autre garage est invisible (404)
+     ↓ deux « Valider » simultanés ne décrémentent qu’une fois
+     ↓ valider puis passer « payée » ne re-décrémente pas
+     ↓ une facture BROUILLON supprimée ne libère aucun stock (rien n’était engagé)
+     ↓ une quantité FRACTIONNAIRE sur une ligne de stock est refusée à la validation
+     ↓ deux lignes de la MÊME pièce sont cumulées (et peuvent dépasser le stock)
+     ↓ « F » propose les pièces du garage courant, « Fil » affine
+     ↓ la suggestion porte tout ce qu’il faut : id, référence, stock, prix
+     ↓ recherche insensible à la casse et aux accents
+     ↓ AUCUNE pièce d’un autre garage n’est proposée
+     ↓ requête vide → aucune suggestion (on ne déverse pas le catalogue)
+ ❯ src/lib/backup/__tests__/restore-roundtrip.test.ts (6 tests | 6 skipped) 3349ms
+     ↓ crée une sauvegarde chiffrée vérifiable (checksum)
+     ↓ restaure EXACTEMENT après corruption des données vivantes
+     ↓ la restauration ne touche PAS le garage B (scopée)
+     ↓ refuse une restauration sans confirmation exacte
+     ↓ refuse de restaurer la sauvegarde de A sur le garage B (inter-garage)
+     ↓ détecte une sauvegarde altérée (intégrité)
+ ❯ src/integration/scenario-maitre.test.ts (8 tests | 8 skipped) 3360ms
+     ↓ 1. planifier une intervention CRÉE le client et le véhicule
+     ↓ 2. poser une pièce décrémente le stock ET laisse un mouvement
+     ↓ 3. établir un devis rattaché au client
+     ↓ 4. convertir le devis produit une facture cohérente
+     ↓ 5. émettre puis encaisser la facture n’entame PAS une seconde fois le stock
+     ↓ 6. les statistiques reflètent la journée, au centime
+     ↓ 7. supprimer l’intervention REND les pièces au stock
+     ↓ 8. rien de tout cela n’a franchi la frontière du garage voisin
+ ❯ src/integration/part-inventory-adjustment.test.ts (13 tests | 13 skipped) 3342ms
+     ↓ refuse une correction qui n’annonce pas la quantité observée
+     ↓ applique la correction et écrit un mouvement ADJUST signé
+     ↓ une correction à la BAISSE écrit un delta négatif
+     ↓ LE DÉFAUT : une vente concurrente n’est plus écrasée
+     ↓ deux corrections CONCURRENTES : une seule aboutit
+     ↓ une correction sans changement réel n’invente pas de mouvement
+     ↓ les champs descriptifs restent modifiables sans témoin de quantité
+     ↓ la correction accompagnée d’autres champs les applique dans la MÊME transaction
+     ↓ rien n’est appliqué quand le conflit survient, pas même les champs descriptifs
+     ↓ RECEPTIONIST : correction refusée (stock:manage)
+     ↓ MECHANIC : correction refusée (stock:manage)
+     ↓ undefined : correction refusée (stock:manage)
+     ↓ un autre garage ne corrige pas mes pièces
+ ❯ src/lib/sync/__tests__/job-tombstones.test.ts (6 tests | 6 skipped) 3378ms
+     ↓ supprimer une intervention écrit une pierre tombale
+     ↓ la trace part avec la remontée, INDÉPENDAMMENT de la fenêtre
+     ↓ la trace n’est effacée QUE sur accusé de réception
+     ↓ une remontée en échec réseau ne perd pas la trace
+     ↓ n’accuse que ce que le cloud a réellement listé
+     ↓ la suppression et sa trace sont atomiques
+ ❯ src/integration/status-mass-assignment-v15.test.ts (3 tests | 3 skipped) 3360ms
+     ↓ réception unique puis rétrogradation refusée → stock non ré-incrémenté
+     ↓ « received » n’est pas atteignable via le PATCH générique (réception = /receive)
+     ↓ impossible de dé-réclamer via PATCH puis de supprimer une garantie réclamée
+ ❯ src/integration/copilot.test.ts (7 tests | 7 skipped) 3334ms
+     ↓ answers revenue_today from garage-scoped, date/status-filtered data
+     ↓ scopes revenue strictly to the session garage
+     ↓ answers low_stock with the reorder plan (deterministic, zero consumption)
+     ↓ gates an action intent behind confirmation and writes NOTHING
+     ↓ returns unknown for an unrecognised query (no phrasing, no write)
+     ↓ rejects a fabricated figure from a provider and keeps the deterministic message
+     ↓ passes a grounded provider rephrase through unchanged
+ ❯ src/integration/copilot-financial-authz-v15.test.ts (6 tests | 6 skipped) 3370ms
+     ↓ RECEPTIONIST → 403 (pas de financial:read)
+     ↓ MECHANIC → 403
+     ↓ OWNER → 200 (accès financier légitime)
+     ↓ intention FINANCIÈRE (marge) par RECEPTIONIST → 403
+     ↓ intention OPÉRATIONNELLE (mécaniciens disponibles) par RECEPTIONIST → autorisée
+     ↓ intention FINANCIÈRE (marge) par OWNER → autorisée
+ ❯ src/app/api/sync/__tests__/tickets-sync.test.ts (9 tests | 9 skipped) 3357ms
+     ↓ la correspondance d’un autre garage ne sort pas
+     ↓ le haché de mot de passe de l’auteur ne redescend JAMAIS
+     ↓ une licence refusée ne lit rien
+     ↓ une réponse est enregistrée et fait avancer la conversation
+     ↓ répondre dans une conversation CLÔTURÉE est refusé
+     ↓ un message vide est refusé
+     ↓ un message démesuré est refusé
+     ↓ le ticket d’un autre garage est INTROUVABLE
+     ↓ un mode inconnu est refusé
+ ❯ src/integration/robustness-v15.test.ts (4 tests | 4 skipped) 3425ms
+     ↓ > 500 opérations → 400, rien inséré
+     ↓ lot raisonnable → 201
+     ↓ confirm + cancel concurrents : aucune mise à jour perdue, état final cohérent
+     ↓ même nom (casse différente) → 409 ; nom distinct → 201
+ ❯ src/integration/reglages-appliques.test.ts (5 tests | 5 skipped) 3420ms
+     ↓ ajouter une photo la range dans un fichier
+     ↓ retirer la photo efface le CHEMIN, pas seulement le contenu inline
+     ↓ remplacer une photo ne laisse pas l’ancienne sur le disque
+     ↓ la modale devis/facture reprend le taux de TVA du garage
+     ↓ la ligne de main-d’œuvre reprend le tarif horaire du garage
+ ❯ src/integration/supplier-linkage.test.ts (6 tests | 6 skipped) 3425ms
+     ↓ persiste supplierName et supplierRef
+     ↓ une pièce sans fournisseur reste valide (le champ est facultatif)
+     ↓ les espaces de bordure sont retirés, une saisie vide vaut « pas de fournisseur »
+     ↓ un nom de fournisseur démesuré est refusé, pas tronqué en silence
+     ↓ change le fournisseur d'une pièce existante
+     ↓ returns an explicit unavailable response even when supplier names/SKUs exist
+ ❯ src/integration/fec-injection-v15.test.ts (3 tests | 3 skipped) 3551ms
+     ↓ aucune ligne ne dépasse 18 colonnes (le « | » du nom client n’injecte pas de champ)
+     ↓ le libellé démarrant par « = » est neutralisé (préfixe apostrophe, pas de formule)
+     ↓ une facture ANNULÉE ne produit aucune écriture, une facture envoyée si
+ ❯ src/integration/stock-money-p3.test.ts (11 tests | 11 skipped) 3448ms
+     ↓ refuse un prix texte
+     ↓ refuse un prix vide
+     ↓ refuse un prix négatif
+     ↓ refuse un prix notation exponentielle
+     ↓ refuse une durée non numérique
+     ↓ un seul prix fautif annule TOUT l’import (rien à moitié importé)
+     ↓ enregistre exactement un barème valide
+     ↓ refuse 2,4 unités au lieu d’enregistrer 2 en silence
+     ↓ accepte une quantité entière et incrémente exactement
+     ↓ le motif fautif a disparu du composant
+     ↓ une quantité invalide interrompt l’enregistrement avec un message
+stdout | src/lib/__tests__/tenant-isolation.test.ts
+prisma:error 
+Invalid `prisma.garage.create()` invocation in
+/home/user/GarageFlowsV2/src/lib/__tests__/tenant-isolation.test.ts:22:33
+
+  19 const ids = { garageA: '', garageB: '', mechA: '', mechB: '', jobA: '', jobB: '', clientB: '' }
+  20 
+  21 async function seedGarage(slug: string) {
+→ 22   const g = await prisma.garage.create(
+Error validating datasource `db`: the URL must start with the protocol `prisma://`
+
+ ❯ src/lib/__tests__/tenant-isolation.test.ts (7 tests | 7 skipped) 287ms
+     ↓ relationInGarage accepte une FK du même garage
+     ↓ relationInGarage REFUSE une FK appartenant à un autre garage
+     ↓ relationInGarage(null) ne bloque pas (rien à vérifier)
+     ↓ lecture scopée : A ne voit pas le job de B
+     ↓ écriture atomique : A ne peut pas modifier le job de B (updateMany count=0)
+     ↓ suppression atomique : A ne peut pas supprimer le job de B (deleteMany count=0)
+     ↓ le garage propriétaire, lui, peut modifier son objet
+ ❯ src/lib/__tests__/keygen-activation-roundtrip.test.ts (10 tests | 10 skipped) 527ms
+   ↓ reproducible script exercises actual checked Python signing and actual TypeScript verification (19 positive/negative steps)
+   ↓ every real GUI issuance branch uses the checked loader before signing/persistence
+   ↓ activation logs signature stage with correlation but no token/payload in production
+   ↓ activation logs signature stage with correlation but no token/payload in development
+   ↓ production keeps FORMAT_INVALID internal rather than exposing a verification oracle
+   ↓ production keeps HEADER_UNSUPPORTED internal rather than exposing a verification oracle
+   ↓ production keeps SIGNATURE_INVALID internal rather than exposing a verification oracle
+   ↓ development distinguishes unrecognized format without returning the input
+   ↓ a real checked Python token crosses the actual activation crypto barrier and reaches DB, without pretending DB activation succeeded
+   ↓ unusable trust anchor stays a technical configuration failure, not an invalid license
+ ✓ src/lib/__tests__/input-contrast.test.ts (23 tests) 2040ms
+ ✓ src/app/api/portal/auth/__tests__/register-verification-email.test.ts (5 tests) 590ms
+
+  ✗ Domaine « cdn.exemple.test » absent de la liste blanche des postes.
+    Autorisés : api.garageflows.fr, garageflows.fr, app.garageflows.fr
+    (voir ALLOWED_DOWNLOAD_HOSTS dans electron/update-verify.js)
+
+
+  ✗ --download-url doit être en HTTPS.
+
+
+  ✗ Version non SemVer : derniere
+
+
+  ✗ Clé privée de signature absente.
+    Renseignez GF_UPDATE_SIGNING_KEY (PEM PKCS#8) ou GF_UPDATE_SIGNING_KEY_FILE.
+    Pour créer une paire : node scripts/sign-release-manifest.mjs --gen-key --key-id <id>
+
+ ✓ src/lib/__tests__/release-signing-chain.test.ts (20 tests) 803ms
+ ✓ src/lib/sync/__tests__/cloud-response-contract.test.ts (14 tests) 550ms
+ ✓ src/integration/publication-mise-a-jour.test.ts (11 tests) 594ms
+ ✓ src/lib/__tests__/signature-release-coherence.test.ts (9 tests) 378ms
+ ✓ src/lib/__tests__/record-mac-admin-routes.test.ts (7 tests) 331ms
+ ✓ src/app/api/mechanic-licenses/__tests__/token-route.test.ts (4 tests) 318ms
+ ✓ src/lib/backup/__tests__/crypto.test.ts (10 tests) 262ms
+ ✓ src/lib/__tests__/ui-lossless-compaction.test.ts (2 tests) 176ms
+ ✓ src/integration/ocr.test.ts (7 tests) 216ms
+ ✓ src/lib/planning/__tests__/bornes-partout.test.ts (4 tests) 187ms
+ ✓ src/app/api/mechanic-licenses/__tests__/register-adopt-route.test.ts (9 tests) 138ms
+ ✓ src/lib/__tests__/verify-rotation.test.ts (8 tests) 126ms
+ ✓ src/app/api/plate-ocr/__tests__/plate-ocr-route.test.ts (12 tests) 139ms
+ ✓ src/lib/license/__tests__/hwid-v1.test.ts (7 tests) 124ms
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > identifiants absents → null (sans toucher la BD)
+AUTH {
+  rid: '2b1391f1',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '2b1391f1',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'missing_fields',
+  ms: 2
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > identifiants absents → null (sans toucher la BD)
+AUTH {
+  rid: '6194484d',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '6194484d',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'missing_fields',
+  ms: 0
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur inexistant → null
+AUTH {
+  rid: '52bd2143',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '52bd2143',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'ok',
+  ms: 1
+}
+AUTH {
+  rid: '52bd2143',
+  step: 'AUTH_STEP_4_DATABASE_STARTED',
+  result: 'ok',
+  ms: 1
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur inexistant → null
+AUTH {
+  rid: '52bd2143',
+  step: 'AUTH_STEP_5_USER_LOOKUP_COMPLETED',
+  result: 'user_not_found',
+  ms: 89
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > mauvais mot de passe → null
+AUTH {
+  rid: 'ed5118b6',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: 'ed5118b6',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'ok',
+  ms: 1
+}
+AUTH {
+  rid: 'ed5118b6',
+  step: 'AUTH_STEP_4_DATABASE_STARTED',
+  result: 'ok',
+  ms: 1
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > mauvais mot de passe → null
+AUTH {
+  rid: 'ed5118b6',
+  step: 'AUTH_STEP_5_USER_LOOKUP_COMPLETED',
+  result: 'user_found',
+  ms: 1
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > mauvais mot de passe → null
+AUTH {
+  rid: 'ed5118b6',
+  step: 'AUTH_STEP_6_PASSWORD_CHECK_COMPLETED',
+  result: 'invalid_password',
+  ms: 4
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur sans garage rattaché → null (garde défensive, pas de crash)
+AUTH {
+  rid: '522ca4e8',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '522ca4e8',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '522ca4e8',
+  step: 'AUTH_STEP_4_DATABASE_STARTED',
+  result: 'ok',
+  ms: 0
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur sans garage rattaché → null (garde défensive, pas de crash)
+AUTH {
+  rid: '522ca4e8',
+  step: 'AUTH_STEP_5_USER_LOOKUP_COMPLETED',
+  result: 'user_found',
+  ms: 1
+}
+
+stderr | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur sans garage rattaché → null (garde défensive, pas de crash)
+[auth] utilisateur sans garage rattaché pendant authorize
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur sans garage rattaché → null (garde défensive, pas de crash)
+AUTH {
+  rid: '522ca4e8',
+  step: 'AUTH_STEP_6_PASSWORD_CHECK_COMPLETED',
+  result: 'ok',
+  ms: 3
+}
+AUTH {
+  rid: '522ca4e8',
+  step: 'AUTH_STEP_7_GARAGE_CHECK_COMPLETED',
+  result: 'no_garage',
+  ms: 3,
+  userId: 'u1'
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > erreur BD (indisponibilité) → RELEVÉE, non masquée en identifiants invalides
+AUTH {
+  rid: '1a853fb3',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '1a853fb3',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '1a853fb3',
+  step: 'AUTH_STEP_4_DATABASE_STARTED',
+  result: 'ok',
+  ms: 0
+}
+
+stderr | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > erreur BD (indisponibilité) → RELEVÉE, non masquée en identifiants invalides
+[auth] échec accès base pendant authorize {
+  name: 'Error',
+  message: 'ECONNREFUSED',
+  stack: 'Error: ECONNREFUSED\n' +
+    '    at /home/<user>/GarageFlowsV2/src/lib/__tests__/auth-authorize.test.ts:72:34\n' +
+    '    at file:///home/<user>/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n' +
+    '    at file:///home/<user>/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n' +
+    '    at file:///home/<user>/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n' +
+    '    at new Promise (<anonymous>)\n' +
+    '    at runWithCancel (file:///home/<user>/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n' +
+    '    at file:///home/<user>/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n' +
+    '    at new Promise (<anonymous>)\n' +
+    '    at runWithTimeout (file:///home/<user>/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n' +
+    '    at file:///home/<user>/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64'
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > erreur BD (indisponibilité) → RELEVÉE, non masquée en identifiants invalides
+AUTH {
+  rid: '1a853fb3',
+  step: 'AUTH_STEP_5_USER_LOOKUP_COMPLETED',
+  result: 'db_error',
+  ms: 1,
+  error: 'Error'
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — succès > identifiants valides → objet utilisateur (id, role, garage*), email en minuscules
+AUTH {
+  rid: '68032a0e',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '68032a0e',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '68032a0e',
+  step: 'AUTH_STEP_4_DATABASE_STARTED',
+  result: 'ok',
+  ms: 0
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — succès > identifiants valides → objet utilisateur (id, role, garage*), email en minuscules
+AUTH {
+  rid: '68032a0e',
+  step: 'AUTH_STEP_5_USER_LOOKUP_COMPLETED',
+  result: 'user_found',
+  ms: 1
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — succès > identifiants valides → objet utilisateur (id, role, garage*), email en minuscules
+AUTH {
+  rid: '68032a0e',
+  step: 'AUTH_STEP_6_PASSWORD_CHECK_COMPLETED',
+  result: 'ok',
+  ms: 6
+}
+AUTH {
+  rid: '68032a0e',
+  step: 'AUTH_STEP_7_GARAGE_CHECK_COMPLETED',
+  result: 'ok',
+  ms: 6
+}
+AUTH {
+  rid: '68032a0e',
+  step: 'AUTH_STEP_9_AUTH_RESULT_CREATED',
+  result: 'ok',
+  ms: 6
+}
+
+ ✓ src/lib/__tests__/auth-authorize.test.ts (6 tests) 123ms
+ ❯ src/lib/license/__tests__/license-keygen-e2e.test.ts (11 tests | 11 skipped) 50ms
+     ↓ l’environnement Python/keygen est disponible
+     ↓ 100% des licences OFFICIELLEMENT VALIDES sont acceptées
+     ↓ 100% des licences INVALIDES (expirée / signature / payload altérés) sont REJETÉES
+     ↓ les types premium/enterprise/trial/mécanicien sont correctement décodés
+     ↓ empreinte locale du keygen (fixture) — format v0 valide, liée à L5
+     ↓ HWID V1 canonique — keygen lie la valeur cliente, verify l’accepte (L7)
+     ↓ HWID v0 et v1 ne se confondent JAMAIS (longueurs 64 vs 70)
+     ↓ les HWID valides (v0/v1) sont signés normalisés
+     ↓ aucun HWID mal formé ne produit de jeton signé
+     ↓ un champ vide reste une licence NON liée (aucun hwid signé)
+     ↓ l’empreinte locale du keygen a un format valide mais n’est pas une preuve
+ ✓ src/lib/copilot/__tests__/semantic.test.ts (40 tests) 113ms
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'cryptography'
+ ❯ src/lib/__tests__/issuer-fixture-roundtrip.test.ts (5 tests | 1 failed) 78ms
+   ✓ P-256 fixture signs a GF2 payload accepted by the actual PWA and Electron verifiers 7ms
+   ✓ a different mathematically valid key is not accepted by either verifier 3ms
+   ✓ changing the payload without re-signing is rejected by both verifiers 3ms
+   ✓ a correctly signed but expired fixture is rejected by both verifiers 16ms
+   × the actual Python keygen signs a transient fixture accepted by the actual Node verifiers 47ms
+ ✓ src/lib/__tests__/composants-atteignables.test.ts (12 tests) 118ms
+ ✓ src/lib/recherche/__tests__/normalisation.test.ts (11 tests) 124ms
+ ✓ src/lib/copilot/__tests__/planning-execution.test.ts (44 tests) 100ms
+ ✓ src/app/api/sync/__tests__/mechanic-assignment.test.ts (14 tests) 97ms
+ ✓ src/lib/__tests__/themes-surfaces-couvertes.test.ts (4 tests) 107ms
+ ✓ src/lib/__tests__/contrats-parametres-api.test.ts (4 tests) 91ms
+ ✓ src/app/api/sync/__tests__/portal-snapshot.test.ts (9 tests) 127ms
+ ✓ src/lib/__tests__/portail-lien-unique.test.ts (5 tests) 98ms
+ ✓ src/lib/mechanics/__tests__/avatar-contrat-affichage.test.ts (7 tests) 94ms
+ ✓ src/lib/__tests__/boucle-mecanicien-robustesse.test.ts (7 tests) 94ms
+ ✓ src/app/api/sync/__tests__/mechanic-status.test.ts (7 tests) 111ms
+ ✓ src/lib/__tests__/secrets-jamais-distribues.test.ts (7 tests) 133ms
+ ✓ src/lib/__tests__/env-manifest-drift.test.ts (8 tests) 81ms
+ ✓ src/lib/__tests__/pwa-trois-publics.test.ts (12 tests) 84ms
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/appointments : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '0c6d9343-d524-408e-a2b3-1e98029a6866'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/appointments : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '4217d236-90eb-4e87-9292-da7a45249aa8'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/appointments : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/appointments] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/appointments : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/appointments] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/einvoicing : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'c633c9f9-3c39-4765-a960-1704e46b38c0'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/einvoicing : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '4090e658-5b1f-419f-b0dc-178fb8ba4584'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/einvoicing : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/einvoicing] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/einvoicing : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/einvoicing] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/invoice : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '6a432998-cc72-40a1-a1d7-f3c4fc752fd9'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/invoice : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '14183a73-2e38-4b19-b111-5d91850127fe'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/invoice : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/invoice] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/invoice : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/invoice] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobPhoto : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'e5f69c8f-a7b0-4108-bec8-1e440ded6725'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobPhoto : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: 'bc911d6d-b302-4463-bb72-7ea00bf13df6'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobPhoto : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/job-photo] refus auth { code: 'LICENSE_INVALID', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobPhoto : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/job-photo] refus auth { code: 'LICENSE_TAMPERED', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobs : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'f7f4ca2f-cf3a-4314-b1ae-36775bfd601e'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobs : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '6d51a4d7-a3e6-4789-b909-c9c91f7d8432'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobs : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/jobs] refus auth { code: 'LICENSE_INVALID', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobs : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/jobs] refus auth { code: 'LICENSE_TAMPERED', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAssignment : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '2630a6f8-6b04-4974-90f7-8526fcf23d4a'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAssignment : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '30b95418-5869-4163-8206-e31e423a5650'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAssignment : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/mechanic] refus auth { code: 'LICENSE_INVALID', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAssignment : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/mechanic] refus auth { code: 'LICENSE_TAMPERED', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAvatar : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'cab38cb7-f7ae-4b88-b3bd-37c868f0d054'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAvatar : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '20b00bea-f042-4140-9a65-e5594a0ce3cc'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAvatar : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/mechanic-avatar] refus auth { code: 'LICENSE_INVALID', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAvatar : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/mechanic-avatar] refus auth { code: 'LICENSE_TAMPERED', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicStatus : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '27fb66b7-d69a-4f1f-8a9f-fca906cf2de2'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicStatus : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: 'cf015847-12ba-4438-9e0f-0466692509a6'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicStatus : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/mechanic-status] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicStatus : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/mechanic-status] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portalAccount : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '1fb6cbc1-aaf7-4bc5-837b-6abca11f01ab'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portalAccount : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '34e386c2-4f45-4c00-b8be-26bc6f882155'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portalAccount : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/portal-account] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portalAccount : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/portal-account] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portal : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'e0bae7cd-f6b0-4259-acab-eb97a714b695'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portal : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '2d2e4302-170c-4191-b044-e33e91dd5fa3'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portal : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/portal] refus auth { code: 'LICENSE_INVALID', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portal : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/portal] refus auth { code: 'LICENSE_TAMPERED', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quoteReturn : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'a41c43c8-c2de-4936-95e0-d0f558c17284'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quoteReturn : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: 'd5e51198-9148-4a16-88c1-1c9b4e2795ee'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quoteReturn : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/quote-return] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quoteReturn : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/quote-return] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quote : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '817a03d6-00f5-4596-b1ba-faf43c224933'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quote : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: 'b5098aeb-6f65-47bc-814a-a0ace074e65a'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quote : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/quote] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quote : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/quote] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/tickets : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'b697f656-af23-4b4a-9ab4-99f607140043'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/tickets : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '493d3bb0-0f74-44e9-82ad-1cdbe0a25681'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/tickets : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/tickets] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/tickets : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/tickets] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > tickets : panne DB après auth → DB_UNAVAILABLE aussi
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '9a36be6f-0896-48cd-91ff-66e11be971e7'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > appointments : panne DB après auth → DB_UNAVAILABLE aussi
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '38c1d7a8-93ee-4273-b065-3b36ae270c2a'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > quote-return : panne DB après auth → DB_UNAVAILABLE aussi
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '1bd618e8-82cb-4d32-85c6-15f7e65ca288'
+}
+
+ ✓ src/lib/__tests__/incident-sync-contracts.test.ts (68 tests) 109ms
+ ✓ src/lib/copilot-llm/__tests__/provider.test.ts (15 tests) 65ms
+ ✓ src/lib/portal/__tests__/portal-line-contract.test.ts (12 tests) 59ms
+ ✓ src/__tests__/docs-consistency-ignored-residue.test.ts (5 tests) 59ms
+ ✓ src/__tests__/docs-consistency-guard.test.ts (9 tests) 63ms
+ ✓ src/lib/copilot/__tests__/phase3-security.test.ts (18 tests) 54ms
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > activation Electron=1 : DB down → aucune session ni appareil
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '11ceef92-f0c4-4756-a2ec-27c1aa167958'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > activation Electron=0 : DB down → aucune session ni appareil
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'e1072f48-6d67-4516-a19d-bca03b5916df'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > activation Electron=1 : erreur appareil → aucune session
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'a66adba1-0c59-4873-aea9-d576e4ae60e6'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > activation Electron=0 : erreur appareil → aucune session
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '134ad600-7811-44bb-9660-02e402895b82'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > clé mécanicien Electron=1 : DB down ≠ clé non attribuée
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'b443218a-983e-44e3-a13a-5b14a702753b'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > clé mécanicien Electron=0 : DB down ≠ clé non attribuée
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '71571072-520b-485d-86f6-f47db4f5e8aa'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > secret absent/faible → SERVER_MISCONFIGURED avant toute écriture
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: 'fc4afeb5-1d21-42e9-a994-f4c3489a4dc5'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > secret absent/faible → SERVER_MISCONFIGURED avant toute écriture
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '58fa7594-cf82-4b77-aa1c-b74dc89090b5'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > MAC invalide → LICENSE_TAMPERED, jamais LICENSE_INVALID
+[license/activate] DB integrity check FAILED { cause: 'mac-invalide' }
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > check/deactivate DB down → 503 sur Electron aussi
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '31fc6544-d58d-4517-ad84-dedb936ac7b1'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > check/deactivate DB down → 503 sur Electron aussi
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '2f2271fb-0b04-4cc5-9401-7f157e172244'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > status/devices : secret absent distinct d’un JWT invalide
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '7cf24898-06c9-4008-8e97-9a5249004bf0'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > status/devices : secret absent distinct d’un JWT invalide
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: 'aec349b3-e966-4f31-8517-0ead29ac87a0'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > status/devices : DB down ≠ révocation
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'a8fc3cff-d215-40dd-b147-9e723bd63cf9'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > status/devices : DB down ≠ révocation
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '819dba18-22b0-4560-8726-5093659dd799'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > clé publique mal configurée : route activation → 500 SERVER_MISCONFIGURED
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '30b0439e-60b3-4a9e-9768-1396d89270ad'
+}
+
+ ✓ src/lib/__tests__/incident-license-infra.test.ts (22 tests) 68ms
+ ✓ src/lib/copilot-llm/__tests__/planning-provider.test.ts (6 tests) 55ms
+ ✓ src/lib/__tests__/sqlite-tx-queue.test.ts (4 tests) 42ms
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > token NextAuth invalide (getToken lève) → traité comme non connecté, pas de 500
+[middleware] getToken a échoué
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > absence de NEXTAUTH_SECRET → getToken lève → fail-closed vers /login, pas de 500
+[middleware] getToken a échoué
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > absence de NEXTAUTH_SECRET → vérification gf_session échoue (getAuthSecret lève) → /license
+[middleware] échec vérification gf_session INATTENDU
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > charge utile gf_session sans typ/lid → rejetée → /license
+[middleware] gf_session rejeté (charge utile invalide)
+
+ ✓ src/__tests__/middleware.test.ts (47 tests) 52ms
+ ✓ src/lib/security/__tests__/bounded-json-response.test.ts (14 tests) 52ms
+ ✓ src/lib/stock/__tests__/invoice-stock-entrelacement.test.ts (3 tests) 48ms
+ ✓ src/__tests__/integrity-diagnostics.test.ts (12 tests | 1 skipped) 46ms
+ ✓ src/lib/__tests__/license-activate.test.ts (25 tests) 43ms
+ ✓ src/lib/einvoicing/__tests__/submit-replay.test.ts (12 tests) 38ms
+ ✓ src/lib/einvoicing/__tests__/catalog-provenance.test.ts (12 tests) 47ms
+ ✓ src/lib/sync/__tests__/redirect-security.test.ts (1 test) 37ms
+ ✓ src/lib/sync/__tests__/mechanic-response-confirmation.test.ts (3 tests) 38ms
+ ✓ src/lib/einvoicing/__tests__/submit-chain.test.ts (17 tests) 35ms
+ ✓ src/lib/__tests__/mechanic-photo.test.ts (9 tests) 38ms
+ ✓ src/lib/__tests__/authz-full-matrix.test.ts (139 tests) 31ms
+ ✓ src/app/api/admin/__tests__/diagnostics-route.test.ts (16 tests) 37ms
+ ✓ src/app/api/purchase-orders/__tests__/receive-guards.test.ts (8 tests) 19ms
+ ✓ src/lib/__tests__/devices-overview.test.ts (11 tests) 31ms
+ ✓ src/lib/license/__tests__/license-crosslang-format.test.ts (11 tests) 30ms
+ ✓ src/lib/__tests__/electron-integrity.test.ts (17 tests) 33ms
+ ✓ src/lib/copilot/__tests__/conversation.test.ts (27 tests) 34ms
+ ✓ src/lib/__tests__/incident-safety.test.ts (23 tests) 33ms
+ ✓ src/lib/__tests__/license-admin-state-machine.test.ts (17 tests) 36ms
+ ✓ src/app/api/keygen/__tests__/admin-scope.test.ts (18 tests) 29ms
+ ✓ src/lib/portal/__tests__/garage-slug.test.ts (22 tests) 31ms
+ ✓ src/lib/__tests__/gcm-tag-length.test.ts (54 tests) 34ms
+ ✓ src/lib/planning/__tests__/mechanic-window.test.ts (31 tests) 31ms
+ ✓ src/lib/__tests__/portal-access-reachable.test.ts (104 tests) 34ms
+ ✓ src/__tests__/integrity-io-retry.test.ts (9 tests) 25ms
+ ✓ src/lib/__tests__/hors-ligne-honnete.test.ts (11 tests) 28ms
+ ✓ src/lib/pdf/__tests__/pdf-print-quality.test.ts (19 tests) 28ms
+ ✓ src/lib/catalog/__tests__/catalog.test.ts (28 tests) 26ms
+ ✓ src/lib/__tests__/routes-exports-autorises.test.ts (3 tests) 23ms
+(node:32125) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/lib/__tests__/money-schema-migration.test.ts (6 tests) 24ms
+ ✓ src/lib/einvoicing/__tests__/generic-pa-adapter.test.ts (36 tests) 21ms
+ ✓ src/lib/__tests__/photo-store-traversal.test.ts (20 tests) 22ms
+ ✓ src/lib/__tests__/depouillement-commentaires.test.ts (5 tests) 24ms
+ ✓ src/lib/einvoicing/__tests__/einvoicing-foundation.test.ts (20 tests) 22ms
+ ✓ src/lib/__tests__/security151-parts-boundary.test.ts (15 tests) 26ms
+ ✓ src/lib/copilot-llm/__tests__/copilot-llm.test.ts (25 tests) 22ms
+ ✓ src/app/api/suppliers/__tests__/transition-guards.test.ts (9 tests) 25ms
+ ✓ src/lib/__tests__/smtp-cipher-key-electron.test.ts (8 tests) 18ms
+ ✓ src/lib/mechanics/__tests__/avatar-image.test.ts (20 tests) 21ms
+stderr | src/app/api/mechanic-licenses/__tests__/status-route.test.ts > §2 — révocation irréversible > active → suspended : autorisé (200)
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+stderr | src/app/api/mechanic-licenses/__tests__/status-route.test.ts > §2 — révocation irréversible > active → revoked : autorisé (200)
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+stderr | src/app/api/mechanic-licenses/__tests__/status-route.test.ts > §6 — audit acteur/cible (jamais de chaîne vide) > action staff → actorUserId/actorRole renseignés, targetMechanicId = mécanicien de la clé
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+stderr | src/app/api/mechanic-licenses/__tests__/status-route.test.ts > §6 — audit acteur/cible (jamais de chaîne vide) > clé non attribuée → targetMechanicId = null (jamais "")
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+ ✓ src/app/api/mechanic-licenses/__tests__/status-route.test.ts (7 tests) 18ms
+ ✓ src/lib/__tests__/security-rate-limit.test.ts (18 tests) 21ms
+ ✓ src/lib/einvoicing/__tests__/webhook-route.test.ts (11 tests) 24ms
+ ✓ src/lib/__tests__/stock-parts.test.ts (12 tests) 21ms
+stderr | src/app/api/mechanics/__tests__/create-route.test.ts > POST /api/mechanics > erreur base de données → 500 (message générique, aucun détail technique)
+[mechanics] création impossible (code P1001)
+
+ ✓ src/app/api/mechanics/__tests__/create-route.test.ts (13 tests) 20ms
+ ✓ src/lib/__tests__/update-verify.test.ts (28 tests) 22ms
+ ✓ src/lib/__tests__/faux-succes.test.ts (12 tests) 16ms
+ ✓ src/lib/stock/__tests__/search.test.ts (15 tests) 19ms
+stderr | src/app/api/mechanic-licenses/__tests__/assign-route.test.ts > assign — première attribution (aucun ancien titulaire) > historise + met à jour la clé, SANS toucher aux appareils
+[sync/mechanic:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+stderr | src/app/api/mechanic-licenses/__tests__/assign-route.test.ts > reassign — révocation TOTALE des appareils de l’ancien titulaire > révoque les appareils actifs ET déconnectés (aucun siège retenu), clôture l’historique, audite reassign
+[sync/mechanic:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+ ✓ src/app/api/mechanic-licenses/__tests__/assign-route.test.ts (6 tests) 20ms
+ ✓ src/app/api/mechanic/__tests__/timer-pause-resume.test.ts (8 tests) 17ms
+ ✓ src/lib/banque/__tests__/iban.test.ts (28 tests) 21ms
+ ✓ src/lib/__tests__/pre-migration-backup.test.ts (6 tests) 20ms
+ ✓ src/lib/einvoicing/__tests__/queue.test.ts (17 tests) 21ms
+ ✓ src/lib/__tests__/reset-schema-drift.test.ts (9 tests) 20ms
+ ✓ src/lib/__tests__/pagination-routes.test.ts (15 tests) 17ms
+ ✓ src/lib/einvoicing/__tests__/bridge-response-contract.test.ts (3 tests) 16ms
+ ✓ src/lib/__tests__/poste-windows.test.ts (28 tests) 19ms
+ ✓ src/lib/copilot-llm/__tests__/paid-block.test.ts (5 tests) 17ms
+ ✓ src/lib/__tests__/business-logic.test.ts (22 tests) 17ms
+ ✓ src/lib/__tests__/electron-secret.test.ts (9 tests) 19ms
+stderr | src/lib/__tests__/mechanic-device-lifecycle.test.ts > §2/§3 — effets appareils selon la transition de licence > SUSPEND → n'AUCUNE écriture appareil (siège conservé, restauration instantanée)
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+stderr | src/lib/__tests__/mechanic-device-lifecycle.test.ts > §2/§3 — effets appareils selon la transition de licence > REVOKE → appareils révoqués (permanent)
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+ ✓ src/lib/__tests__/mechanic-device-lifecycle.test.ts (8 tests) 16ms
+ ✓ src/app/api/mechanic/__tests__/timer-route.test.ts (9 tests) 18ms
+ ✓ src/lib/__tests__/money-json.test.ts (16 tests) 15ms
+ ✓ src/lib/license/__tests__/attach-license-to-garage.test.ts (11 tests) 16ms
+ ✓ src/lib/__tests__/packaging-sans-sauvegarde.test.ts (5 tests) 18ms
+ ✓ src/lib/__tests__/ui-navigation-et-demarrage.test.ts (15 tests) 17ms
+ ✓ src/lib/copilot/__tests__/copilot.test.ts (13 tests) 20ms
+ ✓ src/lib/diagnostic/__tests__/diagnostic.test.ts (10 tests) 20ms
+ ✓ src/lib/portal/__tests__/totp-crypto.test.ts (13 tests) 13ms
+ ✓ src/app/api/purchase-orders/__tests__/route-guards.test.ts (5 tests) 20ms
+ ✓ src/lib/__tests__/garage-settings-validation.test.ts (14 tests) 18ms
+ ✓ src/lib/__tests__/schemas-optional-email.test.ts (11 tests) 11ms
+ ✓ src/lib/__tests__/check-route-policy.test.ts (8 tests) 16ms
+ ✓ src/lib/sync/__tests__/garage-claim-isolation.test.ts (9 tests) 17ms
+ ✓ src/lib/ocr/__tests__/ocr.test.ts (28 tests) 15ms
+ ✓ src/app/api/__tests__/document-immutability.test.ts (6 tests) 16ms
+ ✓ src/lib/einvoicing/__tests__/formats.test.ts (29 tests) 17ms
+ ✓ src/lib/__tests__/create-license-route.test.ts (11 tests) 18ms
+stderr | src/lib/__tests__/env.test.ts > env — validation & fail-fast > assertEnv NE lève PAS en développement (avertit seulement)
+[env] Configuration incomplète (dev) : DATABASE_URL (absente ou vide), NEXTAUTH_SECRET (absente, trop courte ou générique)
+
+ ✓ src/lib/__tests__/env.test.ts (24 tests) 17ms
+ ✓ src/lib/inspection/__tests__/inspection-context.test.ts (13 tests) 16ms
+ ✓ src/lib/__tests__/licence-p3.test.ts (15 tests) 16ms
+ ✓ src/lib/license/__tests__/issuer-key.test.ts (5 tests) 16ms
+ ✓ src/lib/__tests__/licence-changement-contrat.test.ts (8 tests) 16ms
+ ✓ src/lib/license/__tests__/keygen-api-contract.test.ts (16 tests) 14ms
+ ✓ src/__tests__/baseline-canonical-guard.test.ts (6 tests) 11ms
+ ✓ src/lib/suppliers/__tests__/suppliers.test.ts (17 tests) 13ms
+ ✓ src/lib/__tests__/taux-horaire-main-doeuvre.test.ts (18 tests) 17ms
+ ✓ src/lib/__tests__/live-sync.test.ts (14 tests) 17ms
+ ✓ src/components/__tests__/update-sources-installable.test.ts (11 tests) 15ms
+ ✓ src/lib/license/__tests__/forgery-resistance.test.ts (10 tests | 4 skipped) 17ms
+ ✓ src/lib/__tests__/licensed-session.test.ts (13 tests) 17ms
+ ✓ src/lib/text/__tests__/apostrophes.test.ts (9 tests) 18ms
+ ✓ src/lib/portal/__tests__/backup-codes-store.test.ts (5 tests) 16ms
+ ✓ src/lib/license/__tests__/state-machine.test.ts (23 tests) 15ms
+ ✓ src/lib/__tests__/document-numbering.test.ts (3 tests) 15ms
+ ✓ src/lib/analytics/__tests__/analytics.test.ts (17 tests) 15ms
+ ✓ src/lib/__tests__/einvoicing-platforms-contract.test.ts (4 tests) 14ms
+ ✓ src/lib/__tests__/electron-activation-backoff.test.ts (15 tests) 16ms
+ ✓ src/lib/scheduling/__tests__/scheduling.test.ts (8 tests) 14ms
+ ✓ src/lib/__tests__/quoted-secret-redaction.test.ts (33 tests) 14ms
+(node:32638) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/lib/__tests__/desktop-schema-migration-parity.test.ts (6 tests) 13ms
+ ✓ src/lib/__tests__/rotation-cle-ancrages.test.ts (6 tests) 14ms
+ ✓ src/lib/__tests__/electron-heartbeat-policy.test.ts (38 tests) 14ms
+ ✓ src/lib/__tests__/license-devices-unit.test.ts (16 tests) 15ms
+ ✓ src/lib/copilot/__tests__/copilot-chaine-complete.test.ts (16 tests) 13ms
+ ✓ src/lib/__tests__/restore-script.test.ts (10 tests) 15ms
+ ✓ src/lib/vin/__tests__/vin.test.ts (17 tests) 14ms
+ ✓ src/lib/einvoicing/__tests__/dns-deadline.test.ts (4 tests) 13ms
+ ✓ src/components/__tests__/electron-bridge-hydration.test.ts (9 tests) 10ms
+ ✓ src/app/api/__tests__/fec-export.test.ts (7 tests) 13ms
+ ✓ src/lib/notifications/__tests__/notifications.test.ts (12 tests) 10ms
+ ✓ src/lib/planning/__tests__/horaires.test.ts (13 tests) 18ms
+ ✓ src/lib/einvoicing/__tests__/ssrf-guard.test.ts (16 tests) 14ms
+ ✓ src/lib/__tests__/or-pieces-rattachees.test.ts (10 tests) 16ms
+ ✓ src/lib/__tests__/control-plane.test.ts (16 tests) 12ms
+ ✓ src/__tests__/security-headers.test.ts (7 tests) 14ms
+ ✓ src/app/api/suppliers/__tests__/route-guards.test.ts (4 tests) 12ms
+ ✓ src/lib/portal/__tests__/auth-core.test.ts (20 tests) 13ms
+ ✓ src/lib/security/__tests__/secret-cipher.test.ts (11 tests) 12ms
+ ✓ src/lib/portal/__tests__/session.test.ts (10 tests) 14ms
+ ✓ src/lib/backup/__tests__/snapshot.test.ts (3 tests) 7ms
+ ✓ src/lib/__tests__/authz.test.ts (43 tests) 11ms
+ ✓ src/lib/__tests__/mechanic-session.test.ts (11 tests) 13ms
+ ✓ src/lib/__tests__/mechanic-verify.test.ts (5 tests) 11ms
+ ✓ src/lib/__tests__/tva.test.ts (14 tests) 7ms
+ ✓ src/lib/stock/__tests__/inventory.test.ts (17 tests) 9ms
+ ✓ src/lib/__tests__/isolation-preview.test.ts (11 tests) 11ms
+ ✓ src/app/api/__tests__/financial-authz.test.ts (5 tests) 10ms
+ ✓ src/lib/__tests__/redact.test.ts (11 tests) 11ms
+ ✓ src/lib/__tests__/require-session-enforcement.test.ts (5 tests) 11ms
+ ✓ src/lib/signature/__tests__/signature.test.ts (11 tests) 14ms
+ ✓ src/lib/__tests__/public-url.test.ts (28 tests) 9ms
+ ✓ src/lib/portal/__tests__/tickets-appointments.test.ts (11 tests) 7ms
+ ✓ src/lib/__tests__/revoke-by-key-route.test.ts (3 tests) 11ms
+ ✓ src/lib/__tests__/utils.test.ts (32 tests) 11ms
+ ✓ src/lib/pdf/__tests__/print-html-escaping.test.ts (12 tests) 9ms
+ ✓ src/lib/einvoicing/__tests__/ssrf-guard-dns.test.ts (9 tests) 9ms
+ ✓ src/lib/sync/__tests__/clock-and-truncation.test.ts (14 tests) 8ms
+ ✓ src/lib/__tests__/erreur-affichable.test.ts (22 tests) 9ms
+(node:32918) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/lib/__tests__/migrations-unique-index.test.ts (8 tests) 10ms
+ ✓ src/lib/__tests__/money-migration.test.ts (18 tests) 9ms
+ ✓ src/lib/einvoicing/__tests__/webhook-signature.test.ts (16 tests) 9ms
+ ✓ src/lib/forecast/__tests__/forecast.test.ts (10 tests) 9ms
+ ✓ src/lib/__tests__/filtres-rendez-vous.test.ts (13 tests) 10ms
+ ✓ src/lib/__tests__/electron-fuses.test.ts (6 tests) 10ms
+ ✓ src/__tests__/artifact-fuses-gate.test.ts (7 tests) 9ms
+ ✓ src/lib/__tests__/portail-client-parcours.test.ts (11 tests) 6ms
+ ✓ src/lib/__tests__/route-context.test.ts (3 tests) 5ms
+ ✓ src/lib/pricing/__tests__/pricing.test.ts (12 tests) 8ms
+ ✓ src/lib/forgotten-parts/__tests__/forgotten-parts.test.ts (10 tests) 8ms
+(node:32995) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/lib/__tests__/migrations-vehicle-ctdate.test.ts (5 tests) 10ms
+ ✓ src/lib/__tests__/vercel-crons.test.ts (8 tests) 9ms
+ ✓ src/lib/profitability/__tests__/profitability.test.ts (10 tests) 9ms
+ ✓ src/lib/planning/__tests__/schedule-board-contract.test.ts (17 tests) 9ms
+ ✓ src/lib/__tests__/rotation-caractere-invisible.test.ts (10 tests) 8ms
+ ✓ src/lib/__tests__/env-contract.test.ts (10 tests) 9ms
+ ✓ src/lib/__tests__/secrets.test.ts (9 tests) 7ms
+ ✓ src/lib/__tests__/money.test.ts (16 tests) 7ms
+ ✓ src/lib/mechanics/__tests__/avatar-client.test.ts (14 tests) 8ms
+ ✓ src/lib/__tests__/version-compatibility.test.ts (12 tests) 9ms
+ ✓ src/lib/stock-forecast/__tests__/stock-forecast.test.ts (10 tests) 8ms
+ ✓ src/lib/__tests__/mechanic-admin.test.ts (6 tests) 8ms
+ ✓ src/lib/__tests__/verify.test.ts (7 tests) 8ms
+ ✓ src/__tests__/release-gate-idempotent.test.ts (6 tests) 9ms
+ ✓ src/lib/__tests__/temps-reel-garde-fous.test.ts (9 tests) 8ms
+ ✓ src/lib/__tests__/audit-v21-fixes.test.ts (13 tests) 8ms
+ ✓ src/lib/license/__tests__/public-key-consistency.test.ts (5 tests | 2 skipped) 9ms
+ ✓ src/lib/__tests__/routes-sans-appelant.test.ts (8 tests) 11ms
+ ✓ src/lib/email/__tests__/smtp-config.test.ts (22 tests) 8ms
+ ✓ src/lib/__tests__/hwid-verify.test.ts (16 tests) 8ms
+ ✓ src/lib/__tests__/tenant-guard.test.ts (6 tests) 8ms
+ ✓ src/lib/__tests__/installer-shortcuts.test.ts (9 tests) 7ms
+ ✓ src/lib/quote-gen/__tests__/quote-gen.test.ts (10 tests) 9ms
+ ✓ src/lib/dashboard/__tests__/dashboard.test.ts (15 tests) 8ms
+ ✓ src/lib/reports/__tests__/reports.test.ts (9 tests) 7ms
+(node:33172) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/lib/__tests__/fk-indexes.test.ts (8 tests) 8ms
+ ✓ src/lib/planning/__tests__/avatar.test.ts (16 tests) 9ms
+ ✓ src/lib/__tests__/billing-view.test.ts (14 tests) 8ms
+ ✓ src/lib/__tests__/sync-parent-en-base.test.ts (18 tests) 8ms
+ ✓ src/lib/__tests__/electron-startup-gate.test.ts (17 tests) 8ms
+ ✓ src/lib/__tests__/license-public-key.test.ts (5 tests) 9ms
+ ✓ src/lib/__tests__/electron-activation-report.test.ts (11 tests) 8ms
+ ✓ src/lib/__tests__/ux-pwa-derniers-culs-de-sac.test.ts (12 tests) 7ms
+ ✓ src/lib/__tests__/plate-format.test.ts (19 tests) 7ms
+ ✓ src/lib/__tests__/authz-mechanic-matrix.test.ts (17 tests) 7ms
+ ✓ src/lib/gamification/__tests__/gamification.test.ts (7 tests) 7ms
+ ✓ src/lib/monitoring/__tests__/metrics.test.ts (9 tests) 7ms
+ ✓ src/lib/__tests__/pagination.test.ts (11 tests) 6ms
+ ✓ src/lib/__tests__/crash-redaction.test.ts (7 tests) 7ms
+ ✓ src/lib/__tests__/pieces-intervention-atteignables.test.ts (7 tests) 6ms
+ ✓ src/__tests__/toolchain-versions.test.ts (9 tests) 7ms
+ ✓ src/lib/__tests__/document-status.test.ts (14 tests) 7ms
+ ✓ src/lib/__tests__/synchronisation-asymetrie.test.ts (11 tests) 7ms
+ ✓ src/lib/__tests__/tenant-matrix-completude.test.ts (5 tests) 6ms
+ ✓ src/lib/__tests__/licence-emission-bornee.test.ts (10 tests) 6ms
+ ✓ src/lib/__tests__/pwa.test.ts (9 tests) 6ms
+ ✓ src/lib/__tests__/grace-hors-ligne.test.ts (12 tests) 6ms
+ ✓ src/lib/__tests__/electron-loopback.test.ts (9 tests) 6ms
+ ✓ src/components/__tests__/loaner-estimate-formatting.test.ts (7 tests) 5ms
+ ✓ src/lib/__tests__/client-policy.test.ts (8 tests) 5ms
+ ✓ src/lib/__tests__/sauvegarde-en-souffrance.test.ts (14 tests) 6ms
+ ✓ src/lib/__tests__/toolchain-node-version.test.ts (3 tests) 5ms
+ ✓ src/lib/__tests__/money-display.test.ts (11 tests) 7ms
+ ✓ src/lib/__tests__/remac-script-parity.test.ts (4 tests) 5ms
+ ✓ src/lib/__tests__/auth-secret.test.ts (6 tests) 6ms
+ ✓ src/lib/__tests__/billing-api-projection.test.ts (5 tests) 6ms
+ ✓ src/lib/proactive/__tests__/proactive.test.ts (6 tests) 6ms
+ ✓ src/__tests__/server-schema-validate-env.test.ts (7 tests) 6ms
+ ✓ src/lib/__tests__/pwa-cache-et-mise-a-jour.test.ts (10 tests) 6ms
+ ✓ src/lib/__tests__/inspection-autosave.test.ts (5 tests) 5ms
+ ✓ src/lib/__tests__/incident-record-integrity.test.ts (4 tests) 6ms
+ ✓ src/lib/__tests__/pagination-cloisonnee.test.ts (6 tests) 5ms
+ ✓ src/components/__tests__/update-manifest-forwarding.test.ts (5 tests) 6ms
+ ✓ src/lib/__tests__/electron-signed-state.test.ts (7 tests) 6ms
+ ✓ src/lib/memory/__tests__/memory.test.ts (7 tests) 6ms
+ ✓ src/lib/__tests__/document-lock-row-locking.test.ts (7 tests) 6ms
+ ✓ src/lib/__tests__/stock-missing-part-release.test.ts (2 tests) 7ms
+ ✓ src/lib/__tests__/reminder-send-honesty.test.ts (7 tests) 6ms
+ ✓ src/lib/__tests__/echeance-export.test.ts (10 tests) 6ms
+ ✓ src/lib/__tests__/mecanicien-boucle-401.test.ts (6 tests) 5ms
+ ✓ src/lib/__tests__/mechanic-record-mac.test.ts (3 tests) 5ms
+ ✓ src/lib/__tests__/specialty.test.ts (5 tests) 5ms
+ ✓ src/lib/__tests__/migrations-add-column-guard.test.ts (5 tests) 5ms
+ ✓ src/__tests__/baseline-git-identity.test.ts (4 tests) 6ms
+ ✓ src/lib/__tests__/electron-nav-guard.test.ts (5 tests) 4ms
+ ✓ src/lib/portal/__tests__/repair-timeline.test.ts (5 tests) 5ms
+ ✓ src/lib/__tests__/ui-sort-resilience.test.ts (7 tests) 5ms
+ ✓ src/lib/__tests__/i18n-rtl.test.ts (4 tests) 5ms
+ ✓ src/lib/__tests__/safe-redirect.test.ts (7 tests) 5ms
+ ✓ src/lib/pdf/__tests__/poids-pdf.test.ts (4 tests) 4ms
+ ✓ src/lib/analytics/__tests__/report-export.test.ts (5 tests) 5ms
+ ✓ src/lib/__tests__/electron-device-activation.test.ts (6 tests) 6ms
+ ✓ src/lib/__tests__/money-document-consistency.test.ts (3 tests) 4ms
+ ✓ src/lib/__tests__/user-data-path.test.ts (4 tests) 4ms
+ ✓ src/lib/__tests__/licence-bloquee-au-chargement.test.ts (2 tests) 4ms
+ ✓ src/lib/__tests__/electron-license-endpoint.test.ts (4 tests) 4ms
+ ↓ src/lib/__tests__/document-numbering.postgres.int.test.ts (1 test | 1 skipped)
+ ↓ src/lib/__tests__/license-devices.postgres.int.test.ts (15 tests | 15 skipped)
+ ↓ src/lib/__tests__/licensed-session.postgres.int.test.ts (6 tests | 6 skipped)
+ ↓ src/lib/__tests__/rate-limit-multi-instance.int.test.ts (5 tests | 5 skipped)
+ ↓ src/lib/__tests__/stock-concurrency.postgres.int.test.ts (1 test | 1 skipped)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 81 ⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/business-workflow-e2e.test.ts [ src/integration/business-workflow-e2e.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/business-workflow-e2e.test.ts:49:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/85]⎯
+
+ FAIL  src/integration/catalog.test.ts [ src/integration/catalog.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/catalog.test.ts:34:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/85]⎯
+
+ FAIL  src/integration/client-email-garage-portail.test.ts [ src/integration/client-email-garage-portail.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/client-email-garage-portail.test.ts:78:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/85]⎯
+
+ FAIL  src/integration/copilot-conversation.test.ts [ src/integration/copilot-conversation.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot-conversation.test.ts:18:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/85]⎯
+
+ FAIL  src/integration/copilot-cout-achat.test.ts [ src/integration/copilot-cout-achat.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot-cout-achat.test.ts:52:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/85]⎯
+
+ FAIL  src/integration/copilot-ecusson-verifie.test.ts [ src/integration/copilot-ecusson-verifie.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot-ecusson-verifie.test.ts:47:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/85]⎯
+
+ FAIL  src/integration/copilot-financial-authz-v15.test.ts [ src/integration/copilot-financial-authz-v15.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot-financial-authz-v15.test.ts:34:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/85]⎯
+
+ FAIL  src/integration/copilot-portee-et-porte-financiere.test.ts [ src/integration/copilot-portee-et-porte-financiere.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot-portee-et-porte-financiere.test.ts:57:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/85]⎯
+
+ FAIL  src/integration/copilot.test.ts [ src/integration/copilot.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot.test.ts:43:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/85]⎯
+
+ FAIL  src/integration/dashboard.test.ts [ src/integration/dashboard.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/dashboard.test.ts:48:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/85]⎯
+
+ FAIL  src/integration/devis-signature-depuis-un-poste.test.ts [ src/integration/devis-signature-depuis-un-poste.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/devis-signature-depuis-un-poste.test.ts:116:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/85]⎯
+
+ FAIL  src/integration/document-integrity-v15.test.ts [ src/integration/document-integrity-v15.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/document-integrity-v15.test.ts:35:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/85]⎯
+
+ FAIL  src/integration/fec-injection-v15.test.ts [ src/integration/fec-injection-v15.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/fec-injection-v15.test.ts:31:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/85]⎯
+
+ FAIL  src/integration/finance-margin.test.ts [ src/integration/finance-margin.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/finance-margin.test.ts:32:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/85]⎯
+
+ FAIL  src/integration/intervention-rattache-client-vehicule.test.ts [ src/integration/intervention-rattache-client-vehicule.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/intervention-rattache-client-vehicule.test.ts:58:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/85]⎯
+
+ FAIL  src/integration/invoice-authz.test.ts [ src/integration/invoice-authz.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/invoice-authz.test.ts:56:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/85]⎯
+
+ FAIL  src/integration/invoice-document-integrity-p3.test.ts [ src/integration/invoice-document-integrity-p3.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/invoice-document-integrity-p3.test.ts:41:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/85]⎯
+
+ FAIL  src/integration/invoice-stock-sync.test.ts [ src/integration/invoice-stock-sync.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/invoice-stock-sync.test.ts:85:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/85]⎯
+
+ FAIL  src/integration/licence-admin-durcissement.test.ts [ src/integration/licence-admin-durcissement.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/licence-admin-durcissement.test.ts:58:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/85]⎯
+
+ FAIL  src/integration/loaner-availability.test.ts [ src/integration/loaner-availability.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/loaner-availability.test.ts:81:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/85]⎯
+
+ FAIL  src/integration/mechanic-avatar-archive.test.ts [ src/integration/mechanic-avatar-archive.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/mechanic-avatar-archive.test.ts:72:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/85]⎯
+
+ FAIL  src/integration/mechanic-avatar-sync.test.ts [ src/integration/mechanic-avatar-sync.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/mechanic-avatar-sync.test.ts:61:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/85]⎯
+
+ FAIL  src/integration/mechanic-scope-realtime.test.ts [ src/integration/mechanic-scope-realtime.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/mechanic-scope-realtime.test.ts:77:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/85]⎯
+
+ FAIL  src/integration/messagerie-client-garage.test.ts [ src/integration/messagerie-client-garage.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/messagerie-client-garage.test.ts:63:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/85]⎯
+
+ FAIL  src/integration/part-deletion-history.test.ts [ src/integration/part-deletion-history.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/part-deletion-history.test.ts:40:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/85]⎯
+
+ FAIL  src/integration/part-inventory-adjustment.test.ts [ src/integration/part-inventory-adjustment.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/part-inventory-adjustment.test.ts:39:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/85]⎯
+
+ FAIL  src/integration/planning-journee-complete.test.ts [ src/integration/planning-journee-complete.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/planning-journee-complete.test.ts:43:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/85]⎯
+
+ FAIL  src/integration/portail-2fa-cycle.test.ts [ src/integration/portail-2fa-cycle.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portail-2fa-cycle.test.ts:64:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/85]⎯
+
+ FAIL  src/integration/portail-2fa-idor.test.ts [ src/integration/portail-2fa-idor.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portail-2fa-idor.test.ts:84:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/85]⎯
+
+ FAIL  src/integration/portail-instantane-borne.test.ts [ src/integration/portail-instantane-borne.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portail-instantane-borne.test.ts:39:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/85]⎯
+
+ FAIL  src/integration/portail-lien-revoque-a-la-republication.test.ts [ src/integration/portail-lien-revoque-a-la-republication.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portail-lien-revoque-a-la-republication.test.ts:107:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/85]⎯
+
+ FAIL  src/integration/portail-mot-de-passe-provisoire.test.ts [ src/integration/portail-mot-de-passe-provisoire.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portail-mot-de-passe-provisoire.test.ts:61:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/85]⎯
+
+ FAIL  src/integration/portal-access-lifecycle.test.ts [ src/integration/portal-access-lifecycle.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portal-access-lifecycle.test.ts:49:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/85]⎯
+
+ FAIL  src/integration/portal-account-takeover-v15.test.ts [ src/integration/portal-account-takeover-v15.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portal-account-takeover-v15.test.ts:34:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/85]⎯
+
+ FAIL  src/integration/portal-email-sync.test.ts [ src/integration/portal-email-sync.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portal-email-sync.test.ts:55:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/85]⎯
+
+ FAIL  src/integration/portal-password-enforcement.test.ts [ src/integration/portal-password-enforcement.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portal-password-enforcement.test.ts:47:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/85]⎯
+
+ FAIL  src/integration/portal-rbac-p3.test.ts [ src/integration/portal-rbac-p3.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portal-rbac-p3.test.ts:50:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/85]⎯
+
+ FAIL  src/integration/portal-token-isolation.test.ts [ src/integration/portal-token-isolation.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/portal-token-isolation.test.ts:30:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/85]⎯
+
+ FAIL  src/integration/pulse-boucle-de-synchronisation.test.ts [ src/integration/pulse-boucle-de-synchronisation.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/pulse-boucle-de-synchronisation.test.ts:64:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/85]⎯
+
+ FAIL  src/integration/purchase-order-receive-returned.test.ts [ src/integration/purchase-order-receive-returned.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/purchase-order-receive-returned.test.ts:63:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/85]⎯
+
+ FAIL  src/integration/pwa-fenetre-et-photos.test.ts [ src/integration/pwa-fenetre-et-photos.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/pwa-fenetre-et-photos.test.ts:63:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/85]⎯
+
+ FAIL  src/integration/quote-acceptance-proof.test.ts [ src/integration/quote-acceptance-proof.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/quote-acceptance-proof.test.ts:48:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/85]⎯
+
+ FAIL  src/integration/quotes-generate.test.ts [ src/integration/quotes-generate.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/quotes-generate.test.ts:42:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[43/85]⎯
+
+ FAIL  src/integration/rbac-enforcement-e2e.test.ts [ src/integration/rbac-enforcement-e2e.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/rbac-enforcement-e2e.test.ts:46:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[44/85]⎯
+
+ FAIL  src/integration/reglages-appliques.test.ts [ src/integration/reglages-appliques.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/reglages-appliques.test.ts:53:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[45/85]⎯
+
+ FAIL  src/integration/reglages-enfin-lus.test.ts [ src/integration/reglages-enfin-lus.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/reglages-enfin-lus.test.ts:48:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[46/85]⎯
+
+ FAIL  src/integration/reglages-logo-et-cout-achat.test.ts [ src/integration/reglages-logo-et-cout-achat.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/reglages-logo-et-cout-achat.test.ts:87:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[47/85]⎯
+
+ FAIL  src/integration/rendez-vous-client-garage.test.ts [ src/integration/rendez-vous-client-garage.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/rendez-vous-client-garage.test.ts:75:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[48/85]⎯
+
+ FAIL  src/integration/robustness-v15.test.ts [ src/integration/robustness-v15.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/robustness-v15.test.ts:33:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[49/85]⎯
+
+ FAIL  src/integration/scenario-maitre.test.ts [ src/integration/scenario-maitre.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/scenario-maitre.test.ts:64:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[50/85]⎯
+
+ FAIL  src/integration/statistiques-au-centime.test.ts [ src/integration/statistiques-au-centime.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/statistiques-au-centime.test.ts:59:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[51/85]⎯
+
+ FAIL  src/integration/status-mass-assignment-v15.test.ts [ src/integration/status-mass-assignment-v15.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/status-mass-assignment-v15.test.ts:41:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[52/85]⎯
+
+ FAIL  src/integration/stock-money-p3.test.ts [ src/integration/stock-money-p3.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/stock-money-p3.test.ts:41:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[53/85]⎯
+
+ FAIL  src/integration/stock-suppression-et-entrees.test.ts [ src/integration/stock-suppression-et-entrees.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/stock-suppression-et-entrees.test.ts:72:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[54/85]⎯
+
+ FAIL  src/integration/stock-tracabilite-et-suppression.test.ts [ src/integration/stock-tracabilite-et-suppression.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/stock-tracabilite-et-suppression.test.ts:110:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[55/85]⎯
+
+ FAIL  src/integration/supplier-linkage.test.ts [ src/integration/supplier-linkage.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/supplier-linkage.test.ts:46:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[56/85]⎯
+
+ FAIL  src/integration/suppliers.test.ts [ src/integration/suppliers.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/suppliers.test.ts:45:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[57/85]⎯
+
+ FAIL  src/integration/synchro-voie-de-retour.test.ts [ src/integration/synchro-voie-de-retour.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/synchro-voie-de-retour.test.ts:87:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[58/85]⎯
+
+ FAIL  src/integration/tenant-idor-patch.test.ts [ src/integration/tenant-idor-patch.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/tenant-idor-patch.test.ts:39:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[59/85]⎯
+
+ FAIL  src/integration/tenant-isolation-matrix.test.ts [ src/integration/tenant-isolation-matrix.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/tenant-isolation-matrix.test.ts:176:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[60/85]⎯
+
+ FAIL  src/lib/__tests__/keygen-activation-roundtrip.test.ts [ src/lib/__tests__/keygen-activation-roundtrip.test.ts ]
+Error: Command failed: /usr/local/bin/node --input-type=module -e import {reproduce} from './scripts/reproduce-keygen-roundtrip.mjs'; let fixture; const report=reproduce(f=>{fixture=f}); console.log(JSON.stringify({report,fixture}))
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/tmp/gf-keygen-fixture-yArnkW/scripts/keygen_core.py", line 195, in load_checked_private_key
+    from keygen_trust import check_key_match
+  File "/tmp/gf-keygen-fixture-yArnkW/scripts/keygen_trust.py", line 18, in <module>
+    from cryptography.hazmat.primitives import serialization
+ModuleNotFoundError: No module named 'cryptography'
+node:internal/errors:983
+  const err = new Error(message);
+              ^
+
+Error: Command failed: python3 -c import sys,json; sys.path.insert(0,'scripts'); import keygen_core as k; p=k.load_checked_private_key(); print(k.make_license(p,'FIXTURE-ÉTÉ-NOT-ISSUED','premium',label='Garage été')['token'])
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/tmp/gf-keygen-fixture-yArnkW/scripts/keygen_core.py", line 195, in load_checked_private_key
+    from keygen_trust import check_key_match
+  File "/tmp/gf-keygen-fixture-yArnkW/scripts/keygen_trust.py", line 18, in <module>
+    from cryptography.hazmat.primitives import serialization
+ModuleNotFoundError: No module named 'cryptography'
+
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at checkExecSyncError (node:child_process:916:11)
+    at execFileSync (node:child_process:952:15)
+    at runPython (file:///home/user/GarageFlowsV2/scripts/reproduce-keygen-roundtrip.mjs:35:31)
+    at reproduce (file:///home/user/GarageFlowsV2/scripts/reproduce-keygen-roundtrip.mjs:37:19)
+    at file:///home/user/GarageFlowsV2/[eval1]:1:95
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:282:26)
+    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:278:20) {
+  status: 1,
+  signal: null,
+  output: [
+    null,
+    '',
+    'Traceback (most recent call last):\n' +
+      '  File "<string>", line 1, in <module>\n' +
+      '  File "/tmp/gf-keygen-fixture-yArnkW/scripts/keygen_core.py", line 195, in load_checked_private_key\n' +
+      '    from keygen_trust import check_key_match\n' +
+      '  File "/tmp/gf-keygen-fixture-yArnkW/scripts/keygen_trust.py", line 18, in <module>\n' +
+      '    from cryptography.hazmat.primitives import serialization\n' +
+      "ModuleNotFoundError: No module named 'cryptography'\n"
+  ],
+  pid: 31343,
+  stdout: '',
+  stderr: 'Traceback (most recent call last):\n' +
+    '  File "<string>", line 1, in <module>\n' +
+    '  File "/tmp/gf-keygen-fixture-yArnkW/scripts/keygen_core.py", line 195, in load_checked_private_key\n' +
+    '    from keygen_trust import check_key_match\n' +
+    '  File "/tmp/gf-keygen-fixture-yArnkW/scripts/keygen_trust.py", line 18, in <module>\n' +
+    '    from cryptography.hazmat.primitives import serialization\n' +
+    "ModuleNotFoundError: No module named 'cryptography'\n"
+}
+
+Node.js v22.22.3
+
+ ❯ runPython scripts/reproduce-keygen-roundtrip.mjs:35:31
+ ❯ reproduce scripts/reproduce-keygen-roundtrip.mjs:37:19
+ ❯ [eval1]:1:95
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[61/85]⎯
+
+ FAIL  src/lib/__tests__/stock-double-deduction.int.test.ts [ src/lib/__tests__/stock-double-deduction.int.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/lib/__tests__/stock-double-deduction.int.test.ts:71:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[62/85]⎯
+
+ FAIL  src/lib/__tests__/tenant-isolation.test.ts [ src/lib/__tests__/tenant-isolation.test.ts ]
+PrismaClientKnownRequestError: 
+Invalid `prisma.garage.create()` invocation in
+/home/user/GarageFlowsV2/src/lib/__tests__/tenant-isolation.test.ts:22:33
+
+  19 const ids = { garageA: '', garageB: '', mechA: '', mechB: '', jobA: '', jobB: '', clientB: '' }
+  20 
+  21 async function seedGarage(slug: string) {
+→ 22   const g = await prisma.garage.create(
+Error validating datasource `db`: the URL must start with the protocol `prisma://`
+ ❯ $n.handleRequestError node_modules/@prisma/client/runtime/library.js:121:7315
+ ❯ $n.handleAndLogRequestError node_modules/@prisma/client/runtime/library.js:121:6623
+ ❯ $n.request node_modules/@prisma/client/runtime/library.js:121:6307
+ ❯ l node_modules/@prisma/client/runtime/library.js:130:9633
+ ❯ seedGarage src/lib/__tests__/tenant-isolation.test.ts:22:13
+     20|
+     21| async function seedGarage(slug: string) {
+     22|   const g = await prisma.garage.create({ data: { name: slug, slug } })
+       |             ^
+     23|   const mech = await prisma.mechanic.create({ data: { name: `mech-${sl…
+     24|   const client = await prisma.client.create({ data: { name: `client-${…
+ ❯ src/lib/__tests__/tenant-isolation.test.ts:44:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[63/85]⎯
+
+ FAIL  src/lib/backup/__tests__/restore-roundtrip.test.ts [ src/lib/backup/__tests__/restore-roundtrip.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/lib/backup/__tests__/restore-roundtrip.test.ts:36:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[64/85]⎯
+
+ FAIL  src/lib/einvoicing/__tests__/desktop-bridge.test.ts [ src/lib/einvoicing/__tests__/desktop-bridge.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/lib/einvoicing/__tests__/desktop-bridge.test.ts:81:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[65/85]⎯
+
+ FAIL  src/lib/license/__tests__/license-keygen-e2e.test.ts [ src/lib/license/__tests__/license-keygen-e2e.test.ts ]
+Error: gen_test_licenses.py a échoué: SKIP: module cryptography indisponible
+
+ ❯ src/lib/license/__tests__/license-keygen-e2e.test.ts:58:30
+     56|   const py = spawnSync(python, [driver, out], { encoding: 'utf8' })
+     57|   if (py.error) throw new Error('Python/keygen indisponible', { cause:…
+     58|   if (py.status !== 0) throw new Error(`gen_test_licenses.py a échoué:…
+       |                              ^
+     59|   if (!existsSync(out)) throw new Error('Keygen a terminé sans produir…
+     60|   const parsed = JSON.parse(readFileSync(out, 'utf8'))
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[66/85]⎯
+
+ FAIL  src/lib/sync/__tests__/job-tombstones.test.ts [ src/lib/sync/__tests__/job-tombstones.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/lib/sync/__tests__/job-tombstones.test.ts:63:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[67/85]⎯
+
+ FAIL  src/lib/sync/__tests__/mechanic-rattrapage.test.ts [ src/lib/sync/__tests__/mechanic-rattrapage.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/lib/sync/__tests__/mechanic-rattrapage.test.ts:80:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[68/85]⎯
+
+ FAIL  src/lib/sync/__tests__/messages-voie-de-retour.test.ts [ src/lib/sync/__tests__/messages-voie-de-retour.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/lib/sync/__tests__/messages-voie-de-retour.test.ts:54:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[69/85]⎯
+
+ FAIL  src/lib/sync/__tests__/passe-lecture-seule.test.ts [ src/lib/sync/__tests__/passe-lecture-seule.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/lib/sync/__tests__/passe-lecture-seule.test.ts:62:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[70/85]⎯
+
+ FAIL  src/lib/sync/__tests__/quote-return.test.ts [ src/lib/sync/__tests__/quote-return.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/lib/sync/__tests__/quote-return.test.ts:62:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[71/85]⎯
+
+ FAIL  src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts [ src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts:52:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[72/85]⎯
+
+ FAIL  src/app/api/clients/__tests__/portal-access-publication.test.ts [ src/app/api/clients/__tests__/portal-access-publication.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/app/api/clients/__tests__/portal-access-publication.test.ts:63:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[73/85]⎯
+
+ FAIL  src/app/api/internal/__tests__/backup-coherent.test.ts [ src/app/api/internal/__tests__/backup-coherent.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/app/api/internal/__tests__/backup-coherent.test.ts:49:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[74/85]⎯
+
+ FAIL  src/app/api/parts/__tests__/parts-pagination.test.ts [ src/app/api/parts/__tests__/parts-pagination.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/app/api/parts/__tests__/parts-pagination.test.ts:29:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[75/85]⎯
+
+ FAIL  src/app/api/sync/__tests__/appointments-sync.test.ts [ src/app/api/sync/__tests__/appointments-sync.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/app/api/sync/__tests__/appointments-sync.test.ts:44:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[76/85]⎯
+
+ FAIL  src/app/api/sync/__tests__/einvoicing-tunnel.test.ts [ src/app/api/sync/__tests__/einvoicing-tunnel.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/app/api/sync/__tests__/einvoicing-tunnel.test.ts:114:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[77/85]⎯
+
+ FAIL  src/app/api/sync/__tests__/invoice-publication.test.ts [ src/app/api/sync/__tests__/invoice-publication.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/app/api/sync/__tests__/invoice-publication.test.ts:63:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[78/85]⎯
+
+ FAIL  src/app/api/sync/__tests__/portal-account-publication.test.ts [ src/app/api/sync/__tests__/portal-account-publication.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/app/api/sync/__tests__/portal-account-publication.test.ts:54:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[79/85]⎯
+
+ FAIL  src/app/api/sync/__tests__/quote-publication.test.ts [ src/app/api/sync/__tests__/quote-publication.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/app/api/sync/__tests__/quote-publication.test.ts:68:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[80/85]⎯
+
+ FAIL  src/app/api/sync/__tests__/tickets-sync.test.ts [ src/app/api/sync/__tests__/tickets-sync.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/app/api/sync/__tests__/tickets-sync.test.ts:51:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[81/85]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/__tests__/issuer-fixture-roundtrip.test.ts > the actual Python keygen signs a transient fixture accepted by the actual Node verifiers
+Error: Command failed: python3 -c import sys,json
+sys.path.insert(0, 'scripts')
+import keygen_core as k
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import serialization
+p=ec.generate_private_key(ec.SECP256R1())
+r=k.make_license(p, 'PYTHON-FIXTURE-NOT-ISSUED', 'premium')
+print(json.dumps({'token':r['token'],'public':p.public_key().public_bytes(serialization.Encoding.PEM,serialization.PublicFormat.SubjectPublicKeyInfo).decode()}))
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'cryptography'
+
+ ❯ src/lib/__tests__/issuer-fixture-roundtrip.test.ts:62:30
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[82/85]⎯
+
+ FAIL  src/test-utils/__tests__/prepare-test-db.test.ts > GF31-AUD-024 — modèle de base de test partagé > produit une base exploitable, et le modèle porte l’empreinte du schéma
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/test-utils/__tests__/prepare-test-db.test.ts:28:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[83/85]⎯
+
+ FAIL  src/test-utils/__tests__/prepare-test-db.test.ts > GF31-AUD-024 — modèle de base de test partagé > le second appel réutilise le modèle au lieu de reconstruire
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/test-utils/__tests__/prepare-test-db.test.ts:46:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[84/85]⎯
+
+ FAIL  src/test-utils/__tests__/prepare-test-db.test.ts > GF31-AUD-024 — modèle de base de test partagé > une base déjà présente est REMPLACÉE, jamais réutilisée telle quelle
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/test-utils/__tests__/prepare-test-db.test.ts:68:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[85/85]⎯
+
+
+ Test Files  83 failed | 277 passed | 5 skipped (365)
+      Tests  4 failed | 3541 passed | 879 skipped (4424)
+   Start at  16:54:58
+   Duration  351.27s (transform 5.29s, setup 0ms, import 17.40s, tests 287.20s, environment 36ms)
+
+exit_code=1

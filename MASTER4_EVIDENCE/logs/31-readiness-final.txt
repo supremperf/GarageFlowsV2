@@ -1,0 +1,12 @@
+date_utc=2026-10-22T19:18:11Z
+Commande : npm run readiness:final
+
+> garageflow@1.1.0 readiness:final
+> node scripts/production-readiness.cjs
+
+GarageFlows — contrôle final de production
+Manifeste : artifacts/verification/production-readiness.json
+Contrôles : 11 pass, 22 bloquant(s), 33 total
+NON PRÊT POUR LA PRODUCTION
+readiness_final_exit_code=1
+dev_db_unchanged=true

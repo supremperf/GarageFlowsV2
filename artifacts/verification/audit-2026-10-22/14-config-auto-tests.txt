@@ -1,0 +1,736 @@
+
+> garageflow@1.1.0 test:config:auto
+> node --test --test-concurrency=1 "configuation automatique/tests/*.test.js"
+
+TAP version 13
+# Subtest: fichier .env — ce qui est écrit est relu à l identique par l application
+ok 1 - fichier .env — ce qui est écrit est relu à l identique par l application
+  ---
+  duration_ms: 3.776389
+  type: 'test'
+  ...
+# Subtest: fichier .env — les commentaires et les variables tierces sont préservés
+ok 2 - fichier .env — les commentaires et les variables tierces sont préservés
+  ---
+  duration_ms: 0.825698
+  type: 'test'
+  ...
+# Subtest: fichier .env — un doublon est neutralisé en gardant la déclaration effective
+ok 3 - fichier .env — un doublon est neutralisé en gardant la déclaration effective
+  ---
+  duration_ms: 0.203235
+  type: 'test'
+  ...
+# Subtest: fichier .env — une valeur mal formée est détectée puis réparée
+ok 4 - fichier .env — une valeur mal formée est détectée puis réparée
+  ---
+  duration_ms: 0.241358
+  type: 'test'
+  ...
+# Subtest: fichier .env — appliquer deux fois la même valeur ne modifie rien (idempotence)
+ok 5 - fichier .env — appliquer deux fois la même valeur ne modifie rien (idempotence)
+  ---
+  duration_ms: 0.174746
+  type: 'test'
+  ...
+# Subtest: fichier .env — un nom de variable non représentable est refusé
+ok 6 - fichier .env — un nom de variable non représentable est refusé
+  ---
+  duration_ms: 0.41189
+  type: 'test'
+  ...
+# Subtest: secrets — chaque spécification produit une valeur conforme et exploitable
+ok 7 - secrets — chaque spécification produit une valeur conforme et exploitable
+  ---
+  duration_ms: 1.451894
+  type: 'test'
+  ...
+# Subtest: secrets — les clés AES font exactement 32 octets après décodage base64
+ok 8 - secrets — les clés AES font exactement 32 octets après décodage base64
+  ---
+  duration_ms: 0.183952
+  type: 'test'
+  ...
+# Subtest: secrets — deux générations successives diffèrent, et une collision est refusée
+ok 9 - secrets — deux générations successives diffèrent, et une collision est refusée
+  ---
+  duration_ms: 0.504499
+  type: 'test'
+  ...
+# Subtest: secrets — une source aléatoire défaillante est détectée, jamais utilisée
+ok 10 - secrets — une source aléatoire défaillante est détectée, jamais utilisée
+  ---
+  duration_ms: 0.652248
+  type: 'test'
+  ...
+# Subtest: secrets — un secret générique ou trop court est déclaré non conforme
+ok 11 - secrets — un secret générique ou trop court est déclaré non conforme
+  ---
+  duration_ms: 0.224693
+  type: 'test'
+  ...
+# Subtest: masquage — une valeur surveillée disparaît de toute sortie
+ok 12 - masquage — une valeur surveillée disparaît de toute sortie
+  ---
+  duration_ms: 0.73545
+  type: 'test'
+  ...
+# Subtest: masquage — le mot de passe d une URL est masqué même isolé
+ok 13 - masquage — le mot de passe d une URL est masqué même isolé
+  ---
+  duration_ms: 0.1601
+  type: 'test'
+  ...
+# Subtest: masquage — les motifs de jetons sont neutralisés sans liste préalable
+ok 14 - masquage — les motifs de jetons sont neutralisés sans liste préalable
+  ---
+  duration_ms: 0.142115
+  type: 'test'
+  ...
+# Subtest: masquage — ce qui n est pas un secret reste lisible
+ok 15 - masquage — ce qui n est pas un secret reste lisible
+  ---
+  duration_ms: 0.778078
+  type: 'test'
+  ...
+# Subtest: destinations — la politique est cohérente avec le manifeste du dépôt
+ok 16 - destinations — la politique est cohérente avec le manifeste du dépôt
+  ---
+  duration_ms: 4.34881
+  type: 'test'
+  ...
+# Subtest: destinations — aucun secret serveur ne part vers le client ou vers Vercel
+ok 17 - destinations — aucun secret serveur ne part vers le client ou vers Vercel
+  ---
+  duration_ms: 2.302049
+  type: 'test'
+  ...
+# Subtest: destinations — les valeurs propres à un environnement ne sont jamais recopiées
+ok 18 - destinations — les valeurs propres à un environnement ne sont jamais recopiées
+  ---
+  duration_ms: 0.132627
+  type: 'test'
+  ...
+# Subtest: manifeste — chaque variable du contrat a une fiche complète
+ok 19 - manifeste — chaque variable du contrat a une fiche complète
+  ---
+  duration_ms: 4.990763
+  type: 'test'
+  ...
+# Subtest: scénario 1 — installation vierge : les secrets de session sont générés
+ok 20 - scénario 1 — installation vierge : les secrets de session sont générés
+  ---
+  duration_ms: 2.553695
+  type: 'test'
+  ...
+# Subtest: scénario 1 — installation vierge : les défauts desktop sont posés, pas inventés
+ok 21 - scénario 1 — installation vierge : les défauts desktop sont posés, pas inventés
+  ---
+  duration_ms: 0.291759
+  type: 'test'
+  ...
+# Subtest: scénario 2 — une valeur existante conforme est réutilisée telle quelle
+ok 22 - scénario 2 — une valeur existante conforme est réutilisée telle quelle
+  ---
+  duration_ms: 0.4881
+  type: 'test'
+  ...
+# Subtest: scénario 3 — un secret présent chez Vercel et protégé en lecture est conservé
+ok 23 - scénario 3 — un secret présent chez Vercel et protégé en lecture est conservé
+  ---
+  duration_ms: 0.227669
+  type: 'test'
+  ...
+# Subtest: scénario 4 — une clé critique non conforme est signalée, jamais remplacée
+ok 24 - scénario 4 — une clé critique non conforme est signalée, jamais remplacée
+  ---
+  duration_ms: 0.364262
+  type: 'test'
+  ...
+# Subtest: scénario 4 — une valeur de faible risque non conforme est régénérée
+ok 25 - scénario 4 — une valeur de faible risque non conforme est régénérée
+  ---
+  duration_ms: 0.307276
+  type: 'test'
+  ...
+# Subtest: scénario 5 — une variable requise introuvable est bloquée, sans valeur inventée
+ok 26 - scénario 5 — une variable requise introuvable est bloquée, sans valeur inventée
+  ---
+  duration_ms: 0.360107
+  type: 'test'
+  ...
+# Subtest: scénario 5 — une variable facultative absente est ignorée, pas signalée en anomalie
+ok 27 - scénario 5 — une variable facultative absente est ignorée, pas signalée en anomalie
+  ---
+  duration_ms: 0.258511
+  type: 'test'
+  ...
+# Subtest: récupération — une valeur trouvée ailleurs est importée avec son origine
+ok 28 - récupération — une valeur trouvée ailleurs est importée avec son origine
+  ---
+  duration_ms: 0.483176
+  type: 'test'
+  ...
+# Subtest: récupération — une valeur propre à un autre environnement n est pas recopiée
+ok 29 - récupération — une valeur propre à un autre environnement n est pas recopiée
+  ---
+  duration_ms: 0.611405
+  type: 'test'
+  ...
+# Subtest: récupération — un brouillon non prouvé est écarté ; prouvé, il est accepté
+ok 30 - récupération — un brouillon non prouvé est écarté ; prouvé, il est accepté
+  ---
+  duration_ms: 0.613512
+  type: 'test'
+  ...
+# Subtest: dérivation — une valeur calculée et vérifiée est préférée à une génération
+ok 31 - dérivation — une valeur calculée et vérifiée est préférée à une génération
+  ---
+  duration_ms: 0.196423
+  type: 'test'
+  ...
+# Subtest: dérivation — sans sa source, la variable nomme ce qui manque
+ok 32 - dérivation — sans sa source, la variable nomme ce qui manque
+  ---
+  duration_ms: 0.190301
+  type: 'test'
+  ...
+# Subtest: sûreté — aucune génération quand l état distant est inconnu
+ok 33 - sûreté — aucune génération quand l état distant est inconnu
+  ---
+  duration_ms: 0.410814
+  type: 'test'
+  ...
+# Subtest: sûreté — aucune génération d une clé liée aux données sur une base peuplée
+ok 34 - sûreté — aucune génération d une clé liée aux données sur une base peuplée
+  ---
+  duration_ms: 0.452372
+  type: 'test'
+  ...
+# Subtest: sûreté — une clé de chiffrement n est jamais créée sans autorisation explicite
+ok 35 - sûreté — une clé de chiffrement n est jamais créée sans autorisation explicite
+  ---
+  duration_ms: 0.442533
+  type: 'test'
+  ...
+# Subtest: sûreté — la clé privée de licence n est pas provisionnée sans autorisation
+ok 36 - sûreté — la clé privée de licence n est pas provisionnée sans autorisation
+  ---
+  duration_ms: 0.164412
+  type: 'test'
+  ...
+# Subtest: hors périmètre — les variables de plateforme et d outillage sont ignorées avec motif
+ok 37 - hors périmètre — les variables de plateforme et d outillage sont ignorées avec motif
+  ---
+  duration_ms: 0.166213
+  type: 'test'
+  ...
+# Subtest: hors périmètre — une variable facultative à défaut connu n est pas dupliquée
+ok 38 - hors périmètre — une variable facultative à défaut connu n est pas dupliquée
+  ---
+  duration_ms: 0.165919
+  type: 'test'
+  ...
+# Subtest: découverte — un espace réservé n est jamais pris pour un identifiant
+ok 39 - découverte — un espace réservé n est jamais pris pour un identifiant
+  ---
+  duration_ms: 22.296324
+  type: 'test'
+  ...
+# Subtest: découverte — un jeton temporaire est reconnu et jamais propagé
+ok 40 - découverte — un jeton temporaire est reconnu et jamais propagé
+  ---
+  duration_ms: 4.565942
+  type: 'test'
+  ...
+# Subtest: découverte — un identifiant connu exposé est refusé comme candidat
+ok 41 - découverte — un identifiant connu exposé est refusé comme candidat
+  ---
+  duration_ms: 4.219492
+  type: 'test'
+  ...
+# Subtest: découverte — l ordre de priorité préfère la cible, puis la preuve
+ok 42 - découverte — l ordre de priorité préfère la cible, puis la preuve
+  ---
+  duration_ms: 0.168161
+  type: 'test'
+  ...
+# Subtest: découverte — des valeurs divergentes entre sources sont détectées
+ok 43 - découverte — des valeurs divergentes entre sources sont détectées
+  ---
+  duration_ms: 0.168369
+  type: 'test'
+  ...
+# Subtest: autorité de licences — une paire existante est réutilisée et vérifiée par signature
+ok 44 - autorité de licences — une paire existante est réutilisée et vérifiée par signature
+  ---
+  duration_ms: 4.357304
+  type: 'test'
+  ...
+# Subtest: autorité de licences — la création est refusée tant qu une autorité existe
+ok 45 - autorité de licences — la création est refusée tant qu une autorité existe
+  ---
+  duration_ms: 3.676974
+  type: 'test'
+  ...
+# Subtest: autorité de licences — sur un dépôt réellement neuf, la création produit une paire valide
+ok 46 - autorité de licences — sur un dépôt réellement neuf, la création produit une paire valide
+  ---
+  duration_ms: 10.697719
+  type: 'test'
+  ...
+# Subtest: autorité de licences — GF_PRIVATE_KEY se dérive de la clé locale, et refuse une clé étrangère
+ok 47 - autorité de licences — GF_PRIVATE_KEY se dérive de la clé locale, et refuse une clé étrangère
+  ---
+  duration_ms: 6.289769
+  type: 'test'
+  ...
+# Subtest: synchronisation — une variable requise absente est créée dans la bonne cible
+ok 48 - synchronisation — une variable requise absente est créée dans la bonne cible
+  ---
+  duration_ms: 7.660096
+  type: 'test'
+  ...
+# Subtest: synchronisation — une variable déjà identique ne produit aucune opération
+ok 49 - synchronisation — une variable déjà identique ne produit aucune opération
+  ---
+  duration_ms: 0.718868
+  type: 'test'
+  ...
+# Subtest: synchronisation — une variable non relisible n est jamais remplacée à l aveugle
+ok 50 - synchronisation — une variable non relisible n est jamais remplacée à l aveugle
+  ---
+  duration_ms: 0.449329
+  type: 'test'
+  ...
+# Subtest: synchronisation — une variable d intégration Marketplace est laissée intacte
+ok 51 - synchronisation — une variable d intégration Marketplace est laissée intacte
+  ---
+  duration_ms: 0.319645
+  type: 'test'
+  ...
+# Subtest: synchronisation — une divergence n est pas corrigée sans autorisation explicite
+ok 52 - synchronisation — une divergence n est pas corrigée sans autorisation explicite
+  ---
+  duration_ms: 0.341992
+  type: 'test'
+  ...
+# Subtest: synchronisation — une rotation critique reste refusée même autorisée
+ok 53 - synchronisation — une rotation critique reste refusée même autorisée
+  ---
+  duration_ms: 0.311704
+  type: 'test'
+  ...
+# Subtest: synchronisation — une variable partagée entre environnements n est pas mutée
+ok 54 - synchronisation — une variable partagée entre environnements n est pas mutée
+  ---
+  duration_ms: 0.315029
+  type: 'test'
+  ...
+# Subtest: synchronisation — rien n est envoyé vers une cible que la politique n autorise pas
+ok 55 - synchronisation — rien n est envoyé vers une cible que la politique n autorise pas
+  ---
+  duration_ms: 0.142614
+  type: 'test'
+  ...
+# Subtest: synchronisation — le type Vercel suit la nature de la variable
+ok 56 - synchronisation — le type Vercel suit la nature de la variable
+  ---
+  duration_ms: 4.717715
+  type: 'test'
+  ...
+# Subtest: échec d authentification Vercel — aucune lecture, aucune supposition de projet
+ok 57 - échec d authentification Vercel — aucune lecture, aucune supposition de projet
+  ---
+  duration_ms: 9.661898
+  type: 'test'
+  ...
+# Subtest: fournisseur indisponible — PostgreSQL injoignable est rapporté, jamais contourné
+ok 58 - fournisseur indisponible — PostgreSQL injoignable est rapporté, jamais contourné
+  ---
+  duration_ms: 83.274997
+  type: 'test'
+  ...
+# Subtest: fournisseur indisponible — Redis injoignable ne devient jamais un succès
+ok 59 - fournisseur indisponible — Redis injoignable ne devient jamais un succès
+  ---
+  duration_ms: 1.413411
+  type: 'test'
+  ...
+# Subtest: fournisseur — un endpoint Redis hors domaine Upstash est refusé avant tout envoi
+ok 60 - fournisseur — un endpoint Redis hors domaine Upstash est refusé avant tout envoi
+  ---
+  duration_ms: 0.238782
+  type: 'test'
+  ...
+# Subtest: stockage — un jeton Blob dont le store n est pas rattaché est signalé
+ok 61 - stockage — un jeton Blob dont le store n est pas rattaché est signalé
+  ---
+  duration_ms: 0.62282
+  type: 'test'
+  ...
+# Subtest: stockage — un chemin de disque local est refusé pour une cible Vercel
+ok 62 - stockage — un chemin de disque local est refusé pour une cible Vercel
+  ---
+  duration_ms: 0.320777
+  type: 'test'
+  ...
+# Subtest: facturation électronique — une configuration d émission réelle est refusée
+ok 63 - facturation électronique — une configuration d émission réelle est refusée
+  ---
+  duration_ms: 0.379249
+  type: 'test'
+  ...
+# Subtest: SMTP — la clé de chiffrement absente n est pas créée en silence
+ok 64 - SMTP — la clé de chiffrement absente n est pas créée en silence
+  ---
+  duration_ms: 0.826255
+  type: 'test'
+  ...
+# Subtest: Anthropic — la disponibilité n est jamais revendiquée sans test réel
+ok 65 - Anthropic — la disponibilité n est jamais revendiquée sans test réel
+  ---
+  duration_ms: 0.538615
+  type: 'test'
+  ...
+# Subtest: isolation Preview — une base identique à la production est détectée
+ok 66 - isolation Preview — une base identique à la production est détectée
+  ---
+  duration_ms: 1.381652
+  type: 'test'
+  ...
+# Subtest: isolation Preview — une garde non provisionnée est signalée comme absente
+ok 67 - isolation Preview — une garde non provisionnée est signalée comme absente
+  ---
+  duration_ms: 10.875517
+  type: 'test'
+  ...
+# Subtest: cohérence — un secret sous un nom public est une anomalie, pas un détail
+ok 68 - cohérence — un secret sous un nom public est une anomalie, pas un détail
+  ---
+  duration_ms: 0.451664
+  type: 'test'
+  ...
+# Subtest: cohérence — un alias historique du projet est distingué d un alias d intégration
+ok 69 - cohérence — un alias historique du projet est distingué d un alias d intégration
+  ---
+  duration_ms: 0.656325
+  type: 'test'
+  ...
+# Subtest: cohérence — NODE_ENV ou ELECTRON sur le projet PWA sont des anomalies
+ok 70 - cohérence — NODE_ENV ou ELECTRON sur le projet PWA sont des anomalies
+  ---
+  duration_ms: 0.671913
+  type: 'test'
+  ...
+# == 1. Étape de test ========================================================
+# == 1. Étape de test ========================================================
+#   [OK  ] Contrôle — La valeur [valeur masquée] a été vérifiée.
+# == 1. Étape ================================================================
+# == 1. Étape ================================================================
+#   [OK  ] a — ok
+#   [REUT] b — ok
+#   [ATTN] c — attention
+# Subtest: verrou — une seconde exécution est refusée tant que la première tourne
+ok 71 - verrou — une seconde exécution est refusée tant que la première tourne
+  ---
+  duration_ms: 3.685009
+  type: 'test'
+  ...
+# Subtest: verrou — un verrou orphelin est repris, sans écraser un verrou vivant
+ok 72 - verrou — un verrou orphelin est repris, sans écraser un verrou vivant
+  ---
+  duration_ms: 5.207322
+  type: 'test'
+  ...
+# Subtest: verrou — un verrou d une autre machine n est pas repris sans --forcer-verrou
+ok 73 - verrou — un verrou d une autre machine n est pas repris sans --forcer-verrou
+  ---
+  duration_ms: 3.730011
+  type: 'test'
+  ...
+# Subtest: verrou — un verrou n est jamais libéré par une autre exécution
+ok 74 - verrou — un verrou n est jamais libéré par une autre exécution
+  ---
+  duration_ms: 1.218481
+  type: 'test'
+  ...
+# Subtest: interruption et reprise — l état conservé décrit ce qui reste à faire
+ok 75 - interruption et reprise — l état conservé décrit ce qui reste à faire
+  ---
+  duration_ms: 2.506184
+  type: 'test'
+  ...
+# Subtest: sauvegarde — le contenu d origine est copié avant toute écriture
+ok 76 - sauvegarde — le contenu d origine est copié avant toute écriture
+  ---
+  duration_ms: 3.37761
+  type: 'test'
+  ...
+# Subtest: retour arrière — le contenu d origine est restauré et vérifié
+ok 77 - retour arrière — le contenu d origine est restauré et vérifié
+  ---
+  duration_ms: 8.74113
+  type: 'test'
+  ...
+# Subtest: retour arrière — un fichier créé par nous est retiré, pas vidé
+ok 78 - retour arrière — un fichier créé par nous est retiré, pas vidé
+  ---
+  duration_ms: 0.867563
+  type: 'test'
+  ...
+# Subtest: retour arrière — une modification concurrente est refusée, jamais écrasée
+ok 79 - retour arrière — une modification concurrente est refusée, jamais écrasée
+  ---
+  duration_ms: 2.095089
+  type: 'test'
+  ...
+# Subtest: écriture atomique — un lien symbolique est refusé comme destination
+ok 80 - écriture atomique — un lien symbolique est refusé comme destination
+  ---
+  duration_ms: 1.056479
+  type: 'test'
+  ...
+# Subtest: écriture atomique — aucun fichier temporaire ne subsiste après écriture
+ok 81 - écriture atomique — aucun fichier temporaire ne subsiste après écriture
+  ---
+  duration_ms: 0.933264
+  type: 'test'
+  ...
+# Subtest: rapport — un rapport contenant une valeur sensible est refusé, avec son emplacement
+ok 82 - rapport — un rapport contenant une valeur sensible est refusé, avec son emplacement
+  ---
+  duration_ms: 2.932657
+  type: 'test'
+  ...
+# Subtest: rapport — un rapport sans valeur est écrit, avec permissions restreintes
+ok 83 - rapport — un rapport sans valeur est écrit, avec permissions restreintes
+  ---
+  duration_ms: 6.384461
+  type: 'test'
+  ...
+# Subtest: rapport — un statut inconnu est refusé plutôt qu accepté silencieusement
+ok 84 - rapport — un statut inconnu est refusé plutôt qu accepté silencieusement
+  ---
+  duration_ms: 0.691067
+  type: 'test'
+  ...
+# Subtest: rapport — le verdict global retient la gravité la plus forte
+ok 85 - rapport — le verdict global retient la gravité la plus forte
+  ---
+  duration_ms: 4.296899
+  type: 'test'
+  ...
+# Subtest: idempotence — rejouer le même plan sur un fichier déjà écrit ne change rien
+ok 86 - idempotence — rejouer le même plan sur un fichier déjà écrit ne change rien
+  ---
+  duration_ms: 16.046024
+  type: 'test'
+  ...
+# Subtest: sûreté du dépôt — une destination non ignorée par Git bloque l écriture
+ok 87 - sûreté du dépôt — une destination non ignorée par Git bloque l écriture
+  ---
+  duration_ms: 29.4414
+  type: 'test'
+  ...
+# Subtest: rapport — l historique des rapports est borné, le dernier toujours conservé
+ok 88 - rapport — l historique des rapports est borné, le dernier toujours conservé
+  ---
+  duration_ms: 0.795359
+  type: 'test'
+  ...
+# Subtest: intégration — l aide s affiche sans rien exécuter
+ok 89 - intégration — l aide s affiche sans rien exécuter
+  ---
+  duration_ms: 102.775043
+  type: 'test'
+  ...
+# Subtest: intégration — une option inconnue est refusée au lieu d être ignorée
+ok 90 - intégration — une option inconnue est refusée au lieu d être ignorée
+  ---
+  duration_ms: 153.001819
+  type: 'test'
+  ...
+# Subtest: intégration — les vingt étapes s exécutent en simulation hors ligne
+ok 91 - intégration — les vingt étapes s exécutent en simulation hors ligne
+  ---
+  duration_ms: 8079.943075
+  type: 'test'
+  ...
+# Subtest: intégration — hors ligne, aucun succès de connexion n est revendiqué
+ok 92 - intégration — hors ligne, aucun succès de connexion n est revendiqué
+  ---
+  duration_ms: 7521.125826
+  type: 'test'
+  ...
+# Subtest: intégration — hors ligne, aucune génération pour un environnement distant
+ok 93 - intégration — hors ligne, aucune génération pour un environnement distant
+  ---
+  duration_ms: 7105.020322
+  type: 'test'
+  ...
+# Subtest: intégration — le rapport ne contient aucune valeur secrète
+ok 94 - intégration — le rapport ne contient aucune valeur secrète
+  ---
+  duration_ms: 6999.25022
+  type: 'test'
+  ...
+# Subtest: intégration — la sortie terminale ne contient aucune valeur secrète
+ok 95 - intégration — la sortie terminale ne contient aucune valeur secrète
+  ---
+  duration_ms: 7029.782136
+  type: 'test'
+  ...
+# Subtest: intégration — deux exécutions successives donnent les mêmes décisions
+ok 96 - intégration — deux exécutions successives donnent les mêmes décisions
+  ---
+  duration_ms: 13992.605069
+  type: 'test'
+  ...
+# Subtest: intégration — le verrou empêche deux exécutions simultanées
+ok 97 - intégration — le verrou empêche deux exécutions simultanées
+  ---
+  duration_ms: 51.875786
+  type: 'test'
+  ...
+# Subtest: intégration — le rapport décrit chaque variable du contrat
+ok 98 - intégration — le rapport décrit chaque variable du contrat
+  ---
+  duration_ms: 7012.215053
+  type: 'test'
+  ...
+# Subtest: intégration — les statuts employés respectent leur définition
+ok 99 - intégration — les statuts employés respectent leur définition
+  ---
+  duration_ms: 7090.549021
+  type: 'test'
+  ...
+# Subtest: intégration — aucun module du configurateur n emploie un générateur non cryptographique
+ok 100 - intégration — aucun module du configurateur n emploie un générateur non cryptographique
+  ---
+  duration_ms: 2.659189
+  type: 'test'
+  ...
+# Subtest: sélection — chaque environnement borne les écritures à ses propres cibles
+ok 101 - sélection — chaque environnement borne les écritures à ses propres cibles
+  ---
+  duration_ms: 2.105462
+  type: 'test'
+  ...
+# Subtest: sélection — aucun environnement ne peut écrire dans la cible d un autre
+ok 102 - sélection — aucun environnement ne peut écrire dans la cible d un autre
+  ---
+  duration_ms: 0.281941
+  type: 'test'
+  ...
+# Subtest: sélection — le profil local .env appartient à DEVELOPMENT, pas à la production
+ok 103 - sélection — le profil local .env appartient à DEVELOPMENT, pas à la production
+  ---
+  duration_ms: 0.098848
+  type: 'test'
+  ...
+# Subtest: sélection — les trois environnements, et seulement eux
+ok 104 - sélection — les trois environnements, et seulement eux
+  ---
+  duration_ms: 0.202391
+  type: 'test'
+  ...
+# Subtest: sélection — le dernier choix mémorisé est proposé en tête
+ok 105 - sélection — le dernier choix mémorisé est proposé en tête
+  ---
+  duration_ms: 0.231327
+  type: 'test'
+  ...
+# Subtest: sélection — les préférences retiennent trois noms et JAMAIS un secret
+ok 106 - sélection — les préférences retiennent trois noms et JAMAIS un secret
+  ---
+  duration_ms: 1.247642
+  type: 'test'
+  ...
+# Subtest: sélection — un fichier de préférences illisible ou absurde n est jamais fatal
+ok 107 - sélection — un fichier de préférences illisible ou absurde n est jamais fatal
+  ---
+  duration_ms: 0.653491
+  type: 'test'
+  ...
+# Subtest: sélection — les préférences vivent dans le dossier ignoré par Git
+ok 108 - sélection — les préférences vivent dans le dossier ignoré par Git
+  ---
+  duration_ms: 0.232714
+  type: 'test'
+  ...
+# Subtest: sélection — les branches locales et distantes sont découvertes, la courante en tête
+ok 109 - sélection — les branches locales et distantes sont découvertes, la courante en tête
+  ---
+  duration_ms: 9.90052
+  type: 'test'
+  ...
+# Subtest: sélection — la découverte des projets marque celui qui est lié au dossier
+ok 110 - sélection — la découverte des projets marque celui qui est lié au dossier
+  ---
+  duration_ms: 0.630618
+  type: 'test'
+  ...
+# Subtest: sélection — hors ligne, aucun appel réseau et seul le projet lié est connu
+ok 111 - sélection — hors ligne, aucun appel réseau et seul le projet lié est connu
+  ---
+  duration_ms: 0.524882
+  type: 'test'
+  ...
+# Subtest: sélection — une session Vercel absente n est pas une panne du configurateur
+ok 112 - sélection — une session Vercel absente n est pas une panne du configurateur
+  ---
+  duration_ms: 0.258535
+  type: 'test'
+  ...
+# Subtest: sélection — les options répondent aux trois étapes sans poser de question
+ok 113 - sélection — les options répondent aux trois étapes sans poser de question
+  ---
+  duration_ms: 27.06851
+  type: 'test'
+  ...
+# Subtest: sélection — un environnement inconnu est refusé, jamais interprété
+ok 114 - sélection — un environnement inconnu est refusé, jamais interprété
+  ---
+  duration_ms: 9.678666
+  type: 'test'
+  ...
+# Subtest: sélection — sans terminal ni option, aucun environnement n est DEVINÉ
+ok 115 - sélection — sans terminal ni option, aucun environnement n est DEVINÉ
+  ---
+  duration_ms: 9.123378
+  type: 'test'
+  ...
+# Subtest: sélection — un projet absent de l inventaire est conservé et signalé, jamais inventé
+ok 116 - sélection — un projet absent de l inventaire est conservé et signalé, jamais inventé
+  ---
+  duration_ms: 9.386845
+  type: 'test'
+  ...
+# Subtest: sélection — une branche inconnue du dépôt est signalée et n est pas créée
+ok 117 - sélection — une branche inconnue du dépôt est signalée et n est pas créée
+  ---
+  duration_ms: 17.47249
+  type: 'test'
+  ...
+# Subtest: sélection — changer d environnement change les cibles écrites, et rien d autre
+ok 118 - sélection — changer d environnement change les cibles écrites, et rien d autre
+  ---
+  duration_ms: 18.371474
+  type: 'test'
+  ...
+# Subtest: sélection — aucune valeur sensible dans l objet rapporté
+ok 119 - sélection — aucune valeur sensible dans l objet rapporté
+  ---
+  duration_ms: 8.738716
+  type: 'test'
+  ...
+1..119
+# tests 119
+# suites 0
+# pass 119
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 66355.549871

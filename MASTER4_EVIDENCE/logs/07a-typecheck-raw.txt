@@ -1,0 +1,271 @@
+
+> garageflow@1.1.0 type-check
+> tsc --noEmit
+
+scripts/migrate-money-json.ts(35,30): error TS2307: Cannot find module '../src/generated/server-client' or its corresponding type declarations.
+scripts/migrate-money-json.ts(67,14): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/admin/licenses/[id]/route.ts(137,54): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/admin/licenses/generate/route.ts(229,15): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/app/api/dashboard/route.ts(96,29): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/app/api/dashboard/route.ts(97,29): error TS7006: Parameter 'jp' implicitly has an 'any' type.
+src/app/api/dashboard/route.ts(113,34): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/einvoicing/invoices/[id]/submit/route.ts(146,22): error TS2339: Property 'description' does not exist on type 'LineWithEuros<ScaledLine>'.
+src/app/api/einvoicing/invoices/[id]/submit/route.ts(194,39): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/app/api/estimate/route.ts(138,35): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/app/api/export/fec/route.ts(35,13): error TS7006: Parameter 'rows' implicitly has an 'any' type.
+src/app/api/export/fec/route.ts(35,30): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/app/api/finance/route.ts(36,13): error TS7006: Parameter 'rows' implicitly has an 'any' type.
+src/app/api/finance/route.ts(36,30): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/app/api/finance/route.ts(54,41): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/finance/route.ts(57,42): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/finance/route.ts(59,46): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/finance/route.ts(59,49): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/finance/route.ts(60,46): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/finance/route.ts(60,49): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/finance/route.ts(71,46): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/finance/route.ts(71,49): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/finance/route.ts(73,17): error TS7006: Parameter 'l' implicitly has an 'any' type.
+src/app/api/finance/route.ts(74,18): error TS7006: Parameter 'ls' implicitly has an 'any' type.
+src/app/api/finance/route.ts(74,22): error TS7006: Parameter 'l' implicitly has an 'any' type.
+src/app/api/finance/route.ts(76,45): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/app/api/finance/route.ts(77,49): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/app/api/finance/route.ts(105,48): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/app/api/forgotten-parts/route.ts(74,16): error TS7006: Parameter 'g' implicitly has an 'any' type.
+src/app/api/forgotten-parts/route.ts(75,13): error TS7006: Parameter 'g' implicitly has an 'any' type.
+src/app/api/forgotten-parts/route.ts(76,16): error TS7006: Parameter 'n' implicitly has an 'any' type.
+src/app/api/garages/route.ts(223,61): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/health/route.ts(69,24): error TS2347: Untyped function calls may not accept type arguments.
+src/app/api/internal/export/route.ts(58,22): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/internal/license-status/route.ts(53,54): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/internal/migrate/route.ts(53,22): error TS2344: Type 'unknown' does not satisfy the constraint '(...args: any) => any'.
+src/app/api/internal/migrate/route.ts(69,25): error TS2339: Property '$queryRawUnsafe' does not exist on type 'never'.
+src/app/api/internal/migrate/route.ts(70,21): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/app/api/internal/migrate/route.ts(75,23): error TS2347: Untyped function calls may not accept type arguments.
+src/app/api/internal/migrate/route.ts(77,20): error TS2347: Untyped function calls may not accept type arguments.
+src/app/api/internal/migrate/route.ts(92,24): error TS2339: Property 'workOrder' does not exist on type 'never'.
+src/app/api/internal/migrate/route.ts(114,14): error TS2339: Property 'workOrder' does not exist on type 'never'.
+src/app/api/internal/migrate/route.ts(117,24): error TS2339: Property 'purchaseOrder' does not exist on type 'never'.
+src/app/api/internal/migrate/route.ts(128,14): error TS2339: Property 'purchaseOrder' does not exist on type 'never'.
+src/app/api/internal/migrate/route.ts(140,22): error TS2347: Untyped function calls may not accept type arguments.
+src/app/api/internal/migrate/route.ts(141,35): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/app/api/internal/migrate/route.ts(171,28): error TS2347: Untyped function calls may not accept type arguments.
+src/app/api/internal/migrate/route.ts(174,47): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/app/api/internal/migrate/route.ts(202,29): error TS2347: Untyped function calls may not accept type arguments.
+src/app/api/internal/migrate/route.ts(209,44): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/internal/migrate/route.ts(229,42): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/internal/migrate/route.ts(231,38): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/app/api/internal/migrate/route.ts(234,67): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/app/api/internal/migrate/route.ts(235,67): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/app/api/internal/migrate/route.ts(237,36): error TS2347: Untyped function calls may not accept type arguments.
+src/app/api/internal/migrate/route.ts(248,70): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/app/api/internal/migrate/route.ts(250,77): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/app/api/invoices/[id]/route.ts(27,53): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+src/app/api/invoices/[id]/route.ts(101,48): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/invoices/[id]/route.ts(208,76): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+src/app/api/invoices/[id]/route.ts(237,38): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/invoices/route.ts(45,29): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/invoices/route.ts(47,56): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+src/app/api/invoices/route.ts(95,48): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/invoices/route.ts(152,76): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+src/app/api/jobs/[id]/parts/route.ts(59,15): error TS7006: Parameter 'jp' implicitly has an 'any' type.
+src/app/api/jobs/[id]/parts/route.ts(101,54): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/jobs/[id]/parts/route.ts(194,38): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/jobs/[id]/route.ts(149,38): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/loaner-reservations/[id]/route.ts(75,52): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/loaner-reservations/route.ts(86,56): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/mechanic-licenses/[lid]/assign/route.ts(54,36): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/mechanic-licenses/route.ts(48,12): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/mechanic-licenses/route.ts(81,43): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/app/api/mechanic-licenses/route.ts(86,45): error TS7006: Parameter 'l' implicitly has an 'any' type.
+src/app/api/mechanic-licenses/route.ts(89,51): error TS7006: Parameter 'd' implicitly has an 'any' type.
+src/app/api/mechanic-licenses/route.ts(91,30): error TS7006: Parameter 'l' implicitly has an 'any' type.
+src/app/api/mechanic-licenses/route.ts(254,56): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/mechanic-licenses/route.ts(305,48): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/mechanic/jobs/[id]/checklist/[itemId]/route.ts(35,48): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/mechanic/jobs/[id]/notes/route.ts(40,49): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/mechanics/route.ts(35,43): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/app/api/mechanics/route.ts(86,22): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/app/api/parts/[id]/route.ts(81,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/parts/[id]/route.ts(194,36): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/parts/low-stock/route.ts(14,36): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/parts/route.ts(51,46): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/parts/search/route.ts(71,31): error TS2339: Property 'unitPriceTenThousandths' does not exist on type 'SearchablePart'.
+src/app/api/parts/search/route.ts(72,30): error TS2339: Property 'unitCostTenThousandths' does not exist on type 'SearchablePart'.
+src/app/api/parts/search/route.ts(73,19): error TS2339: Property 'quantity' does not exist on type 'SearchablePart'.
+src/app/api/parts/search/route.ts(73,33): error TS2339: Property 'minQuantity' does not exist on type 'SearchablePart'.
+src/app/api/portal/auth/devices/route.ts(20,26): error TS7006: Parameter 'd' implicitly has an 'any' type.
+src/app/api/portal/me/dashboard/route.ts(64,13): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/portal/me/dashboard/route.ts(65,10): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/portal/me/dashboard/route.ts(81,24): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/app/api/portal/me/dashboard/route.ts(82,28): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/app/api/portal/quote/[token]/route.ts(194,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/portal/tickets/route.ts(22,26): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/app/api/profitability/route.ts(43,56): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/profitability/route.ts(56,56): error TS7006: Parameter 'jp' implicitly has an 'any' type.
+src/app/api/profitability/route.ts(65,43): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/purchase-orders/[id]/receive/route.ts(87,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/purchase-orders/route.ts(16,39): error TS7006: Parameter 'o' implicitly has an 'any' type.
+src/app/api/purchase-orders/route.ts(65,46): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/quotes/[id]/convert/route.ts(25,54): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/quotes/[id]/convert/route.ts(59,37): error TS7006: Parameter 'l' implicitly has an 'any' type.
+src/app/api/quotes/[id]/convert/route.ts(104,78): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+src/app/api/quotes/[id]/route.ts(23,51): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+src/app/api/quotes/[id]/route.ts(66,50): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/quotes/[id]/route.ts(152,74): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+src/app/api/quotes/generate/route.ts(171,50): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/quotes/route.ts(44,27): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/app/api/quotes/route.ts(46,54): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+src/app/api/quotes/route.ts(81,46): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/quotes/route.ts(133,74): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+src/app/api/reminders/suggestions/route.ts(41,13): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/app/api/reminders/suggestions/route.ts(47,10): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/app/api/reminders/suggestions/route.ts(66,12): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/reminders/suggestions/route.ts(66,15): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/app/api/reports/route.ts(29,26): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/reports/route.ts(36,23): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/reports/route.ts(43,25): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/app/api/reports/route.ts(54,20): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(54,71): error TS2635: Type 'any' has no signatures for which the type argument list is applicable.
+src/app/api/stats/route.ts(68,48): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(68,51): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/stats/route.ts(69,48): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(69,51): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/stats/route.ts(83,34): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(84,38): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(94,45): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(94,48): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(98,47): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(98,50): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(99,30): error TS7006: Parameter 'ps' implicitly has an 'any' type.
+src/app/api/stats/route.ts(99,34): error TS7006: Parameter 'jp' implicitly has an 'any' type.
+src/app/api/stats/route.ts(100,47): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(100,50): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(101,30): error TS7006: Parameter 'ps' implicitly has an 'any' type.
+src/app/api/stats/route.ts(101,34): error TS7006: Parameter 'jp' implicitly has an 'any' type.
+src/app/api/stats/route.ts(106,46): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/app/api/stats/route.ts(108,46): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(108,49): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(126,39): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/app/api/stats/route.ts(127,36): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(128,37): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(129,42): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(129,45): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(135,45): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(135,48): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(136,45): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(136,48): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(143,15): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/stats/route.ts(144,16): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(144,19): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/stats/route.ts(174,35): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/stats/route.ts(199,44): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/stats/route.ts(216,41): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/api/stats/route.ts(216,44): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/stats/route.ts(245,51): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/app/api/stock-forecast/route.ts(45,28): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/suggestions/route.ts(37,34): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/suggestions/route.ts(57,49): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/app/api/suppliers/route.ts(108,47): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/sync/einvoicing/route.ts(248,28): error TS2339: Property 'description' does not exist on type 'LineWithEuros<ScaledLine>'.
+src/app/api/sync/einvoicing/route.ts(284,45): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/app/api/sync/invoice/route.ts(163,40): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/sync/jobs/route.ts(170,51): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/app/api/sync/jobs/route.ts(176,46): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/sync/jobs/route.ts(196,44): error TS2345: Argument of type '{} | null' is not assignable to parameter of type 'Date | null'.
+  Type '{}' is missing the following properties from type 'Date': toDateString, toTimeString, toLocaleDateString, toLocaleTimeString, and 37 more.
+src/app/api/sync/jobs/route.ts(234,39): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/sync/jobs/route.ts(234,70): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/sync/jobs/route.ts(260,55): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/sync/mechanic-assignment/route.ts(110,53): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/sync/mechanic-status/route.ts(72,54): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/sync/portal-account/route.ts(116,38): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/sync/portal/route.ts(103,40): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/sync/portal/route.ts(140,38): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/sync/quote-return/route.ts(92,70): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/sync/quote-return/route.ts(96,49): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/app/api/sync/quote-return/route.ts(105,32): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/sync/quote/route.ts(183,38): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/tickets/route.ts(30,26): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/app/api/vehicles/[id]/route.ts(31,65): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/app/api/vehicles/ct-alerts/route.ts(32,13): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/app/api/vehicles/ct-alerts/route.ts(33,14): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/app/api/vehicles/ct-alerts/route.ts(54,13): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/vehicles/ct-alerts/route.ts(58,28): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/vehicles/ct-alerts/route.ts(59,28): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/app/api/work-orders/route.ts(128,50): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/lib/__tests__/license-devices.postgres.int.test.ts(261,43): error TS2307: Cannot find module '@/generated/server-client' or its corresponding type declarations.
+src/lib/analytics/collect.ts(135,40): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/lib/analytics/collect.ts(136,32): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/lib/analytics/collect.ts(137,42): error TS7006: Parameter 'w' implicitly has an 'any' type.
+src/lib/analytics/collect.ts(138,36): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/lib/backup/service.ts(13,15): error TS2305: Module '"@prisma/client"' has no exported member 'BackupRecord'.
+src/lib/backup/service.ts(62,46): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/lib/backup/service.ts(157,46): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/lib/backup/snapshot.ts(33,71): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'ClientCreateManyInput'.
+src/lib/backup/snapshot.ts(39,73): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'MechanicCreateManyInput'.
+src/lib/backup/snapshot.ts(45,69): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'PartCreateManyInput'.
+src/lib/backup/snapshot.ts(51,79): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'LaborOperationCreateManyInput'.
+src/lib/backup/snapshot.ts(57,72): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'VehicleCreateManyInput'.
+src/lib/backup/snapshot.ts(63,68): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'JobCreateManyInput'.
+src/lib/backup/snapshot.ts(69,72): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'JobPartCreateManyInput'.
+src/lib/backup/snapshot.ts(75,70): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'QuoteCreateManyInput'.
+src/lib/backup/snapshot.ts(81,74): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'QuoteLineCreateManyInput'.
+src/lib/backup/snapshot.ts(87,72): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'InvoiceCreateManyInput'.
+src/lib/backup/snapshot.ts(93,76): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'InvoiceLineCreateManyInput'.
+src/lib/backup/snapshot.ts(99,73): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'ReminderCreateManyInput'.
+src/lib/backup/snapshot.ts(105,75): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'InspectionCreateManyInput'.
+src/lib/backup/snapshot.ts(111,79): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'InspectionItemCreateManyInput'.
+src/lib/backup/snapshot.ts(117,74): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'WorkOrderCreateManyInput'.
+src/lib/backup/snapshot.ts(123,73): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'WarrantyCreateManyInput'.
+src/lib/backup/snapshot.ts(129,74): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'SignatureCreateManyInput'.
+src/lib/clients/rattachement.ts(92,34): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/lib/clients/rattachement.ts(133,38): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/lib/copilot/server-readers.ts(55,34): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/lib/copilot/server-readers.ts(65,32): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/lib/copilot/server-readers.ts(71,48): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/lib/copilot/server-readers.ts(71,51): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+src/lib/copilot/server-readers.ts(83,35): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/lib/copilot/server-readers.ts(84,35): error TS7006: Parameter 'jp' implicitly has an 'any' type.
+src/lib/copilot/server-readers.ts(131,31): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/lib/copilot/server-readers.ts(132,83): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/lib/copilot/server-readers.ts(246,34): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/lib/db.ts(18,52): error TS2307: Cannot find module '@/generated/server-client' or its corresponding type declarations.
+src/lib/einvoicing/queue.ts(191,22): error TS2339: Property 'description' does not exist on type 'LineWithEuros<ScaledLine>'.
+src/lib/inspection/context.ts(85,27): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/lib/license/devices.ts(232,51): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/lib/loaner/availability.ts(91,36): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/lib/portal/auth-helpers.ts(10,15): error TS2305: Module '"@prisma/client"' has no exported member 'PortalUser'.
+src/lib/portal/auth-helpers.ts(10,27): error TS2305: Module '"@prisma/client"' has no exported member 'PortalDevice'.
+src/lib/stock/invoice-stock.ts(299,39): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/lib/sync/invoice-sync.ts(95,31): error TS7006: Parameter 'f' implicitly has an 'any' type.
+src/lib/sync/invoice-sync.ts(111,21): error TS2347: Untyped function calls may not accept type arguments.
+src/lib/sync/invoice-sync.ts(112,16): error TS7006: Parameter 'f' implicitly has an 'any' type.
+src/lib/sync/invoice-sync.ts(113,29): error TS7006: Parameter 'max' implicitly has an 'any' type.
+src/lib/sync/invoice-sync.ts(113,34): error TS7006: Parameter 'f' implicitly has an 'any' type.
+src/lib/sync/job-sync.ts(168,39): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/lib/sync/job-sync.ts(182,40): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/lib/sync/job-sync.ts(189,39): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/lib/sync/job-sync.ts(189,42): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/lib/sync/job-sync.ts(344,37): error TS7006: Parameter 'l' implicitly has an 'any' type.
+src/lib/sync/job-sync.ts(349,36): error TS2345: Argument of type '{}' is not assignable to parameter of type 'Date'.
+  Type '{}' is missing the following properties from type 'Date': toDateString, toTimeString, toLocaleDateString, toLocaleTimeString, and 37 more.
+src/lib/sync/quote-return.ts(127,40): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/lib/sync/ticket-sync.ts(76,40): error TS7006: Parameter 'tx' implicitly has an 'any' type.

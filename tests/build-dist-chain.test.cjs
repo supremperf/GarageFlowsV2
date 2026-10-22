@@ -159,6 +159,9 @@ function arbreStandaloneSain(racine) {
     fs.mkdirSync(path.dirname(cible), { recursive: true })
     fs.writeFileSync(cible, relatif.endsWith('.js') ? '// client genere' : '{"name":"x"}')
   }
+  // Le client JS seul ne suffit pas : une sortie empaquetable doit contenir
+  // au moins une bibliothèque/binaire de requête Prisma natif.
+  fs.writeFileSync(path.join(app, 'node_modules', '.prisma', 'client', 'query_engine-windows.dll.node'), 'moteur natif factice')
   // `next-auth` n'est pas copié : la compilation l'embarque (constaté sur une
   // vraie sortie autonome). On reproduit le morceau qui le contient.
   fs.mkdirSync(path.join(app, '.next', 'server', 'chunks'), { recursive: true })
@@ -177,6 +180,17 @@ test('verify:standalone ACCEPTE une sortie saine (le garde-fou ne bloque pas un 
   assert.equal(resultat.status, 0, `attendu 0, obtenu ${resultat.status}\n${resultat.stderr}`)
   assert.match(resultat.stdout, /Sortie autonome complète/)
   assert.ok(!/absent/.test(resultat.stderr), 'aucun faux « absent » sur une sortie saine')
+  fs.rmSync(dir, { recursive: true, force: true })
+})
+
+test('verify:standalone REFUSE un client Prisma présent mais sans moteur natif', () => {
+  const dir = arbreStandaloneSain(fs.mkdtempSync(path.join(os.tmpdir(), 'gf-standalone-no-engine-')))
+  const client = path.join(dir, '.next', 'standalone', 'node_modules', '.prisma', 'client')
+  fs.rmSync(path.join(client, 'query_engine-windows.dll.node'))
+  assert.ok(fs.existsSync(path.join(client, 'index.js')), 'le client JS reste présent pour reproduire le faux vert')
+  const resultat = executerVerificateur(dir)
+  assert.equal(resultat.status, 1, `le dossier du client ne doit pas suffire\n${resultat.stdout}\n${resultat.stderr}`)
+  assert.match(resultat.stderr, /moteur Prisma natif absent/)
   fs.rmSync(dir, { recursive: true, force: true })
 })
 

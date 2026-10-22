@@ -1,0 +1,8 @@
+whoami=user
+apt_get=/usr/bin/apt-get
+chromium=chromium_browser=google_chrome=gitleaks=go=wine=
+=== APT POLICY ===
+
+=== APT SOURCES (SANS CREDENTIALS) ===
+URIs: http://deb.debian.org/debian
+URIs: http://deb.debian.org/debian-security

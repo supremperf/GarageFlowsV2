@@ -39,7 +39,11 @@ function isWeakValue(v) {
  */
 function ensureEnvSecret(content, name, gen = generateSecret) {
   const src = typeof content === 'string' ? content : ''
-  const re = new RegExp(`^\\s*${name}\\s*=\\s*(.*)$`, 'm')
+  // Ne JAMAIS utiliser `\s*` ici : il traverse les sauts de ligne. Pour une
+  // valeur vide suivie d'un long commentaire, ce commentaire devenait alors la
+  // prétendue valeur « forte » et aucun secret n'était généré. Les espaces
+  // horizontaux seuls sont admis ; `(.*)` reste strictement sur la même ligne.
+  const re = new RegExp(`^[\\t ]*${name}[\\t ]*=[\\t ]*(.*)$`, 'm')
   const m = src.match(re)
 
   const current = m ? m[1].trim().replace(/^["']|["']$/g, '') : null

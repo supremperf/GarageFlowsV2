@@ -15,9 +15,12 @@
  * Usage : TEST_POSTGRES_URL=postgres://… node scripts/gate-fresh-postgres.mjs
  */
 import { spawnSync } from 'node:child_process'
+import { temporaryPostgresDatabaseName } from './lib/postgres-test-database.mjs'
 
 const SOURCE = process.env.TEST_POSTGRES_URL
-const SCRATCH_DB = 'gf_gate_check'
+// Une base neuve à identifiant unique : toute collision fait échouer la création.
+// Elle est conservée après le contrôle ; aucune suppression n'est automatisée.
+const SCRATCH_DB = temporaryPostgresDatabaseName()
 
 if (!SOURCE) {
   console.error('TEST_POSTGRES_URL est requis (base d\'administration servant à créer la base de contrôle).')
@@ -56,8 +59,7 @@ step('création de la base de contrôle', 'psql', [
   '-d', SOURCE,
   '-v', 'ON_ERROR_STOP=1',
   '-q',
-  '-c', `DROP DATABASE IF EXISTS ${SCRATCH_DB}`,
-  '-c', `CREATE DATABASE ${SCRATCH_DB}`,
+  '-c', `CREATE DATABASE "${SCRATCH_DB}"`,
 ])
 
 step('migrations + smoke test sur base vierge', process.execPath, ['scripts/validate-server-db.js'], {

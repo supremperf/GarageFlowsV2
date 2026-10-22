@@ -1,0 +1,12 @@
+Vérification du patch ciblé, sans installation à cette étape.
+{
+  "version": "15.5.28",
+  "engines": {
+    "node": "^18.18.0 || ^19.8.0 || >= 20.0.0"
+  },
+  "dist.integrity": "sha512-JjhLBBY1PNnuwPtcZ7t8yxVeJVYvD2Jyp633J+gRCNbzSt7N0E+xqCf6uQiff3+3qmUkwcF/ksfSsK1xsZ76Tw==",
+  "dist.tarball": "https://registry.npmjs.org/next/-/next-15.5.28.tgz"
+}
+npm_view_exit_code=0
+current_package_spec=15.5.27
+current_lock_version=15.5.27

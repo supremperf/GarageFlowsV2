@@ -1,0 +1,15 @@
+
+> garageflow@1.1.0 preflight:release
+> node scripts/preflight-release.cjs
+
+
+🔎 Contrôles avant empaquetage
+   Node 22.22.3 — linux/x64
+   Cible : Windows x64 (NSIS) — installeur utilisateur, sans droits administrateur
+   Version empaquetée : 1.1.0
+
+⚠️  Empaquetage demandé depuis un système non-Windows.
+     Le résultat dépend de Wine et de NSIS : la validation finale de l’installeur
+     doit être faite sur Windows (installation, désinstallation, lancement).
+✅ Prérequis réunis — poursuite de la construction.
+

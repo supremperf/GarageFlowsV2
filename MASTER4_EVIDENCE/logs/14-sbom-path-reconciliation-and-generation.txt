@@ -1,0 +1,88 @@
+date_utc=2026-10-22T18:57:14Z
+
+Commande : npm run test:sbom
+
+> garageflow@1.1.0 test:sbom
+> node --test tests/production-sbom.test.cjs tests/notices-completeness.test.cjs
+
+TAP version 13
+# Subtest: license text is complete past 8000 characters and nested versions keep their own license
+ok 1 - license text is complete past 8000 characters and nested versions keep their own license
+  ---
+  duration_ms: 38.962533
+  type: 'test'
+  ...
+# Subtest: wrong SBOM package version is refused instead of attributing another installed version
+ok 2 - wrong SBOM package version is refused instead of attributing another installed version
+  ---
+  duration_ms: 32.186433
+  type: 'test'
+  ...
+# Subtest: SBOM cannot point license discovery outside node_modules
+ok 3 - SBOM cannot point license discovery outside node_modules
+  ---
+  duration_ms: 28.610014
+  type: 'test'
+  ...
+# Subtest: production SBOM keeps devOptional production packages and prunes development graph
+ok 4 - production SBOM keeps devOptional production packages and prunes development graph
+  ---
+  duration_ms: 4.918074
+  type: 'test'
+  ...
+# Subtest: production SBOM fails closed when npm metadata is incomplete
+ok 5 - production SBOM fails closed when npm metadata is incomplete
+  ---
+  duration_ms: 0.889783
+  type: 'test'
+  ...
+# Subtest: production SBOM rejects ambiguous name@version instead of choosing a license arbitrarily
+ok 6 - production SBOM rejects ambiguous name@version instead of choosing a license arbitrarily
+  ---
+  duration_ms: 0.568379
+  type: 'test'
+  ...
+# Subtest: production SBOM rejects different physical locations for one name@version
+ok 7 - production SBOM rejects different physical locations for one name@version
+  ---
+  duration_ms: 0.388706
+  type: 'test'
+  ...
+# Subtest: production SBOM requires a complete dependency graph
+ok 8 - production SBOM requires a complete dependency graph
+  ---
+  duration_ms: 0.358747
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 195.731029
+test_sbom_exit_code=0
+
+Commande : npm run sbom:generate
+
+> garageflow@1.1.0 sbom:generate
+> node scripts/gen-production-sbom.mjs && node scripts/gen-third-party-notices.mjs
+
+[sbom] Production closure: npx --yes npm@11.16.0 ls --omit=dev --all --json --long
+[sbom] Reading complete npm metadata, including devOptional packages
+[sbom] 133 production components → docs/sbom/sbom-garageflowsv2.cdx.json
+[notices] 133 composants → THIRD_PARTY_NOTICES.md
+sbom_generate_exit_code=0
+
+Commande : npm run sbom:verify
+
+> garageflow@1.1.0 sbom:verify
+> node scripts/gen-production-sbom.mjs --check
+
+[sbom] Production closure: npx --yes npm@11.16.0 ls --omit=dev --all --json --long
+[sbom] Reading complete npm metadata, including devOptional packages
+[sbom] PASS: 133 components, installed identities, graph and notices match
+sbom_verify_exit_code=0
+dev_db_unchanged=true

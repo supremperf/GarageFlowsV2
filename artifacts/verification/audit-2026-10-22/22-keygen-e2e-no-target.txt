@@ -1,0 +1,6 @@
+
+> garageflow@1.1.0 test:keygen:e2e
+> python3 scripts/test_keygen_e2e.py
+
+GF_E2E_URL absente : AUCUN parcours exécuté (voir l'en-tête de ce fichier).
+Rien n'a été vérifié — ce n'est pas un succès.

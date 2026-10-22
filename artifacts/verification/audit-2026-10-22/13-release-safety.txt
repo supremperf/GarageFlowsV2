@@ -1,0 +1,1051 @@
+> garageflow@1.1.0 test:release-safety
+> node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/ci-required-gate.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs tests/setup-dev-permissions.test.cjs tests/secret-scan-policy.test.cjs tests/pre-migration-backup-safety.test.cjs tests/gitleaks-ci.test.cjs tests/build-dist-chain.test.cjs tests/windows-delivery.test.cjs tests/desktop-server-ready.test.cjs tests/desktop-database-preservation.test.cjs tests/private-key-material.test.cjs tests/installed-runtime-modules.test.cjs tests/file-snapshot.test.cjs tests/private-file-ownership.test.cjs tests/electron-http-json.test.cjs tests/next-build-home.test.cjs tests/restore-public-anchors.test.cjs tests/env-artifact-check.test.cjs tests/evidence-artifact-secrets.test.cjs tests/update-signing-cli.test.cjs
+
+TAP version 13
+# Subtest: next.config.mjs verrouille la racine de tracing sur le dossier du projet
+ok 1 - next.config.mjs verrouille la racine de tracing sur le dossier du projet
+  ---
+  duration_ms: 1.830217
+  type: 'test'
+  ...
+# Subtest: sortie saine : server.js à la racine, ressources au bon endroit
+ok 2 - sortie saine : server.js à la racine, ressources au bon endroit
+  ---
+  duration_ms: 2.000807
+  type: 'test'
+  ...
+# Subtest: sortie IMBRIQUÉE (lockfile parent) : refusée avec la cause exacte, jamais « server.js NOT found »
+ok 3 - sortie IMBRIQUÉE (lockfile parent) : refusée avec la cause exacte, jamais « server.js NOT found »
+  ---
+  duration_ms: 1.669571
+  type: 'test'
+  ...
+# Subtest: sortie absente ou sans server.js : diagnostic explicite
+ok 4 - sortie absente ou sans server.js : diagnostic explicite
+  ---
+  duration_ms: 1.112874
+  type: 'test'
+  ...
+# Subtest: détecte les copies périmées de l’application à purger avant empaquetage
+ok 5 - détecte les copies périmées de l’application à purger avant empaquetage
+  ---
+  duration_ms: 2.13429
+  type: 'test'
+  ...
+# Subtest: le post-build dirige les copies vers le dossier d’application (pas un chemin supposé)
+ok 6 - le post-build dirige les copies vers le dossier d’application (pas un chemin supposé)
+  ---
+  duration_ms: 0.413048
+  type: 'test'
+  ...
+# Subtest: le vérificateur standalone analyse la RACINE du projet, pas le dossier standalone
+ok 7 - le vérificateur standalone analyse la RACINE du projet, pas le dossier standalone
+  ---
+  duration_ms: 1.072647
+  type: 'test'
+  ...
+# Subtest: la liste des modules d’exécution se résout sans double préfixe node_modules
+ok 8 - la liste des modules d’exécution se résout sans double préfixe node_modules
+  ---
+  duration_ms: 1.821437
+  type: 'test'
+  ...
+# Subtest: verify:standalone ACCEPTE une sortie saine (le garde-fou ne bloque pas un installeur valide)
+ok 9 - verify:standalone ACCEPTE une sortie saine (le garde-fou ne bloque pas un installeur valide)
+  ---
+  duration_ms: 31.863222
+  type: 'test'
+  ...
+# Subtest: verify:standalone REFUSE un client Prisma présent mais sans moteur natif
+ok 10 - verify:standalone REFUSE un client Prisma présent mais sans moteur natif
+  ---
+  duration_ms: 30.611086
+  type: 'test'
+  ...
+# Subtest: verify:standalone REFUSE une sortie absente, incomplète ou sans moteur Prisma
+ok 11 - verify:standalone REFUSE une sortie absente, incomplète ou sans moteur Prisma
+  ---
+  duration_ms: 66.092959
+  type: 'test'
+  ...
+# Subtest: next-auth est accepté COPIÉ ou EMBARQUÉ, et signalé s’il a disparu des deux côtés
+ok 12 - next-auth est accepté COPIÉ ou EMBARQUÉ, et signalé s’il a disparu des deux côtés
+  ---
+  duration_ms: 1.808381
+  type: 'test'
+  ...
+# Subtest: le post-build ne casse pas les builds cloud (Vercel) et distingue l’empaquetage desktop
+ok 13 - le post-build ne casse pas les builds cloud (Vercel) et distingue l’empaquetage desktop
+  ---
+  duration_ms: 0.331136
+  type: 'test'
+  ...
+# Subtest: package.json : dist vérifie tout et échoue clairement à chaque étape
+ok 14 - package.json : dist vérifie tout et échoue clairement à chaque étape
+  ---
+  duration_ms: 0.656706
+  type: 'test'
+  ...
+# Subtest: la chaîne n’essaie JAMAIS de publier une release toute seule
+ok 15 - la chaîne n’essaie JAMAIS de publier une release toute seule
+  ---
+  duration_ms: 0.31899
+  type: 'test'
+  ...
+# Subtest: release:sign explique quoi fournir au lieu d’un « --file obligatoire » sec
+ok 16 - release:sign explique quoi fournir au lieu d’un « --file obligatoire » sec
+  ---
+  duration_ms: 0.235024
+  type: 'test'
+  ...
+# Subtest: restores same public key idempotently, never creates private key
+ok 17 - restores same public key idempotently, never creates private key
+  ---
+  duration_ms: 6.634869
+  type: 'test'
+  ...
+# Subtest: preserves existing mismatched resource and refuses overwrite
+ok 18 - preserves existing mismatched resource and refuses overwrite
+  ---
+  duration_ms: 2.094439
+  type: 'test'
+  ...
+# Subtest: rejects disagreement between anchors before writing any resource
+ok 19 - rejects disagreement between anchors before writing any resource
+  ---
+  duration_ms: 4.449162
+  type: 'test'
+  ...
+# Subtest: refuses a symlink directory without writing outside the fixture
+ok 20 - refuses a symlink directory without writing outside the fixture
+  ---
+  duration_ms: 6.060441
+  type: 'test'
+  ...
+# Subtest: a replaced pathname cannot change the descriptor already being checked
+ok 21 - a replaced pathname cannot change the descriptor already being checked
+  ---
+  duration_ms: 1.947194
+  type: 'test'
+  ...
+# Subtest: names the divergent anchors and refuses when _PK and _LINES share a locally regenerated key
+ok 22 - names the divergent anchors and refuses when _PK and _LINES share a locally regenerated key
+  ---
+  duration_ms: 5.126364
+  type: 'test'
+  ...
+# Subtest: inside its OWN git repository, locally modified anchors are reported and git restore is advised
+ok 23 - inside its OWN git repository, locally modified anchors are reported and git restore is advised
+  ---
+  duration_ms: 18.45489
+  type: 'test'
+  ...
+# Subtest: a PARENT git repository does not make project files look "modified"
+ok 24 - a PARENT git repository does not make project files look "modified"
+  ---
+  duration_ms: 9.125371
+  type: 'test'
+  ...
+# Subtest: a partial update (only one literal changed) is diagnosed as partial and refused
+ok 25 - a partial update (only one literal changed) is diagnosed as partial and refused
+  ---
+  duration_ms: 4.084989
+  type: 'test'
+  ...
+# Subtest: an ambiguous anchor (two declarations) is refused instead of trusting the first match
+ok 26 - an ambiguous anchor (two declarations) is refused instead of trusting the first match
+  ---
+  duration_ms: 7.074862
+  type: 'test'
+  ...
+# Subtest: a retired key is flagged as such in the diagnostic
+ok 27 - a retired key is flagged as such in the diagnostic
+  ---
+  duration_ms: 4.004822
+  type: 'test'
+  ...
+# Subtest: preflight stops with the full diagnostic and exit code 1, not a bare stack trace
+ok 28 - preflight stops with the full diagnostic and exit code 1, not a bare stack trace
+  ---
+  duration_ms: 38.826545
+  type: 'test'
+  ...
+# Subtest: an existing different keys/public.pem is preserved and both fingerprints are reported
+ok 29 - an existing different keys/public.pem is preserved and both fingerprints are reported
+  ---
+  duration_ms: 1.744407
+  type: 'test'
+  ...
+# Subtest: keys:sync moves the three anchors together, then the materializer agrees
+ok 30 - keys:sync moves the three anchors together, then the materializer agrees
+  ---
+  duration_ms: 38.693545
+  type: 'test'
+  ...
+# Subtest: keys:sync leaves NO partial state when one anchor cannot be written
+ok 31 - keys:sync leaves NO partial state when one anchor cannot be written
+  ---
+  duration_ms: 38.474039
+  type: 'test'
+  ...
+# Subtest: mandatory gate rejects any failed, cancelled or skipped upstream job
+ok 32 - mandatory gate rejects any failed, cancelled or skipped upstream job
+  ---
+  duration_ms: 50.948431
+  type: 'test'
+  ...
+# Subtest: workflow graph pins actions, retains strict security and packages Windows before gate
+ok 33 - workflow graph pins actions, retains strict security and packages Windows before gate
+  ---
+  duration_ms: 1.185756
+  type: 'test'
+  ...
+# Subtest: authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+ok 34 - authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+  ---
+  duration_ms: 376.444286
+  type: 'test'
+  ...
+# Subtest: a valid preexisting customer DB is never copied over or moved by startup
+ok 35 - a valid preexisting customer DB is never copied over or moved by startup
+  ---
+  duration_ms: 2.338679
+  type: 'test'
+  ...
+# Subtest: an unreadable customer DB remains exactly in place; no silent reset or rename
+ok 36 - an unreadable customer DB remains exactly in place; no silent reset or rename
+  ---
+  duration_ms: 1.218791
+  type: 'test'
+  ...
+# Subtest: first-run DB copy is exclusive and a concurrent existing file is preserved
+ok 37 - first-run DB copy is exclusive and a concurrent existing file is preserved
+  ---
+  duration_ms: 0.871863
+  type: 'test'
+  ...
+# Subtest: readiness proves the owned process and real healthy DB, not merely an open port
+ok 38 - readiness proves the owned process and real healthy DB, not merely an open port
+  ---
+  duration_ms: 18.659345
+  type: 'test'
+  ...
+# Subtest: bounded failure on foreign
+ok 39 - bounded failure on foreign
+  ---
+  duration_ms: 152.26218
+  type: 'test'
+  ...
+# Subtest: bounded failure on unhealthy
+ok 40 - bounded failure on unhealthy
+  ---
+  duration_ms: 151.083616
+  type: 'test'
+  ...
+# Subtest: bounded failure on forged-proof
+ok 41 - bounded failure on forged-proof
+  ---
+  duration_ms: 151.383335
+  type: 'test'
+  ...
+# Subtest: bounded failure on hang
+ok 42 - bounded failure on hang
+  ---
+  duration_ms: 151.850665
+  type: 'test'
+  ...
+# Subtest: utility-process exit aborts startup without waiting for its full deadline
+ok 43 - utility-process exit aborts startup without waiting for its full deadline
+  ---
+  duration_ms: 1.601905
+  type: 'test'
+  ...
+# Subtest: keeps JSON, User-Agent and split UTF8 metadata intact
+ok 44 - keeps JSON, User-Agent and split UTF8 metadata intact
+  ---
+  duration_ms: 25.708227
+  type: 'test'
+  ...
+# Subtest: POST preserves request data and authoritative HTTP status, with no redirect following
+ok 45 - POST preserves request data and authoritative HTTP status, with no redirect following
+  ---
+  duration_ms: 5.407757
+  type: 'test'
+  ...
+# Subtest: rejects declared and chunked oversize responses instead of parsing truncation
+ok 46 - rejects declared and chunked oversize responses instead of parsing truncation
+  ---
+  duration_ms: 6.084812
+  type: 'test'
+  ...
+# Subtest: an active slow response cannot keep the request alive past its total deadline
+ok 47 - an active slow response cannot keep the request alive past its total deadline
+  ---
+  duration_ms: 101.662517
+  type: 'test'
+  ...
+# Subtest: relative GET redirects are supported with a fixed hop budget
+ok 48 - relative GET redirects are supported with a fixed hop budget
+  ---
+  duration_ms: 8.120756
+  type: 'test'
+  ...
+# Subtest: redirect chain shares one deadline rather than resetting it on every hop
+ok 49 - redirect chain shares one deadline rather than resetting it on every hop
+  ---
+  duration_ms: 100.64385
+  type: 'test'
+  ...
+# Subtest: malformed JSON and interrupted responses resolve null, never partial success
+ok 50 - malformed JSON and interrupted responses resolve null, never partial success
+  ---
+  duration_ms: 4.274734
+  type: 'test'
+  ...
+# Subtest: redirect policy rejects invalid protocols and HTTPS downgrades
+ok 51 - redirect policy rejects invalid protocols and HTTPS downgrades
+  ---
+  duration_ms: 0.221733
+  type: 'test'
+  ...
+# Subtest: invalid options and circular request bodies resolve null without making a request
+ok 52 - invalid options and circular request bodies resolve null without making a request
+  ---
+  duration_ms: 0.308296
+  type: 'test'
+  ...
+# Subtest: chunk overhead is bounded as well as bytes (deterministic real-module transport fixture)
+ok 53 - chunk overhead is bounded as well as bytes (deterministic real-module transport fixture)
+  ---
+  duration_ms: 2.432065
+  type: 'test'
+  ...
+# Subtest: real HTTP503 with an active-looking body cannot reactivate a blocked license
+ok 54 - real HTTP503 with an active-looking body cannot reactivate a blocked license
+  ---
+  duration_ms: 10.091103
+  type: 'test'
+  ...
+# Subtest: chargement du module de contrôle
+ok 55 - chargement du module de contrôle
+  ---
+  duration_ms: 3.364213
+  type: 'test'
+  ...
+# Subtest: les trois noms historiques restent acceptés sans inspection
+ok 56 - les trois noms historiques restent acceptés sans inspection
+  ---
+  duration_ms: 0.209565
+  type: 'test'
+  ...
+# Subtest: un gabarit étendu dont toutes les valeurs sont vides est accepté
+ok 57 - un gabarit étendu dont toutes les valeurs sont vides est accepté
+  ---
+  duration_ms: 0.270293
+  type: 'test'
+  ...
+# Subtest: un gabarit étendu qui contient une valeur est UNE FUITE
+ok 58 - un gabarit étendu qui contient une valeur est UNE FUITE
+  ---
+  duration_ms: 1.221935
+  type: 'test'
+  ...
+# Subtest: un fichier illisible n’est jamais blanchi
+ok 59 - un fichier illisible n’est jamais blanchi
+  ---
+  duration_ms: 0.170238
+  type: 'test'
+  ...
+# Subtest: les .env réels sont reconnus, les noms étendus ne le sont pas d’office
+ok 60 - les .env réels sont reconnus, les noms étendus ne le sont pas d’office
+  ---
+  duration_ms: 0.221522
+  type: 'test'
+  ...
+# Subtest: le scan d’un dossier racine ne remonte QUE les fuites réelles
+ok 61 - le scan d’un dossier racine ne remonte QUE les fuites réelles
+  ---
+  duration_ms: 0.884869
+  type: 'test'
+  ...
+# Subtest: en mode dépôt, un .env à la racine est ignoré (gitignored, non distribué)
+ok 62 - en mode dépôt, un .env à la racine est ignoré (gitignored, non distribué)
+  ---
+  duration_ms: 0.136396
+  type: 'test'
+  ...
+# Subtest: un dossier standalone est scanné MÊME en mode dépôt
+ok 63 - un dossier standalone est scanné MÊME en mode dépôt
+  ---
+  duration_ms: 0.304053
+  type: 'test'
+  ...
+# Subtest: aucun artefact ne présente un champ à mot-clé secret suivi d’une empreinte
+ok 64 - aucun artefact ne présente un champ à mot-clé secret suivi d’une empreinte
+  ---
+  duration_ms: 3.45163
+  type: 'test'
+  ...
+# Subtest: la campagne publie des empreintes, jamais un jeton de licence brut
+ok 65 - la campagne publie des empreintes, jamais un jeton de licence brut
+  ---
+  duration_ms: 9.510651
+  type: 'test'
+  ...
+# Subtest: checks and reads the same opened object even when the name would resolve to replacement data
+ok 66 - checks and reads the same opened object even when the name would resolve to replacement data
+  ---
+  duration_ms: 1.435659
+  type: 'test'
+  ...
+# Subtest: hard read bound survives a stale size and closes the descriptor on growth/error
+ok 67 - hard read bound survives a stale size and closes the descriptor on growth/error
+  ---
+  duration_ms: 0.492777
+  type: 'test'
+  ...
+# Subtest: real regular-file, missing, oversized and directory cases retain their error semantics
+ok 68 - real regular-file, missing, oversized and directory cases retain their error semantics
+  ---
+  duration_ms: 1.627229
+  type: 'test'
+  ...
+# Subtest: docs/audit/resumption-2026-10-14/run-command.cjs reserves a proof before executing and refuses reuse without touching old data
+ok 69 - docs/audit/resumption-2026-10-14/run-command.cjs reserves a proof before executing and refuses reuse without touching old data
+  ---
+  duration_ms: 19.382783
+  type: 'test'
+  ...
+# Subtest: docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs reserves a proof before executing and refuses reuse without touching old data
+ok 70 - docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs reserves a proof before executing and refuses reuse without touching old data
+  ---
+  duration_ms: 2.748346
+  type: 'test'
+  ...
+# Subtest: docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs reserves a proof before executing and refuses reuse without touching old data
+ok 71 - docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs reserves a proof before executing and refuses reuse without touching old data
+  ---
+  duration_ms: 10.699348
+  type: 'test'
+  ...
+# Subtest: Git entry snapshots read link text itself without opening its target
+ok 72 - Git entry snapshots read link text itself without opening its target
+  ---
+  duration_ms: 0.267682
+  type: 'test'
+  ...
+# Subtest: empty successful report preserves scanner exit zero
+ok 73 - empty successful report preserves scanner exit zero
+  ---
+  duration_ms: 2.60207
+  type: 'test'
+  ...
+# Subtest: official nil-slice JSON null is empty, but exit one remains inconsistent
+ok 74 - official nil-slice JSON null is empty, but exit one remains inconsistent
+  ---
+  duration_ms: 1.042376
+  type: 'test'
+  ...
+# Subtest: finding metadata preserves exit one and never prints secret/match/child output
+ok 75 - finding metadata preserves exit one and never prints secret/match/child output
+  ---
+  duration_ms: 1.08509
+  type: 'test'
+  ...
+# Subtest: workflow command characters are escaped in file/rule/commit metadata
+ok 76 - workflow command characters are escaped in file/rule/commit metadata
+  ---
+  duration_ms: 0.645709
+  type: 'test'
+  ...
+# Subtest: scanner failure is fail-closed
+ok 77 - scanner failure is fail-closed
+  ---
+  duration_ms: 0.431761
+  type: 'test'
+  ...
+# Subtest: spawn failure is fail-closed
+ok 78 - spawn failure is fail-closed
+  ---
+  duration_ms: 0.427701
+  type: 'test'
+  ...
+# Subtest: killed scanner is fail-closed
+ok 79 - killed scanner is fail-closed
+  ---
+  duration_ms: 0.39867
+  type: 'test'
+  ...
+# Subtest: missing report is fail-closed
+ok 80 - missing report is fail-closed
+  ---
+  duration_ms: 0.511712
+  type: 'test'
+  ...
+# Subtest: bad JSON is fail-closed
+ok 81 - bad JSON is fail-closed
+  ---
+  duration_ms: 0.673742
+  type: 'test'
+  ...
+# Subtest: non-array report is fail-closed
+ok 82 - non-array report is fail-closed
+  ---
+  duration_ms: 0.585894
+  type: 'test'
+  ...
+# Subtest: success with finding is fail-closed
+ok 83 - success with finding is fail-closed
+  ---
+  duration_ms: 0.521076
+  type: 'test'
+  ...
+# Subtest: failure without finding is fail-closed
+ok 84 - failure without finding is fail-closed
+  ---
+  duration_ms: 1.522846
+  type: 'test'
+  ...
+# Subtest: invalid location is fail-closed
+ok 85 - invalid location is fail-closed
+  ---
+  duration_ms: 0.488989
+  type: 'test'
+  ...
+# Subtest: only whitelisted fields survive report projection
+ok 86 - only whitelisted fields survive report projection
+  ---
+  duration_ms: 0.136807
+  type: 'test'
+  ...
+# Subtest: complete inventory pages precede capped per-finding annotations without changing scanner exit
+ok 87 - complete inventory pages precede capped per-finding annotations without changing scanner exit
+  ---
+  duration_ms: 4.287911
+  type: 'test'
+  ...
+# Subtest: metadata overflow is explicitly incomplete, never reported as full inventory
+ok 88 - metadata overflow is explicitly incomplete, never reported as full inventory
+  ---
+  duration_ms: 25.586677
+  type: 'test'
+  ...
+# Subtest: builder-production-closure is projected outside ASAR without checkout fallback
+ok 89 - builder-production-closure is projected outside ASAR without checkout fallback
+  ---
+  duration_ms: 41.109679
+  type: 'test'
+  ...
+# Subtest: next-traced-closure is projected outside ASAR without checkout fallback
+ok 90 - next-traced-closure is projected outside ASAR without checkout fallback
+  ---
+  duration_ms: 19.078814
+  type: 'test'
+  ...
+# Subtest: profile on another drive than the project is detected (nft would glob it)
+ok 91 - profile on another drive than the project is detected (nft would glob it)
+  ---
+  duration_ms: 0.835448
+  type: 'test'
+  ...
+# Subtest: profile that is an ancestor on the same drive is already ignored by nft
+ok 92 - profile that is an ancestor on the same drive is already ignored by nft
+  ---
+  duration_ms: 0.307231
+  type: 'test'
+  ...
+# Subtest: cross-drive build gets an empty home under node_modules/.cache, rest of env untouched
+ok 93 - cross-drive build gets an empty home under node_modules/.cache, rest of env untouched
+  ---
+  duration_ms: 0.497519
+  type: 'test'
+  ...
+# Subtest: same-drive build keeps the environment object as is
+ok 94 - same-drive build keeps the environment object as is
+  ---
+  duration_ms: 0.162651
+  type: 'test'
+  ...
+# Subtest: npm run build delegates to the wrapper, which runs `next build` and keeps its exit code
+ok 95 - npm run build delegates to the wrapper, which runs `next build` and keeps its exit code
+  ---
+  duration_ms: 1.662463
+  type: 'test'
+  ...
+# (node:21604) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: copies only schema and empty template; leaves local user DB unchanged
+ok 96 - copies only schema and empty template; leaves local user DB unchanged
+  ---
+  duration_ms: 11.620156
+  type: 'test'
+  ...
+# Subtest: missing template never falls back to local DB
+ok 97 - missing template never falls back to local DB
+  ---
+  duration_ms: 8.683472
+  type: 'test'
+  ...
+# Subtest: nonempty template is refused without changing it
+ok 98 - nonempty template is refused without changing it
+  ---
+  duration_ms: 26.119601
+  type: 'test'
+  ...
+# Subtest: stale databases in output fail closed rather than being packaged or deleted
+ok 99 - stale databases in output fail closed rather than being packaged or deleted
+  ---
+  duration_ms: 5.911642
+  type: 'test'
+  ...
+# Subtest: packaging filter cannot wildcard local databases
+ok 100 - packaging filter cannot wildcard local databases
+  ---
+  duration_ms: 0.730797
+  type: 'test'
+  ...
+# Subtest: refuses an output directory junction without overwriting its external target
+ok 101 - refuses an output directory junction without overwriting its external target
+  ---
+  duration_ms: 5.142106
+  type: 'test'
+  ...
+# Subtest: refuses a source directory junction without touching its files
+ok 102 - refuses a source directory junction without touching its files
+  ---
+  duration_ms: 6.802456
+  type: 'test'
+  ...
+# Subtest: same-second backups preserve distinct real SQLite snapshots
+ok 103 - same-second backups preserve distinct real SQLite snapshots
+  ---
+  duration_ms: 107.250565
+  type: 'test'
+  ...
+# Subtest: same-second copies never inherit another snapshot rollback journal
+ok 104 - same-second copies never inherit another snapshot rollback journal
+  ---
+  duration_ms: 36.164262
+  type: 'test'
+  ...
+# Subtest: retention removes all owned annexes including journal
+ok 105 - retention removes all owned annexes including journal
+  ---
+  duration_ms: 48.553594
+  type: 'test'
+  ...
+# Subtest: retention does not delete unrelated files with the application prefix
+ok 106 - retention does not delete unrelated files with the application prefix
+  ---
+  duration_ms: 20.759961
+  type: 'test'
+  ...
+# Subtest: same-second retention keeps the actual latest five snapshots
+ok 107 - same-second retention keeps the actual latest five snapshots
+  ---
+  duration_ms: 319.710647
+  type: 'test'
+  ...
+# Subtest: copy permission failure blocks migration without attempting retention
+ok 108 - copy permission failure blocks migration without attempting retention
+  ---
+  duration_ms: 28.430228
+  type: 'test'
+  ...
+# Subtest: rotation failure is an explicit warning, not a lost valid backup
+ok 109 - rotation failure is an explicit warning, not a lost valid backup
+  ---
+  duration_ms: 53.901097
+  type: 'test'
+  ...
+# Subtest: collision retries are bounded and always use exclusive copy
+ok 110 - collision retries are bounded and always use exclusive copy
+  ---
+  duration_ms: 110.516052
+  type: 'test'
+  ...
+# Subtest: source permission error is not treated as a first-install skip
+ok 111 - source permission error is not treated as a first-install skip
+  ---
+  duration_ms: 0.85015
+  type: 'test'
+  ...
+# Subtest: orphan journal names are reserved without overwriting or reusing them
+ok 112 - orphan journal names are reserved without overwriting or reusing them
+  ---
+  duration_ms: 26.200228
+  type: 'test'
+  ...
+# Subtest: cleanup onLicenseError preserves other subscribers
+ok 113 - cleanup onLicenseError preserves other subscribers
+  ---
+  duration_ms: 2.972758
+  type: 'test'
+  ...
+# Subtest: cleanup windowAPI.onMaximizedChange preserves other subscribers
+ok 114 - cleanup windowAPI.onMaximizedChange preserves other subscribers
+  ---
+  duration_ms: 0.867744
+  type: 'test'
+  ...
+# Subtest: cleanup windowAPI.onFullscreenChange preserves other subscribers
+ok 115 - cleanup windowAPI.onFullscreenChange preserves other subscribers
+  ---
+  duration_ms: 2.029397
+  type: 'test'
+  ...
+# Subtest: cleanup onDesktopExportDone preserves other subscribers
+ok 116 - cleanup onDesktopExportDone preserves other subscribers
+  ---
+  duration_ms: 0.99855
+  type: 'test'
+  ...
+# Subtest: cleanup onLicenseRevoked preserves other subscribers
+ok 117 - cleanup onLicenseRevoked preserves other subscribers
+  ---
+  duration_ms: 1.294325
+  type: 'test'
+  ...
+# Subtest: cleanup onLicenseReactivated preserves other subscribers
+ok 118 - cleanup onLicenseReactivated preserves other subscribers
+  ---
+  duration_ms: 1.029983
+  type: 'test'
+  ...
+# Subtest: cleanup onOnlineStatus preserves other subscribers
+ok 119 - cleanup onOnlineStatus preserves other subscribers
+  ---
+  duration_ms: 1.212325
+  type: 'test'
+  ...
+# Subtest: cleanup onEntitlements preserves other subscribers
+ok 120 - cleanup onEntitlements preserves other subscribers
+  ---
+  duration_ms: 0.856619
+  type: 'test'
+  ...
+# Subtest: cleanup onNotifications preserves other subscribers
+ok 121 - cleanup onNotifications preserves other subscribers
+  ---
+  duration_ms: 1.371596
+  type: 'test'
+  ...
+# (node:21679) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: copies a real legacy SQLite database exclusively and keeps its original
+ok 122 - copies a real legacy SQLite database exclusively and keeps its original
+  ---
+  duration_ms: 6.96255
+  type: 'test'
+  ...
+# Subtest: never deletes either distinct database or other nested files when canonical exists
+ok 123 - never deletes either distinct database or other nested files when canonical exists
+  ---
+  duration_ms: 7.416829
+  type: 'test'
+  ...
+# Subtest: absent legacy database does not overwrite a canonical SQLite database
+ok 124 - absent legacy database does not overwrite a canonical SQLite database
+  ---
+  duration_ms: 5.716087
+  type: 'test'
+  ...
+# Subtest: actual setup-dev bootstrap preserves both databases and unrelated nested files
+ok 125 - actual setup-dev bootstrap preserves both databases and unrelated nested files
+  ---
+  duration_ms: 49.141841
+  type: 'test'
+  ...
+# Subtest: private writer sets permissions on its owned descriptor, not a replaced path; exclusive=false
+ok 126 - private writer sets permissions on its owned descriptor, not a replaced path; exclusive=false
+  ---
+  duration_ms: 5.427844
+  type: 'test'
+  ...
+# Subtest: private writer sets permissions on its owned descriptor, not a replaced path; exclusive=true
+ok 127 - private writer sets permissions on its owned descriptor, not a replaced path; exclusive=true
+  ---
+  duration_ms: 1.106578
+  type: 'test'
+  ...
+# Subtest: failed permissions keep the old private file and remove only an owned temporary
+ok 128 - failed permissions keep the old private file and remove only an owned temporary
+  ---
+  duration_ms: 4.655113
+  type: 'test'
+  ...
+# Subtest: multiline P256 and short Ed25519 PKCS8 material are detected in plain and JSON strings
+ok 129 - multiline P256 and short Ed25519 PKCS8 material are detected in plain and JSON strings
+  ---
+  duration_ms: 4.718602
+  type: 'test'
+  ...
+# Subtest: encrypted private material is rejected without any passphrase request
+ok 130 - encrypted private material is rejected without any passphrase request
+  ---
+  duration_ms: 0.799522
+  type: 'test'
+  ...
+# Subtest: marker literals, unrelated Base64 and malformed PEM are not private keys
+ok 131 - marker literals, unrelated Base64 and malformed PEM are not private keys
+  ---
+  duration_ms: 0.275049
+  type: 'test'
+  ...
+# Subtest: versioned scan inspects source, config, Prisma, docs and examples; binary files are skipped
+ok 132 - versioned scan inspects source, config, Prisma, docs and examples; binary files are skipped
+  ---
+  duration_ms: 26.484263
+  type: 'test'
+  ...
+# Subtest: tracked symlink target is scanned; a link outside the repository fails closed
+ok 133 - tracked symlink target is scanned; a link outside the repository fails closed
+  ---
+  duration_ms: 45.331115
+  type: 'test'
+  ...
+# Subtest: library header literals are not private keys, and delivery scans cannot skip large files or failed extraction
+ok 134 - library header literals are not private keys, and delivery scans cannot skip large files or failed extraction
+  ---
+  duration_ms: 0.480508
+  type: 'test'
+  ...
+# Subtest: restores both literals from keys/public.pem when its fingerprint IS the reference; rest of the files untouched
+ok 135 - restores both literals from keys/public.pem when its fingerprint IS the reference; rest of the files untouched
+  ---
+  duration_ms: 34.852653
+  type: 'test'
+  ...
+# Subtest: a partial update is repaired from the anchor that is still correct
+ok 136 - a partial update is repaired from the anchor that is still correct
+  ---
+  duration_ms: 5.60576
+  type: 'test'
+  ...
+# Subtest: the GitHub copy is accepted ONLY if its fingerprint is the reference
+ok 137 - the GitHub copy is accepted ONLY if its fingerprint is the reference
+  ---
+  duration_ms: 8.085557
+  type: 'test'
+  ...
+# Subtest: a forged / different GitHub copy is rejected and nothing is written
+ok 138 - a forged / different GitHub copy is rejected and nothing is written
+  ---
+  duration_ms: 8.678045
+  type: 'test'
+  ...
+# Subtest: offline / network error: refused with every source listed, files untouched
+ok 139 - offline / network error: refused with every source listed, files untouched
+  ---
+  duration_ms: 7.682943
+  type: 'test'
+  ...
+# Subtest: a retired REFERENCE_FP is never used as a restoration target
+ok 140 - a retired REFERENCE_FP is never used as a restoration target
+  ---
+  duration_ms: 3.678984
+  type: 'test'
+  ...
+# Subtest: an ambiguous literal (two declarations) is refused, not guessed
+ok 141 - an ambiguous literal (two declarations) is refused, not guessed
+  ---
+  duration_ms: 1.980712
+  type: 'test'
+  ...
+# Subtest: a keys/public.pem holding the divergent key is moved into the backup, never deleted
+ok 142 - a keys/public.pem holding the divergent key is moved into the backup, never deleted
+  ---
+  duration_ms: 9.003521
+  type: 'test'
+  ...
+# Subtest: CRLF files stay CRLF
+ok 143 - CRLF files stay CRLF
+  ---
+  duration_ms: 8.331504
+  type: 'test'
+  ...
+# Subtest: agreeing anchors: nothing to do
+ok 144 - agreeing anchors: nothing to do
+  ---
+  duration_ms: 4.086953
+  type: 'test'
+  ...
+# Subtest: literalPem refuses non-key and ambiguous content
+ok 145 - literalPem refuses non-key and ambiguous content
+  ---
+  duration_ms: 0.58732
+  type: 'test'
+  ...
+# Subtest: preflight repairs automatically, then continues to its other checks
+ok 146 - preflight repairs automatically, then continues to its other checks
+  ---
+  duration_ms: 64.567572
+  type: 'test'
+  ...
+# Subtest: GF_NO_ANCHOR_RESTORE=1 keeps the pure refusal
+ok 147 - GF_NO_ANCHOR_RESTORE=1 keeps the pure refusal
+  ---
+  duration_ms: 35.176848
+  type: 'test'
+  ...
+# Subtest: a LOCAL authority holding the divergent key (config receipt) is a decision, not an automatic restore
+ok 148 - a LOCAL authority holding the divergent key (config receipt) is a decision, not an automatic restore
+  ---
+  duration_ms: 2.267399
+  type: 'test'
+  ...
+# Subtest: keys/private.pem whose public half is NOT the reference blocks the automatic choice (private key never read)
+ok 149 - keys/private.pem whose public half is NOT the reference blocks the automatic choice (private key never read)
+  ---
+  duration_ms: 1.803206
+  type: 'test'
+  ...
+# Subtest: keys/private.pem paired with the PRODUCTION public key does not block the restore
+ok 150 - keys/private.pem paired with the PRODUCTION public key does not block the restore
+  ---
+  duration_ms: 3.163984
+  type: 'test'
+  ...
+# Subtest: secret scanner retains default rules and never exempts whole critical auth/public-key sources
+ok 151 - secret scanner retains default rules and never exempts whole critical auth/public-key sources
+  ---
+  duration_ms: 1.158347
+  type: 'test'
+  ...
+# Subtest: three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+ok 152 - three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+  ---
+  duration_ms: 13.073945
+  type: 'test'
+  ...
+# Subtest: every phase5 suppression is an exact hash-locked location; prior twenty individually retained
+ok 153 - every phase5 suppression is an exact hash-locked location; prior twenty individually retained
+  ---
+  duration_ms: 367.278519
+  type: 'test'
+  ...
+# Subtest: changed receipt/source/line/prose or unknown classification invalidates suppression
+ok 154 - changed receipt/source/line/prose or unknown classification invalidates suppression
+  ---
+  duration_ms: 6.320358
+  type: 'test'
+  ...
+# Subtest: actual setup-dev preserves a strong secret and restricts an existing .env
+ok 155 - actual setup-dev preserves a strong secret and restricts an existing .env
+  ---
+  duration_ms: 36.805561
+  type: 'test'
+  ...
+# Subtest: actual setup-dev creates a private .env and keeps it private on later runs
+ok 156 - actual setup-dev creates a private .env and keeps it private on later runs
+  ---
+  duration_ms: 64.065369
+  type: 'test'
+  ...
+# Subtest: sans clé : refus explicite, aucun manifeste
+ok 157 - sans clé : refus explicite, aucun manifeste
+  ---
+  duration_ms: 43.990128
+  type: 'test'
+  ...
+# Subtest: clé non Ed25519 : refus avant toute signature
+ok 158 - clé non Ed25519 : refus avant toute signature
+  ---
+  duration_ms: 39.333691
+  type: 'test'
+  ...
+# Subtest: clé étrangère pour un keyId déjà embarqué : refus
+ok 159 - clé étrangère pour un keyId déjà embarqué : refus
+  ---
+  duration_ms: 36.617045
+  type: 'test'
+  ...
+# Subtest: signature nominale : manifeste vérifié par le module client, sans fuite de clé
+ok 160 - signature nominale : manifeste vérifié par le module client, sans fuite de clé
+  ---
+  duration_ms: 174.330128
+  type: 'test'
+  ...
+# Subtest: binaire modifié après signature : l’empreinte signée ne correspond plus
+ok 161 - binaire modifié après signature : l’empreinte signée ne correspond plus
+  ---
+  duration_ms: 148.432407
+  type: 'test'
+  ...
+# Subtest: manifeste falsifié : signature refusée
+ok 162 - manifeste falsifié : signature refusée
+  ---
+  duration_ms: 158.150119
+  type: 'test'
+  ...
+# Subtest: installeur au nom fixe sans version : signable, version issue de package.json
+ok 163 - installeur au nom fixe sans version : signable, version issue de package.json
+  ---
+  duration_ms: 149.77352
+  type: 'test'
+  ...
+# Subtest: fichier absent : refus, rien n’est signé
+ok 164 - fichier absent : refus, rien n’est signé
+  ---
+  duration_ms: 29.15221
+  type: 'test'
+  ...
+# (node:22199) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: single offline NSIS per-user contract preserves identity, data and protections
+ok 165 - single offline NSIS per-user contract preserves identity, data and protections
+  ---
+  duration_ms: 2.057095
+  type: 'test'
+  ...
+# Subtest: publication requires actual payload inspection, validates PE and keeps release to one EXE
+ok 166 - publication requires actual payload inspection, validates PE and keeps release to one EXE
+  ---
+  duration_ms: 143.985758
+  type: 'test'
+  ...
+# Subtest: foreign release files and invalid PE are refused without deleting user files
+ok 167 - foreign release files and invalid PE are refused without deleting user files
+  ---
+  duration_ms: 1.342145
+  type: 'test'
+  ...
+# Subtest: actual payload comparison rejects missing, extra and altered files
+ok 168 - actual payload comparison rejects missing, extra and altered files
+  ---
+  duration_ms: 8.786174
+  type: 'test'
+  ...
+# Subtest: NSIS inspection uses the current pinned builder toolset, not removed 7zip-bin
+ok 169 - NSIS inspection uses the current pinned builder toolset, not removed 7zip-bin
+  ---
+  duration_ms: 145.140622
+  type: 'test'
+  ...
+# Subtest: describePe distingue un fichier tronqué d’un fichier qui n’est pas un exécutable
+ok 170 - describePe distingue un fichier tronqué d’un fichier qui n’est pas un exécutable
+  ---
+  duration_ms: 2.366693
+  type: 'test'
+  ...
+# Subtest: peInfo refuse toujours, mais porte désormais la cause précise
+ok 171 - peInfo refuse toujours, mais porte désormais la cause précise
+  ---
+  duration_ms: 1.582006
+  type: 'test'
+  ...
+# Subtest: le vérificateur passe par le diagnostic qui ne lève pas, sinon le verdict est court-circuité
+ok 172 - le vérificateur passe par le diagnostic qui ne lève pas, sinon le verdict est court-circuité
+  ---
+  duration_ms: 0.725319
+  type: 'test'
+  ...
+1..172
+# tests 172
+# suites 0
+# pass 172
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6351.107816

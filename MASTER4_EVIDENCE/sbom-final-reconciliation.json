@@ -1,0 +1,97 @@
+{
+  "generatedAt": "2026-10-22T18:59:52.750Z",
+  "components": 133,
+  "old35StillMissing": [],
+  "old35NowPresent": 35,
+  "oldExtras": [
+    {
+      "name": "@emnapi/runtime",
+      "inCurrentProduction": true,
+      "resolution": "CONFIRMED_PRODUCTION_LICENSE_CHECKER_OMISSION"
+    },
+    {
+      "name": "@img/sharp-wasm32",
+      "inCurrentProduction": true,
+      "resolution": "CONFIRMED_PRODUCTION_LICENSE_CHECKER_OMISSION"
+    },
+    {
+      "name": "@next/swc-linux-x64-musl",
+      "inCurrentProduction": true,
+      "resolution": "CONFIRMED_PRODUCTION_LICENSE_CHECKER_OMISSION"
+    }
+  ],
+  "oldVersionMismatches": [
+    {
+      "name": "@next/env",
+      "before": "15.5.27",
+      "current": [
+        "15.5.28"
+      ]
+    },
+    {
+      "name": "@next/swc-linux-x64-gnu",
+      "before": "15.5.27",
+      "current": [
+        "15.5.28"
+      ]
+    },
+    {
+      "name": "next",
+      "before": "15.5.27",
+      "current": [
+        "15.5.28"
+      ]
+    }
+  ],
+  "licenseCheckerEntriesMissingFromCurrent": [],
+  "currentComponentsMissingFromLicenseChecker": [
+    "@emnapi/runtime@1.11.3",
+    "@img/sharp-wasm32@0.35.5"
+  ],
+  "missingLicenseTexts": [
+    "client-only@0.0.1",
+    "next-auth@4.24.15"
+  ],
+  "explicitLocalProvenanceFallbacks": 5,
+  "licenseDistribution": {
+    "MIT": 95,
+    "Apache-2.0": 15,
+    "ISC": 13,
+    "LGPL-3.0-or-later": 2,
+    "Apache-2.0 AND LGPL-3.0-or-later AND MIT": 1,
+    "CC-BY-4.0": 1,
+    "(MPL-2.0 OR Apache-2.0)": 1,
+    "MIT-0": 1,
+    "(MIT AND Zlib)": 1,
+    "Métadonnée absente": 1,
+    "BSD-3-Clause": 1,
+    "0BSD": 1
+  },
+  "copyleftOrAttributionReview": [
+    {
+      "name": "@img/sharp-libvips-linux-x64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "name": "@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "name": "@img/sharp-wasm32",
+      "version": "0.35.5",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later AND MIT"
+    },
+    {
+      "name": "caniuse-lite",
+      "version": "1.0.30001816",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "name": "dompurify",
+      "version": "3.4.17",
+      "license": "(MPL-2.0 OR Apache-2.0)"
+    }
+  ]
+}

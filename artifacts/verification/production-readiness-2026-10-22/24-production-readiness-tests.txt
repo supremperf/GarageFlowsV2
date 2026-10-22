@@ -1,0 +1,84 @@
+Commande : tests des deux portes fail-closed
+TAP version 13
+# Subtest: la porte complète refuse les contrôles critiques NON EXÉCUTÉS même si tout le reste réussit
+ok 1 - la porte complète refuse les contrôles critiques NON EXÉCUTÉS même si tout le reste réussit
+  ---
+  duration_ms: 63.120796
+  type: 'test'
+  ...
+# Subtest: --fast reste un pré-contrôle local et ne revendique jamais une readiness production
+ok 2 - --fast reste un pré-contrôle local et ne revendique jamais une readiness production
+  ---
+  duration_ms: 44.648768
+  type: 'test'
+  ...
+# Subtest: la porte complète reste verte lorsque chaque contrôle critique est exécuté et réussit
+ok 3 - la porte complète reste verte lorsque chaque contrôle critique est exécuté et réussit
+  ---
+  duration_ms: 51.680465
+  type: 'test'
+  ...
+# Subtest: toutes les exigences passent seulement avec preuves, codes 0, marqueurs et empreintes valides
+ok 4 - toutes les exigences passent seulement avec preuves, codes 0, marqueurs et empreintes valides
+  ---
+  duration_ms: 15.173779
+  type: 'test'
+  ...
+# Subtest: une exigence critique absente du manifeste bloque même si toutes les autres sont vertes
+ok 5 - une exigence critique absente du manifeste bloque même si toutes les autres sont vertes
+  ---
+  duration_ms: 6.260695
+  type: 'test'
+  ...
+# Subtest: fail, blocked et not_executed ne peuvent jamais devenir un verdict prêt
+ok 6 - fail, blocked et not_executed ne peuvent jamais devenir un verdict prêt
+  ---
+  duration_ms: 17.987073
+  type: 'test'
+  ...
+# Subtest: un statut pass avec code non nul ou marqueur absent est invalide
+ok 7 - un statut pass avec code non nul ou marqueur absent est invalide
+  ---
+  duration_ms: 12.196719
+  type: 'test'
+  ...
+# Subtest: une preuve modifiée après le SHA256SUMS invalide le verdict
+ok 8 - une preuve modifiée après le SHA256SUMS invalide le verdict
+  ---
+  duration_ms: 5.731364
+  type: 'test'
+  ...
+# Subtest: un chemin de preuve sortant du dossier est refusé
+ok 9 - un chemin de preuve sortant du dossier est refusé
+  ---
+  duration_ms: 6.965435
+  type: 'test'
+  ...
+# Subtest: un identifiant dupliqué est refusé au lieu de masquer une exigence
+ok 10 - un identifiant dupliqué est refusé au lieu de masquer une exigence
+  ---
+  duration_ms: 6.554541
+  type: 'test'
+  ...
+# Subtest: une ligne SHA256SUMS malformée ou dupliquée est fail-closed
+ok 11 - une ligne SHA256SUMS malformée ou dupliquée est fail-closed
+  ---
+  duration_ms: 7.147751
+  type: 'test'
+  ...
+# Subtest: la publication exige la readiness après dist et avant signature
+ok 12 - la publication exige la readiness après dist et avant signature
+  ---
+  duration_ms: 1.646082
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 376.295135
+exit_code=0

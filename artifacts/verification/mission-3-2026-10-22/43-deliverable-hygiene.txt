@@ -1,0 +1,10 @@
+required_reports_present=11/11
+required_reports_missing=none
+aq_sections=17 sequence=ABCDEFGHIJKLMNOPQ
+aq_sequence_valid=true
+final_line=NON PRÊT POUR LA PRODUCTION
+journal_markers=11/11
+hygiene_files=68 text=68 binary_skipped=0
+hygiene_findings=0
+scope_note=Contrôle ciblé d’hygiène seulement ; ne remplace ni Gitleaks ni le scan d’historique.
+hygiene_exit_code=0

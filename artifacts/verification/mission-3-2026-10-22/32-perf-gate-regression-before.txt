@@ -1,0 +1,148 @@
+Avant correction de la garde : le nouveau test doit échouer sur la mesure dev.
+TAP version 13
+# Subtest: la porte complète refuse les contrôles critiques NON EXÉCUTÉS même si tout le reste réussit
+ok 1 - la porte complète refuse les contrôles critiques NON EXÉCUTÉS même si tout le reste réussit
+  ---
+  duration_ms: 37.764501
+  type: 'test'
+  ...
+# Subtest: --fast reste un pré-contrôle local et ne revendique jamais une readiness production
+ok 2 - --fast reste un pré-contrôle local et ne revendique jamais une readiness production
+  ---
+  duration_ms: 30.608528
+  type: 'test'
+  ...
+# Subtest: la porte complète reste verte lorsque chaque contrôle critique est exécuté et réussit
+ok 3 - la porte complète reste verte lorsque chaque contrôle critique est exécuté et réussit
+  ---
+  duration_ms: 31.158777
+  type: 'test'
+  ...
+# Subtest: le budget ne mesure jamais une sortie Next de développement sans BUILD_ID
+not ok 4 - le budget ne mesure jamais une sortie Next de développement sans BUILD_ID
+  ---
+  duration_ms: 31.8242
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/final-release-gate-verdict.test.cjs:81:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /Budget de performance[^\n]*NON EXÉCUTÉ/. Input:
+    
+    '\n' +
+      '════ GarageFlows — FINAL RELEASE GATE ════\n' +
+      '\n' +
+      '▶ TypeScript (tsc --noEmit)… OK (0s)\n' +
+      '▶ ESLint… OK (0s)\n' +
+      '▶ Gardes de cohérence (check:consistency)… OK (0s)\n' +
+      '▶ Suite de tests (vitest) + baseline machine + baseline humaine… OK (0s)\n' +
+      '▶ Cohérence documentaire (post-baseline)… OK (0s)\n' +
+      '▶ Audit complet dépendances (tous niveaux)… OK (0s)\n' +
+      '▶ Audit runtime desktop empaqueté (Electron)… OK (0s)\n' +
+      '▶ Manifeste de release (commit-bound)… OK (0s)\n' +
+      "▶ Vérification d'artefact (identité + cohérence + secrets)… OK (0s)\n" +
+      "▶ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)… OK (0s)\n" +
+      '▶ Build de production (next build)… OK (0s)\n' +
+      '▶ Budget de performance (bundle client)… OK (0s)\n' +
+      '\n' +
+      '════ RÉCAPITULATIF ════\n' +
+      '✅ TypeScript (tsc --noEmit)                                                  OK\n' +
+      '✅ ESLint                                                                     OK\n' +
+      '✅ Gardes de cohérence (check:consistency)                                    OK\n' +
+      '⏭️  Preuve de rotation des secrets                                             NON EXÉCUTÉ — .env absent — aucun secret à comparer (exécuter là où ils sont définis)\n' +
+      '✅ Suite de tests (vitest) + baseline machine + baseline humaine              OK\n' +
+      '✅ Cohérence documentaire (post-baseline)                                     OK\n' +
+      '⏭️  Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)  NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni\n' +
+      '⏭️  Migrations PostgreSQL sur base neuve + smoke test                          NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni\n' +
+      '⏭️  Rate-limit distribué multi-instance (Redis réel)                           NON EXÉCUTÉ — TEST_REDIS_URL non fourni\n' +
+      '✅ Audit complet dépendances (tous niveaux)                                   OK\n' +
+      '✅ Audit runtime desktop empaqueté (Electron)                                 OK\n' +
+      '✅ Manifeste de release (commit-bound)                                        OK\n' +
+      "✅ Vérification d'artefact (identité + cohérence + secrets)                   OK\n" +
+      "✅ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)        OK\n" +
+      '✅ Build de production (next build)                                           OK\n' +
+      '✅ Budget de performance (bundle client)                                      OK\n' +
+      '\n' +
+      '⚠ 4 contrôle(s) NON EXÉCUTÉ(S) (environnement absent) — ils ne sont PAS réputés verts.\n' +
+      '\n' +
+      '✅ GATE LOCAL PASSÉ : exécutez encore `npm run readiness:final` avec les preuves Playwright, Windows, staging et conformité.\n' +
+      '\n' +
+      '\n' +
+      '❌ 4 contrôle(s) obligatoire(s) NON EXÉCUTÉ(S) : accès ou prérequis manquant, jamais une réussite.\n' +
+      '   - Preuve de rotation des secrets — .env absent — aucun secret à comparer (exécuter là où ils sont définis)\n' +
+      '   - Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions) — TEST_POSTGRES_URL non fourni\n' +
+      '   - Migrations PostgreSQL sur base neuve + smoke test — TEST_POSTGRES_URL non fourni\n' +
+      '   - Rate-limit distribué multi-instance (Redis réel) — TEST_REDIS_URL non fourni\n' +
+      '\n' +
+      '❌ GATE ÉCHOUÉ : 0 échec(s) et 4 contrôle(s) obligatoire(s) non exécuté(s).\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    
+    ════ GarageFlows — FINAL RELEASE GATE ════
+    
+    ▶ TypeScript (tsc --noEmit)… OK (0s)
+    ▶ ESLint… OK (0s)
+    ▶ Gardes de cohérence (check:consistency)… OK (0s)
+    ▶ Suite de tests (vitest) + baseline machine + baseline humaine… OK (0s)
+    ▶ Cohérence documentaire (post-baseline)… OK (0s)
+    ▶ Audit complet dépendances (tous niveaux)… OK (0s)
+    ▶ Audit runtime desktop empaqueté (Electron)… OK (0s)
+    ▶ Manifeste de release (commit-bound)… OK (0s)
+    ▶ Vérification d'artefact (identité + cohérence + secrets)… OK (0s)
+    ▶ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)… OK (0s)
+    ▶ Build de production (next build)… OK (0s)
+    ▶ Budget de performance (bundle client)… OK (0s)
+    
+    ════ RÉCAPITULATIF ════
+    ✅ TypeScript (tsc --noEmit)                                                  OK
+    ✅ ESLint                                                                     OK
+    ✅ Gardes de cohérence (check:consistency)                                    OK
+    ⏭️  Preuve de rotation des secrets                                             NON EXÉCUTÉ — .env absent — aucun secret à comparer (exécuter là où ils sont définis)
+    ✅ Suite de tests (vitest) + baseline machine + baseline humaine              OK
+    ✅ Cohérence documentaire (post-baseline)                                     OK
+    ⏭️  Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)  NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni
+    ⏭️  Migrations PostgreSQL sur base neuve + smoke test                          NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni
+    ⏭️  Rate-limit distribué multi-instance (Redis réel)                           NON EXÉCUTÉ — TEST_REDIS_URL non fourni
+    ✅ Audit complet dépendances (tous niveaux)                                   OK
+    ✅ Audit runtime desktop empaqueté (Electron)                                 OK
+    ✅ Manifeste de release (commit-bound)                                        OK
+    ✅ Vérification d'artefact (identité + cohérence + secrets)                   OK
+    ✅ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)        OK
+    ✅ Build de production (next build)                                           OK
+    ✅ Budget de performance (bundle client)                                      OK
+    
+    ⚠ 4 contrôle(s) NON EXÉCUTÉ(S) (environnement absent) — ils ne sont PAS réputés verts.
+    
+    ✅ GATE LOCAL PASSÉ : exécutez encore `npm run readiness:final` avec les preuves Playwright, Windows, staging et conformité.
+    
+    
+    ❌ 4 contrôle(s) obligatoire(s) NON EXÉCUTÉ(S) : accès ou prérequis manquant, jamais une réussite.
+       - Preuve de rotation des secrets — .env absent — aucun secret à comparer (exécuter là où ils sont définis)
+       - Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions) — TEST_POSTGRES_URL non fourni
+       - Migrations PostgreSQL sur base neuve + smoke test — TEST_POSTGRES_URL non fourni
+       - Rate-limit distribué multi-instance (Redis réel) — TEST_REDIS_URL non fourni
+    
+    ❌ GATE ÉCHOUÉ : 0 échec(s) et 4 contrôle(s) obligatoire(s) non exécuté(s).
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/final-release-gate-verdict.test.cjs:85:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 181.231645
+regression_before_exit_code=1

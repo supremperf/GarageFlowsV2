@@ -1,0 +1,14 @@
+Commandes gh api en lecture seule sur les releases officielles Prisma
+
+=== repos/prisma/prisma/releases/tags/5.22.0 ===
+exit_code=0
+releases 1
+tag 5.22.0 draft false prerelease false assets 0
+
+=== repos/prisma/prisma-engines/releases?per_page=100 ===
+exit_code=0
+releases 0
+
+=== COMMIT OFFICIEL DU MOTEUR ===
+{"date":"2024-11-05T13:26:54Z","message":"fix: temporarily rename `prisma:engine:query` back to `prisma:engine` (#5038)","sha":"605197351a3c8bdd595af2d2a9bc3025bca48ea2"}
+exit_code=0

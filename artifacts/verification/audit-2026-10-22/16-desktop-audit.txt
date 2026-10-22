@@ -1,0 +1,5 @@
+
+> garageflow@1.1.0 check:desktop-audit
+> node scripts/check-desktop-runtime-audit.mjs
+
+LOW=0 MODERATE=0 HIGH=0 CRITICAL=0 TOTAL=0

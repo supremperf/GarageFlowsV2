@@ -1,0 +1,10 @@
+date_utc=2026-10-22T19:00:46Z
+gitleaks=absent
+go=absent
+docker=absent
+podman=absent
+gitleaks_working_tree_scan=NOT_RUN_OFFICIAL_BINARY_ABSENT
+gitleaks_git_history_scan=NOT_RUN_OFFICIAL_BINARY_ABSENT
+npm_homonym_used=false
+prior_official_download_result=ECONNRESET_OR_EOF_NO_BINARY_MASTER3
+no_findings_claim=false

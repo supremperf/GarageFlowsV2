@@ -1,0 +1,9 @@
+Lecture seule des runs GitHub Actions pour le HEAD exact, sans logs ni secrets.
+runs_api_exit_code=0
+total_count 3
+run 39810398493 pip in /docs/audit/resumption-2026-10-14 for certifi, mcp - Update #1645603895 arena/84940ac2-garageflowsv2 dynamic completed success 150654535ca0b3b417e96be057ba674a119c512f
+run 39810221794 Graph Update: pip in /docs/audit/resumption-2026-10-14, /tests #1645601524 arena/84940ac2-garageflowsv2 dynamic completed success 150654535ca0b3b417e96be057ba674a119c512f
+run 39801508474 CI arena/84940ac2-garageflowsv2 push completed failure 150654535ca0b3b417e96be057ba674a119c512f
+artifacts_api_run=39810398493 exit_code=0
+artifacts_api_run=39810221794 exit_code=0
+artifacts_api_run=39801508474 exit_code=0

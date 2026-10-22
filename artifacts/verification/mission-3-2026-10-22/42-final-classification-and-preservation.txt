@@ -1,0 +1,68 @@
+=== CLASSIFICATION VITEST POST-PATCH ===
+groups {"nativeDb":79,"serverClient":5,"other":0}
+other_files []
+failed_assertion /home/user/GarageFlowsV2/src/test-utils/__tests__/prepare-test-db.test.ts :: GF31-AUD-024 — modèle de base de test partagé produit une base exploitable, et le modèle porte l’empreinte du schéma
+failed_assertion /home/user/GarageFlowsV2/src/test-utils/__tests__/prepare-test-db.test.ts :: GF31-AUD-024 — modèle de base de test partagé le second appel réutilise le modèle au lieu de reconstruire
+failed_assertion /home/user/GarageFlowsV2/src/test-utils/__tests__/prepare-test-db.test.ts :: GF31-AUD-024 — modèle de base de test partagé une base déjà présente est REMPLACÉE, jamais réutilisée telle quelle
+classification_exit_code=0
+
+=== PRÉSERVATION ===
+hwid_license_keys_diff_exit=0
+git_diff_check_exit=0
+.env_mode=600 .env_bytes=28573
+dev_db_mode=644 dev_db_bytes=909312
+dev_db_matches_template=true
+next_version=15.5.28
+setup_exe_count=0
+
+=== CHEMINS MODIFIÉS (AUCUNE VALEUR SECRÈTE) ===
+ M docs/CONFIG_REPOSITORY_AUDIT.md
+ M package-lock.json
+ M package.json
+ M scripts/config-audit.cjs
+ M scripts/final-release-gate.mjs
+ M scripts/secrets.js
+ M scripts/setup-dev.js
+ M scripts/verify-standalone-build.cjs
+ M src/app/api/purchase-orders/__tests__/receive-guards.test.ts
+ M src/lib/__tests__/secrets.test.ts
+ M src/lib/__tests__/toolchain-node-version.test.ts
+ M tests/build-dist-chain.test.cjs
+?? ACTIONS_MANUELLES_RESTANTES.md
+?? AUDIT_COMPLET.md
+?? BLOCKERS_REMAINING.md
+?? BUILD_OFFICIAL_REPORT.md
+?? BUILD_OFFICIEL.md
+?? COMMANDS_EXECUTED.md
+?? CONFIGURATION.md
+?? CORRECTIONS_EFFECTUEES.md
+?? DATABASE_RUNTIME_REPORT.md
+?? DATABASE_VALIDATION.md
+?? FINAL_EVIDENCE_INDEX.md
+?? GITLEAKS_AND_HISTORY_REPORT.md
+?? INSTALLATION_WINDOWS.md
+?? MISSION_3_DIAGNOSTIC.md
+?? PLAYWRIGHT_EXECUTION_REPORT.md
+?? PLAYWRIGHT_VALIDATION.md
+?? PRISMA_RUNTIME_VALIDATION.md
+?? PRISMA_TLS_REPAIR.md
+?? PRODUCTION_READINESS.md
+?? PRODUCTION_READINESS_FINAL.md
+?? SBOM_AND_LICENSES.md
+?? SBOM_WINDOWS_FINAL.md
+?? SECURITE.md
+?? SECURITY_FINAL.md
+?? STAGING_VALIDATION.md
+?? TESTS_ET_VALIDATIONS.md
+?? VITEST_REPAIR_REPORT.md
+?? WINDOWS_INSTALLATION_TEST.md
+?? WINDOWS_INSTALLER_REPORT.md
+?? WINDOWS_INSTALLER_VALIDATION.md
+?? artifacts/verification/audit-2026-10-22/
+?? artifacts/verification/mission-3-2026-10-22/
+?? artifacts/verification/production-readiness-2026-10-22/
+?? artifacts/verification/production-readiness.json
+?? scripts/production-readiness.cjs
+?? tests/final-release-gate-verdict.test.cjs
+?? tests/production-readiness.test.cjs
+?? tests/setup-dev-permissions.test.cjs

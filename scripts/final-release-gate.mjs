@@ -9,9 +9,13 @@
  * (jamais comptés « verts » silencieusement : aucun résultat n'est inventé).
  *
  * Usage :
- *   node scripts/final-release-gate.mjs            # tout (build inclus)
- *   node scripts/final-release-gate.mjs --fast     # sans build ni e2e (pré-PR)
+ *   node scripts/final-release-gate.mjs            # contrôles locaux complets (build inclus)
+ *   node scripts/final-release-gate.mjs --fast     # pré-PR sans build ; JAMAIS un verdict production
  *   TEST_POSTGRES_URL=… TEST_REDIS_URL=… node scripts/final-release-gate.mjs
+ *
+ * En mode complet, un contrôle obligatoire NON EXÉCUTÉ bloque comme un échec.
+ * Le verdict local ne remplace pas `npm run readiness:final`, qui exige aussi
+ * les preuves Playwright, Windows, staging et de conformité de l'artefact.
  *
  * Sortie : tableau récapitulatif + code 0/1. Pensé pour être le DERNIER mot
  * avant un tag de release — et la commande unique à montrer en due diligence.
@@ -44,7 +48,9 @@ const results = []
 function run(name, cmd, opts = {}) {
   const { mandatory = true, env = {}, skip = false, skipReason = '', argv = null } = opts
   if (skip) {
-    results.push({ name, status: 'NON EXÉCUTÉ', mandatory: false, note: skipReason })
+    // Conserver la criticité demandée : en mode complet, l'absence d'un accès
+    // ou d'un prérequis ne transforme jamais un contrôle requis en optionnel.
+    results.push({ name, status: 'NON EXÉCUTÉ', mandatory, note: skipReason })
     return
   }
   const started = Date.now()
@@ -107,6 +113,7 @@ run('Preuve de rotation des secrets', null, {
   argv: [process.execPath, '--env-file=.env', 'scripts/verify-rotation.mjs'],
   skip: !existsSync('.env'),
   skipReason: '.env absent — aucun secret à comparer (exécuter là où ils sont définis)',
+  mandatory: !FAST || existsSync('.env'),
 })
 
 // 4. Tests unitaires + intégration (inclut monnaie, e-invoicing/formats, isolation
@@ -129,17 +136,21 @@ run('Suite de tests (vitest) + baseline machine + baseline humaine', FAST
 //     si un document — Y COMPRIS la baseline canonique elle-même — présente un
 //     compte de tests ou une version de toolchain résolue divergents des mesures
 //     réelles (anti-divergence de due diligence).
-run('Cohérence documentaire (post-baseline)', 'node scripts/check-docs-consistency.mjs', { skip: FAST, skipReason: '--fast (déjà couvert par check:consistency)' })
+run('Cohérence documentaire (post-baseline)', 'node scripts/check-docs-consistency.mjs', {
+  skip: FAST,
+  skipReason: '--fast (déjà couvert par check:consistency)',
+  mandatory: !FAST,
+})
 
 // 5-6. Tests conditionnels sur infrastructures réelles
 run('Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)',
   'npx vitest run src/lib/__tests__/document-numbering.postgres.int.test.ts src/lib/__tests__/stock-concurrency.postgres.int.test.ts src/lib/__tests__/license-devices.postgres.int.test.ts src/lib/__tests__/licensed-session.postgres.int.test.ts',
-  { skip: !PG, skipReason: 'TEST_POSTGRES_URL non fourni', mandatory: !!PG })
+  { skip: !PG, skipReason: 'TEST_POSTGRES_URL non fourni', mandatory: !FAST || !!PG })
 run('Migrations PostgreSQL sur base neuve + smoke test', null,
-  { argv: [process.execPath, 'scripts/gate-fresh-postgres.mjs'], skip: !PG, skipReason: 'TEST_POSTGRES_URL non fourni', mandatory: !!PG })
+  { argv: [process.execPath, 'scripts/gate-fresh-postgres.mjs'], skip: !PG, skipReason: 'TEST_POSTGRES_URL non fourni', mandatory: !FAST || !!PG })
 run('Rate-limit distribué multi-instance (Redis réel)',
   'npx vitest run src/lib/__tests__/rate-limit-multi-instance.int.test.ts',
-  { skip: !REDIS, skipReason: 'TEST_REDIS_URL non fourni', mandatory: !!REDIS })
+  { skip: !REDIS, skipReason: 'TEST_REDIS_URL non fourni', mandatory: !FAST || !!REDIS })
 
 // 7. Audit complet sans dérogation (LOW à CRITICAL, dev/optional inclus)
 run('Audit complet dépendances (tous niveaux)', 'node scripts/audit-ci.js')
@@ -164,7 +175,10 @@ run('Empaquetage + vérification d\'artefact RÉEL (ZIP extrait, sans .git)',
 
 // 8-9. Build + budget de perf (sautés en --fast)
 run('Build de production (next build)', 'npm run build', {
-  skip: FAST, skipReason: '--fast', env: {
+  skip: FAST,
+  skipReason: '--fast',
+  mandatory: !FAST,
+  env: {
     DATABASE_URL: process.env.DATABASE_URL || 'file:./prisma/dev.db',
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'gate-build-secret-0123456789abcdefghij',
     NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:4028',
@@ -184,7 +198,13 @@ if (!FAST && existsSync('.next/standalone')) {
 }
 
 run('Budget de performance (bundle client)', 'npm run check:perf-budget', {
-  skip: FAST || !existsSync('.next/static'), skipReason: FAST ? '--fast' : '.next absent (lancez le build)',
+  // Un `next dev` (Playwright, par exemple) laisse aussi `.next/static`. Sans
+  // BUILD_ID, ce ne sont pas les assets immuables du build de production : les
+  // mesurer produit des chiffres très gonflés et un diagnostic trompeur. En mode
+  // complet, NON EXÉCUTÉ reste obligatoire et bloque toujours la release.
+  skip: FAST || !existsSync('.next/BUILD_ID') || !existsSync('.next/static'),
+  skipReason: FAST ? '--fast' : '.next/BUILD_ID ou .next/static absent — build de production non abouti',
+  mandatory: !FAST,
 })
 
 // ── Récapitulatif ─────────────────────────────────────────────────────────────
@@ -196,11 +216,20 @@ for (const r of results) {
 }
 const failed = results.filter((r) => r.status === 'ÉCHEC' && r.mandatory)
 const skipped = results.filter((r) => r.status === 'NON EXÉCUTÉ')
+const skippedMandatory = skipped.filter((r) => r.mandatory)
 if (skipped.length) {
   console.log(`\n⚠ ${skipped.length} contrôle(s) NON EXÉCUTÉ(S) (environnement absent) — ils ne sont PAS réputés verts.`)
 }
-if (failed.length) {
-  console.error(`\n❌ GATE ÉCHOUÉ : ${failed.length} contrôle(s) obligatoire(s) en échec.`)
+if (skippedMandatory.length) {
+  console.error(`\n❌ ${skippedMandatory.length} contrôle(s) obligatoire(s) NON EXÉCUTÉ(S) : accès ou prérequis manquant, jamais une réussite.`)
+  for (const r of skippedMandatory) console.error(`   - ${r.name} — ${r.note}`)
+}
+if (failed.length || skippedMandatory.length) {
+  console.error(`\n❌ GATE ÉCHOUÉ : ${failed.length} échec(s) et ${skippedMandatory.length} contrôle(s) obligatoire(s) non exécuté(s).`)
   process.exit(1)
 }
-console.log('\n✅ GATE PASSÉ : tous les contrôles obligatoires exécutables sont verts.')
+if (FAST) {
+  console.log('\n✅ PRÉ-PR LOCAL : contrôles exécutés verts. Ceci ne constitue PAS un verdict de readiness production.')
+} else {
+  console.log('\n✅ GATE LOCAL PASSÉ : exécutez encore `npm run readiness:final` avec les preuves Playwright, Windows, staging et conformité.')
+}

@@ -1,0 +1,9 @@
+Versions requises par les tests keygen (Pillow n en fait pas partie ; OCR reste séparé).
+python 3.11.2
+cryptography 50.0.2
+cffi 2.1.1
+version_probe_exit_code=0
+
+Commande : PATH=/tmp/gf-python-venv/bin:$PATH npx vitest run <3 fichiers Python identifiés>
+JSON report written to /home/user/GarageFlowsV2/artifacts/verification/mission-3-2026-10-22/vitest-python-targeted-results.json
+vitest_targeted_exit_code=0

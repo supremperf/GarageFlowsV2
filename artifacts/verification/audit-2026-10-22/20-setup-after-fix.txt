@@ -1,0 +1,4 @@
+✅  .env déjà présent.
+🔐  NEXTAUTH_SECRET généré (aléatoire, unique à cette installation).
+✅  Dossier prisma/ assuré.
+✅  Base de données prisma/dev.db présente.

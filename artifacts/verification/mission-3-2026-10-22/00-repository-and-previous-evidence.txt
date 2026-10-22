@@ -1,0 +1,129 @@
+date_utc=2026-10-22T18:05:07Z
+repository_root=/home/user/GarageFlowsV2
+origin=https://github.com/supremperf/GarageFlowsV2.git
+arena_branch=arena/388085e0-garageflowsv2
+head=150654535ca0b3b417e96be057ba674a119c512f
+requested_branch=arena/84940ac2-garageflowsv2
+
+=== REMOTE REFERENCES ===
+150654535ca0b3b417e96be057ba674a119c512f	refs/heads/arena/84940ac2-garageflowsv2
+ls_remote_exit_code=0
+
+=== PREVIOUS REPORTS ===
+OK PRODUCTION_READINESS_FINAL.md bytes=6744
+OK BUILD_OFFICIEL.md bytes=2685
+OK PRISMA_RUNTIME_VALIDATION.md bytes=3765
+OK DATABASE_VALIDATION.md bytes=3165
+OK PLAYWRIGHT_VALIDATION.md bytes=2445
+OK WINDOWS_INSTALLER_VALIDATION.md bytes=2665
+OK STAGING_VALIDATION.md bytes=2136
+OK SECURITY_FINAL.md bytes=3543
+OK SBOM_AND_LICENSES.md bytes=2344
+OK BLOCKERS_REMAINING.md bytes=3088
+OK COMMANDS_EXECUTED.md bytes=5201
+OK FINAL_EVIDENCE_INDEX.md bytes=5253
+
+=== PREVIOUS EVIDENCE SHA256 ===
+00-initial-state.txt: OK
+01-previous-evidence-verification.txt: OK
+02-branch-references.txt: OK
+03-prisma-tls-diagnostic.txt: OK
+04-prisma-environment.txt: OK
+05-previous-fixes-regression.txt: OK
+06-node-config-regression.txt: OK
+07-prisma-npm-channel.txt: OK
+08-prisma-github-channel.txt: OK
+09-prisma-fetch-internals.txt: OK
+10-playwright-browser-channels.txt: OK
+11-static-security-regression.txt: OK
+12-keygen-python-regression.txt: OK
+13-playwright-install.txt: OK
+14-keygen-python-corrected.txt: OK
+15-vitest-baseline.txt: OK
+16-supply-chain-audit-corrected.txt: OK
+17-python-vitest-corrected.txt: OK
+18-official-and-partial-build.txt: OK
+19-python-vitest-correct-paths.txt: OK
+20-playwright-inventory-and-launch.txt: OK
+21-environment-access-inventory.txt: OK
+22-readiness-gate-before.txt: OK
+23-readiness-gate-after.txt: OK
+24-production-readiness-tests.txt: OK
+25-artifact-static-checks.txt: OK
+26-hwid-and-data-preservation.txt: OK
+27-license-sbom-inventory.txt: OK
+28-license-sbom-corrected.txt: OK
+29-standalone-server.txt: OK
+30-standalone-server-local-config.txt: OK
+31-standalone-smoke.txt: OK
+32-sbom-notice-delta.txt: OK
+33-final-node-release-safety.txt: OK
+34-final-static-security.txt: OK
+35-production-readiness-required-ocr-tests.txt: OK
+36-final-static-with-master2-docs.txt: OK
+37-config-inventory-final.txt: OK
+38-source-working-tree-secret-scan.txt: OK
+39-production-readiness-verdict.txt: OK
+40-evidence-secret-scan.txt: OK
+previous_sha_exit_code=0
+
+=== READINESS MANIFEST ===
+schemaVersion 1 checks 33 counts {"pass":11,"blocked":14,"fail":5,"not_executed":3}
+
+=== GIT STATUS ===
+ M docs/CONFIG_REPOSITORY_AUDIT.md
+ M package.json
+ M scripts/config-audit.cjs
+ M scripts/final-release-gate.mjs
+ M scripts/secrets.js
+ M scripts/setup-dev.js
+ M scripts/verify-standalone-build.cjs
+ M src/app/api/purchase-orders/__tests__/receive-guards.test.ts
+ M src/lib/__tests__/secrets.test.ts
+ M src/lib/__tests__/toolchain-node-version.test.ts
+ M tests/build-dist-chain.test.cjs
+?? ACTIONS_MANUELLES_RESTANTES.md
+?? AUDIT_COMPLET.md
+?? BLOCKERS_REMAINING.md
+?? BUILD_OFFICIEL.md
+?? COMMANDS_EXECUTED.md
+?? CONFIGURATION.md
+?? CORRECTIONS_EFFECTUEES.md
+?? DATABASE_VALIDATION.md
+?? FINAL_EVIDENCE_INDEX.md
+?? INSTALLATION_WINDOWS.md
+?? PLAYWRIGHT_VALIDATION.md
+?? PRISMA_RUNTIME_VALIDATION.md
+?? PRODUCTION_READINESS.md
+?? PRODUCTION_READINESS_FINAL.md
+?? SBOM_AND_LICENSES.md
+?? SECURITE.md
+?? SECURITY_FINAL.md
+?? STAGING_VALIDATION.md
+?? TESTS_ET_VALIDATIONS.md
+?? WINDOWS_INSTALLER_VALIDATION.md
+?? artifacts/verification/audit-2026-10-22/
+?? artifacts/verification/mission-3-2026-10-22/
+?? artifacts/verification/production-readiness-2026-10-22/
+?? artifacts/verification/production-readiness.json
+?? scripts/production-readiness.cjs
+?? tests/final-release-gate-verdict.test.cjs
+?? tests/production-readiness.test.cjs
+?? tests/setup-dev-permissions.test.cjs
+
+=== TRACKED DIFF STAT ===
+ docs/CONFIG_REPOSITORY_AUDIT.md                    | 75 ++++++++++++++--------
+ package.json                                       |  5 +-
+ scripts/config-audit.cjs                           |  3 +-
+ scripts/final-release-gate.mjs                     | 49 ++++++++++----
+ scripts/secrets.js                                 |  6 +-
+ scripts/setup-dev.js                               | 11 +++-
+ scripts/verify-standalone-build.cjs                | 15 ++++-
+ .../__tests__/receive-guards.test.ts               | 19 +++++-
+ src/lib/__tests__/secrets.test.ts                  | 17 +++++
+ src/lib/__tests__/toolchain-node-version.test.ts   |  2 +-
+ tests/build-dist-chain.test.cjs                    | 14 ++++
+ 11 files changed, 168 insertions(+), 48 deletions(-)
+
+=== DIFF CHECK ===
+diff_check_exit_code=0

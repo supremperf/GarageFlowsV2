@@ -1,0 +1,1424 @@
+date_utc=2026-10-22T19:20:35Z
+
+Commande : npm run check:consistency
+
+> garageflow@1.1.0 check:consistency
+> npm run check:branding && npm run check:docs && npm run check:pwa && npm run check:money && npm run check:money-calculations && npm run check:money-json && npm run check:env-consistency && npm run check:migration-safety && npm run check:sqlite-template && npm run check:pg-migrations && npm run check:converge-additive && npm run check:critical-files && npm run check:public-key && npm run keys:check
+
+
+> garageflow@1.1.0 check:branding
+> node scripts/check-branding.mjs
+
+Marque — exceptions techniques ACTIVES (précises, documentées) :
+   • electron/main.js — User-Agent HTTP « GarageFlow/<version> »  (2)
+   • electron/main.js — sel de MAC base — NE PAS changer  (1)
+   • electron/main.js — sel de chiffrement (KDF) — NE PAS changer  (1)
+   • electron/main.js — serviceName Electron (keytar/identité OS)  (1)
+   • electron/secure-key.js — sel KDF secure-key — NE PAS changer  (1)
+   • electron/update-verify.js — doit correspondre au champ « product » du flux de MàJ (identité interne, non visible)  (1)
+   • electron/user-data-path.js — nom du dossier de données HISTORIQUE — compat installations existantes  (1)
+   • scripts/config-full.cjs — chemin physique du coffre de configuration existant — compat des plans/reprises  (4)
+   • scripts/config-keygen.cjs — chemin physique du runtime keygen existant — compat config  (1)
+   • scripts/config-keys.cjs — chemin physique du registre de clés existant — ne pas orpheliner les originaux  (1)
+   • scripts/config-manager.cjs — chemin physique du coffre existant — état transactionnel privé du gestionnaire  (1)
+   • scripts/config-policy.cjs — destination physique du coffre éditeur existant — compat des plans config  (1)
+   • scripts/config-rebuild.cjs — chemin physique du coffre de configuration existant — sauvegardes et journal de reconstruction  (2)
+   • scripts/config-release.cjs — chemin physique du coffre éditeur existant — compat signature  (1)
+   • scripts/config-services.cjs — chemin physique du coffre éditeur existant — compat signature  (1)
+   • scripts/keygen_server.py — User-Agent keygen (compat control-plane)  (1)
+   • scripts/lib/config-cloud.cjs — chemin physique du coffre existant — corps API temporaires privés  (2)
+   • scripts/lib/config-secrets-auto.cjs — chemin physique du coffre local existant — compatibilité des reçus de configuration  (1)
+   • scripts/lib/repository-audit-map.cjs — chemin physique du coffre local exclu de la lecture d’inventaire — compat config  (1)
+   • scripts/restore.js — chemin du dossier de données historique (restore.js / userData pin)  (3)
+   • scripts/sign-release-manifest.mjs — le manifeste signé DOIT porter la même identité « product » que EXPECTED_PRODUCT, sinon chaque poste rejette la mise à jour (identité interne, non visible)  (1)
+   • src/app/admin/licenses/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/license/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/login/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/register/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (4)
+   • src/components/GarageFlowLogo.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/Header.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/LicenseChangeModal.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/UpdateModal.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/integration/publication-mise-a-jour.test.ts — manifeste de test de PUBLICATION : le champ « product » doit valoir EXPECTED_PRODUCT, sinon le poste rejette la mise à jour — écrire « GarageFlows » ici ferait affirmer au test un contrat que la production refuse  (1)
+   • src/lib/__tests__/release-signing-chain.test.ts — chemin du dossier de données historique (restore.js / userData pin)  (1)
+   • src/lib/__tests__/update-verify.test.ts — reflète l'identité « product » du flux de MàJ (voir EXPECTED_PRODUCT)  (1)
+   • src/lib/__tests__/user-data-path.test.ts — assertion de compat : le dossier historique ne doit JAMAIS être renommé  (1)
+   • src/lib/__tests__/user-data-path.test.ts — intitulé du test de compat du dossier historique  (1)
+   • src/lib/signature/__tests__/signature.test.ts — User-Agent HTTP « GarageFlow/<version> »  (1)
+
+✅ Marque cohérente : « GarageFlows » dans tout le visible (1132 fichiers). Exceptions techniques uniquement.
+
+> garageflow@1.1.0 check:docs
+> node scripts/check-docs-consistency.mjs
+
+✅ Cohérence docs : source canonique unique, comptes & statuts cohérents (311 .md scannés).
+
+> garageflow@1.1.0 check:pwa
+> node scripts/check-pwa.mjs
+
+✅ PWA : manifestes valides, marque GarageFlows, icônes présentes aux dimensions exactes déclarées.
+
+> garageflow@1.1.0 check:money
+> node scripts/check-money-fields.mjs
+
+Schémas analysés : prisma/schema.prisma, prisma/server/schema.prisma
+Champs Float NON monétaires classés (autorisés) : 4
+   • Garage.taxRate — taux de TVA (%) — non monétaire, valeurs exactes en binaire
+   • Invoice.taxRate — taux de TVA (%) — non monétaire
+   • Quote.taxRate — taux de TVA (%) — non monétaire
+   • WorkOrder.taxRate — taux de TVA (%) — non monétaire
+
+✅ 0 champ monétaire Float (RÈGLE : zéro). Stockage monétaire 100 % en entiers exacts.
+
+> garageflow@1.1.0 check:money-calculations
+> node scripts/check-money-calculations.mjs
+
+✅ Calculs financiers : aucun calcul direct interdit hors couche centrale (951 fichiers).
+
+> garageflow@1.1.0 check:money-json
+> node scripts/check-money-json.mjs
+
+✅ JSON monétaires : écritures de worksJson/partsJson/linesJson via les sérialiseurs v2 ET lectures via les parseurs versionnés (8 exceptions justifiées, 4 fichiers de fixtures v1).
+
+> garageflow@1.1.0 check:env-consistency
+> node scripts/check-env-consistency.mjs
+
+✅ Contrat d'environnement : 146 variables canoniques, 8 alias interdits absents du code actif, 53 variables plateforme, 1126 fichiers balayés.
+
+> garageflow@1.1.0 check:migration-safety
+> node scripts/check-migration-safety.mjs
+
+✅ Sûreté des migrations : runner atomique fail-closed (enregistrement en transaction, zéro catch toléré), DROP toujours prouvé, ordre Electron sauvegarde → serveur → migration → fenêtre, contrôle HTTP+métier, sauvegarde vérifiée avec rétention sûre.
+
+> garageflow@1.1.0 check:sqlite-template
+> node scripts/check-sqlite-template.mjs
+
+✅ Modèle SQLite : intégrité + clés étrangères OK, baseline complète (214 migrations enregistrées, 0 en attente), checksums conformes, schéma final.
+(node:40386) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:40386) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/user/GarageFlowsV2/src/lib/migrations.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/user/GarageFlowsV2/package.json.
+
+> garageflow@1.1.0 check:pg-migrations
+> node scripts/check-postgres-migration-verification.mjs
+
+✅ Migrations PostgreSQL : 17 colonnes supprimées, chacune avec backfill + vérification bloquante (scaled_units) et re-vérification pré-DROP (drop_floats), bloc de contrôle avant tout DROP.
+
+> garageflow@1.1.0 check:converge-additive
+> node scripts/check-converge-additive.mjs
+
+✅ Convergence additive par colonne : 8 tables CREATE-IF-NOT-EXISTS, 84 colonnes toutes couvertes par ADD COLUMN.
+
+> garageflow@1.1.0 check:critical-files
+> node scripts/check-critical-files.js
+
+→ Vérification des fichiers critiques…
+  ✓ electron/license-endpoint.js
+  ✓ electron/signed-state.js
+  ✓ electron/nav-guard.js
+  ✓ electron/integrity.js
+  ✓ electron/activation-report.js
+  ✓ scripts/fuse-config.js
+  ✓ src/lib/security/secret-cipher.ts
+  ✓ scripts/encrypt-smtp-secrets.js
+  ✓ src/lib/security/rate-limit.ts
+  ✓ src/lib/auth.ts
+  ✓ src/middleware.ts
+  ✓ src/lib/license/public-key.ts
+  ✓ src/lib/license/mechanic-session.ts
+  ✓ src/lib/license/mechanic-admin.ts
+  ✓ src/lib/license/record-mac.ts
+  ✓ src/lib/mechanic-api.ts
+  ✓ src/lib/license/__tests__/public-key-consistency.test.ts
+  ✓ src/__tests__/middleware.test.ts
+  ✓ src/lib/__tests__/auth-authorize.test.ts
+  ✓ src/lib/security/__tests__/secret-cipher.test.ts
+  ✓ scripts/garageflow-env-manifest.json
+  ✓ docs/RESTAURATION_GARAGEFLOW.md
+  ✓ docs/ROTATION_SECRETS.md
+  ✓ .vercelignore
+→ Vérification de la clé publique embarquée…
+  ✓ clé publique embarquée cohérente et non retirée (b16d2e1bf6b9662f…)
+  ✓ REFERENCE_FP du test de cohérence alignée sur la clé embarquée
+
+✓ Tous les fichiers critiques sont présents et cohérents.
+
+> garageflow@1.1.0 check:public-key
+> node scripts/check-public-key.mjs
+
+✅ check:public-key — 2 consommateurs internes alignés sur keys/public.pem (b16d2e1bf6b9662f…)
+
+> garageflow@1.1.0 keys:check
+> node scripts/sync-public-key.mjs --check
+
+✅ sync:public-key — 3 ancrages déjà alignés sur keys/public.pem (b16d2e1bf6b9662f…)
+check_consistency_exit_code=0
+
+Commande : git diff --check
+THIRD_PARTY_NOTICES.md:1227: trailing whitespace.
++Apache License
+THIRD_PARTY_NOTICES.md:1228: trailing whitespace.
++                           Version 2.0, January 2004
+THIRD_PARTY_NOTICES.md:1229: trailing whitespace.
++                        http://www.apache.org/licenses/
+THIRD_PARTY_NOTICES.md:1230: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1231: trailing whitespace.
++   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+THIRD_PARTY_NOTICES.md:1232: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1233: trailing whitespace.
++   1. Definitions.
+THIRD_PARTY_NOTICES.md:1234: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1235: trailing whitespace.
++      "License" shall mean the terms and conditions for use, reproduction,
+THIRD_PARTY_NOTICES.md:1236: trailing whitespace.
++      and distribution as defined by Sections 1 through 9 of this document.
+THIRD_PARTY_NOTICES.md:1237: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1238: trailing whitespace.
++      "Licensor" shall mean the copyright owner or entity authorized by
+THIRD_PARTY_NOTICES.md:1239: trailing whitespace.
++      the copyright owner that is granting the License.
+THIRD_PARTY_NOTICES.md:1240: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1241: trailing whitespace.
++      "Legal Entity" shall mean the union of the acting entity and all
+THIRD_PARTY_NOTICES.md:1242: trailing whitespace.
++      other entities that control, are controlled by, or are under common
+THIRD_PARTY_NOTICES.md:1243: trailing whitespace.
++      control with that entity. For the purposes of this definition,
+THIRD_PARTY_NOTICES.md:1244: trailing whitespace.
++      "control" means (i) the power, direct or indirect, to cause the
+THIRD_PARTY_NOTICES.md:1245: trailing whitespace.
++      direction or management of such entity, whether by contract or
+THIRD_PARTY_NOTICES.md:1246: trailing whitespace.
++      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+THIRD_PARTY_NOTICES.md:1247: trailing whitespace.
++      outstanding shares, or (iii) beneficial ownership of such entity.
+THIRD_PARTY_NOTICES.md:1248: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1249: trailing whitespace.
++      "You" (or "Your") shall mean an individual or Legal Entity
+THIRD_PARTY_NOTICES.md:1250: trailing whitespace.
++      exercising permissions granted by this License.
+THIRD_PARTY_NOTICES.md:1251: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1252: trailing whitespace.
++      "Source" form shall mean the preferred form for making modifications,
+THIRD_PARTY_NOTICES.md:1253: trailing whitespace.
++      including but not limited to software source code, documentation
+THIRD_PARTY_NOTICES.md:1254: trailing whitespace.
++      source, and configuration files.
+THIRD_PARTY_NOTICES.md:1255: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1256: trailing whitespace.
++      "Object" form shall mean any form resulting from mechanical
+THIRD_PARTY_NOTICES.md:1257: trailing whitespace.
++      transformation or translation of a Source form, including but
+THIRD_PARTY_NOTICES.md:1258: trailing whitespace.
++      not limited to compiled object code, generated documentation,
+THIRD_PARTY_NOTICES.md:1259: trailing whitespace.
++      and conversions to other media types.
+THIRD_PARTY_NOTICES.md:1260: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1261: trailing whitespace.
++      "Work" shall mean the work of authorship, whether in Source or
+THIRD_PARTY_NOTICES.md:1262: trailing whitespace.
++      Object form, made available under the License, as indicated by a
+THIRD_PARTY_NOTICES.md:1263: trailing whitespace.
++      copyright notice that is included in or attached to the work
+THIRD_PARTY_NOTICES.md:1264: trailing whitespace.
++      (an example is provided in the Appendix below).
+THIRD_PARTY_NOTICES.md:1265: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1266: trailing whitespace.
++      "Derivative Works" shall mean any work, whether in Source or Object
+THIRD_PARTY_NOTICES.md:1267: trailing whitespace.
++      form, that is based on (or derived from) the Work and for which the
+THIRD_PARTY_NOTICES.md:1268: trailing whitespace.
++      editorial revisions, annotations, elaborations, or other modifications
+THIRD_PARTY_NOTICES.md:1269: trailing whitespace.
++      represent, as a whole, an original work of authorship. For the purposes
+THIRD_PARTY_NOTICES.md:1270: trailing whitespace.
++      of this License, Derivative Works shall not include works that remain
+THIRD_PARTY_NOTICES.md:1271: trailing whitespace.
++      separable from, or merely link (or bind by name) to the interfaces of,
+THIRD_PARTY_NOTICES.md:1272: trailing whitespace.
++      the Work and Derivative Works thereof.
+THIRD_PARTY_NOTICES.md:1273: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1274: trailing whitespace.
++      "Contribution" shall mean any work of authorship, including
+THIRD_PARTY_NOTICES.md:1275: trailing whitespace.
++      the original version of the Work and any modifications or additions
+THIRD_PARTY_NOTICES.md:1276: trailing whitespace.
++      to that Work or Derivative Works thereof, that is intentionally
+THIRD_PARTY_NOTICES.md:1277: trailing whitespace.
++      submitted to Licensor for inclusion in the Work by the copyright owner
+THIRD_PARTY_NOTICES.md:1278: trailing whitespace.
++      or by an individual or Legal Entity authorized to submit on behalf of
+THIRD_PARTY_NOTICES.md:1279: trailing whitespace.
++      the copyright owner. For the purposes of this definition, "submitted"
+THIRD_PARTY_NOTICES.md:1280: trailing whitespace.
++      means any form of electronic, verbal, or written communication sent
+THIRD_PARTY_NOTICES.md:1281: trailing whitespace.
++      to the Licensor or its representatives, including but not limited to
+THIRD_PARTY_NOTICES.md:1282: trailing whitespace.
++      communication on electronic mailing lists, source code control systems,
+THIRD_PARTY_NOTICES.md:1283: trailing whitespace.
++      and issue tracking systems that are managed by, or on behalf of, the
+THIRD_PARTY_NOTICES.md:1284: trailing whitespace.
++      Licensor for the purpose of discussing and improving the Work, but
+THIRD_PARTY_NOTICES.md:1285: trailing whitespace.
++      excluding communication that is conspicuously marked or otherwise
+THIRD_PARTY_NOTICES.md:1286: trailing whitespace.
++      designated in writing by the copyright owner as "Not a Contribution."
+THIRD_PARTY_NOTICES.md:1287: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1288: trailing whitespace.
++      "Contributor" shall mean Licensor and any individual or Legal Entity
+THIRD_PARTY_NOTICES.md:1289: trailing whitespace.
++      on behalf of whom a Contribution has been received by Licensor and
+THIRD_PARTY_NOTICES.md:1290: trailing whitespace.
++      subsequently incorporated within the Work.
+THIRD_PARTY_NOTICES.md:1291: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1292: trailing whitespace.
++   2. Grant of Copyright License. Subject to the terms and conditions of
+THIRD_PARTY_NOTICES.md:1293: trailing whitespace.
++      this License, each Contributor hereby grants to You a perpetual,
+THIRD_PARTY_NOTICES.md:1294: trailing whitespace.
++      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+THIRD_PARTY_NOTICES.md:1295: trailing whitespace.
++      copyright license to reproduce, prepare Derivative Works of,
+THIRD_PARTY_NOTICES.md:1296: trailing whitespace.
++      publicly display, publicly perform, sublicense, and distribute the
+THIRD_PARTY_NOTICES.md:1297: trailing whitespace.
++      Work and such Derivative Works in Source or Object form.
+THIRD_PARTY_NOTICES.md:1298: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1299: trailing whitespace.
++   3. Grant of Patent License. Subject to the terms and conditions of
+THIRD_PARTY_NOTICES.md:1300: trailing whitespace.
++      this License, each Contributor hereby grants to You a perpetual,
+THIRD_PARTY_NOTICES.md:1301: trailing whitespace.
++      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+THIRD_PARTY_NOTICES.md:1302: trailing whitespace.
++      (except as stated in this section) patent license to make, have made,
+THIRD_PARTY_NOTICES.md:1303: trailing whitespace.
++      use, offer to sell, sell, import, and otherwise transfer the Work,
+THIRD_PARTY_NOTICES.md:1304: trailing whitespace.
++      where such license applies only to those patent claims licensable
+THIRD_PARTY_NOTICES.md:1305: trailing whitespace.
++      by such Contributor that are necessarily infringed by their
+THIRD_PARTY_NOTICES.md:1306: trailing whitespace.
++      Contribution(s) alone or by combination of their Contribution(s)
+THIRD_PARTY_NOTICES.md:1307: trailing whitespace.
++      with the Work to which such Contribution(s) was submitted. If You
+THIRD_PARTY_NOTICES.md:1308: trailing whitespace.
++      institute patent litigation against any entity (including a
+THIRD_PARTY_NOTICES.md:1309: trailing whitespace.
++      cross-claim or counterclaim in a lawsuit) alleging that the Work
+THIRD_PARTY_NOTICES.md:1310: trailing whitespace.
++      or a Contribution incorporated within the Work constitutes direct
+THIRD_PARTY_NOTICES.md:1311: trailing whitespace.
++      or contributory patent infringement, then any patent licenses
+THIRD_PARTY_NOTICES.md:1312: trailing whitespace.
++      granted to You under this License for that Work shall terminate
+THIRD_PARTY_NOTICES.md:1313: trailing whitespace.
++      as of the date such litigation is filed.
+THIRD_PARTY_NOTICES.md:1314: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1315: trailing whitespace.
++   4. Redistribution. You may reproduce and distribute copies of the
+THIRD_PARTY_NOTICES.md:1316: trailing whitespace.
++      Work or Derivative Works thereof in any medium, with or without
+THIRD_PARTY_NOTICES.md:1317: trailing whitespace.
++      modifications, and in Source or Object form, provided that You
+THIRD_PARTY_NOTICES.md:1318: trailing whitespace.
++      meet the following conditions:
+THIRD_PARTY_NOTICES.md:1319: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1320: trailing whitespace.
++      (a) You must give any other recipients of the Work or
+THIRD_PARTY_NOTICES.md:1321: trailing whitespace.
++          Derivative Works a copy of this License; and
+THIRD_PARTY_NOTICES.md:1322: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1323: trailing whitespace.
++      (b) You must cause any modified files to carry prominent notices
+THIRD_PARTY_NOTICES.md:1324: trailing whitespace.
++          stating that You changed the files; and
+THIRD_PARTY_NOTICES.md:1325: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1326: trailing whitespace.
++      (c) You must retain, in the Source form of any Derivative Works
+THIRD_PARTY_NOTICES.md:1327: trailing whitespace.
++          that You distribute, all copyright, patent, trademark, and
+THIRD_PARTY_NOTICES.md:1328: trailing whitespace.
++          attribution notices from the Source form of the Work,
+THIRD_PARTY_NOTICES.md:1329: trailing whitespace.
++          excluding those notices that do not pertain to any part of
+THIRD_PARTY_NOTICES.md:1330: trailing whitespace.
++          the Derivative Works; and
+THIRD_PARTY_NOTICES.md:1331: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1332: trailing whitespace.
++      (d) If the Work includes a "NOTICE" text file as part of its
+THIRD_PARTY_NOTICES.md:1333: trailing whitespace.
++          distribution, then any Derivative Works that You distribute must
+THIRD_PARTY_NOTICES.md:1334: trailing whitespace.
++          include a readable copy of the attribution notices contained
+THIRD_PARTY_NOTICES.md:1335: trailing whitespace.
++          within such NOTICE file, excluding those notices that do not
+THIRD_PARTY_NOTICES.md:1336: trailing whitespace.
++          pertain to any part of the Derivative Works, in at least one
+THIRD_PARTY_NOTICES.md:1337: trailing whitespace.
++          of the following places: within a NOTICE text file distributed
+THIRD_PARTY_NOTICES.md:1338: trailing whitespace.
++          as part of the Derivative Works; within the Source form or
+THIRD_PARTY_NOTICES.md:1339: trailing whitespace.
++          documentation, if provided along with the Derivative Works; or,
+THIRD_PARTY_NOTICES.md:1340: trailing whitespace.
++          within a display generated by the Derivative Works, if and
+THIRD_PARTY_NOTICES.md:1341: trailing whitespace.
++          wherever such third-party notices normally appear. The contents
+THIRD_PARTY_NOTICES.md:1342: trailing whitespace.
++          of the NOTICE file are for informational purposes only and
+THIRD_PARTY_NOTICES.md:1343: trailing whitespace.
++          do not modify the License. You may add Your own attribution
+THIRD_PARTY_NOTICES.md:1344: trailing whitespace.
++          notices within Derivative Works that You distribute, alongside
+THIRD_PARTY_NOTICES.md:1345: trailing whitespace.
++          or as an addendum to the NOTICE text from the Work, provided
+THIRD_PARTY_NOTICES.md:1346: trailing whitespace.
++          that such additional attribution notices cannot be construed
+THIRD_PARTY_NOTICES.md:1347: trailing whitespace.
++          as modifying the License.
+THIRD_PARTY_NOTICES.md:1348: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1349: trailing whitespace.
++      You may add Your own copyright statement to Your modifications and
+THIRD_PARTY_NOTICES.md:1350: trailing whitespace.
++      may provide additional or different license terms and conditions
+THIRD_PARTY_NOTICES.md:1351: trailing whitespace.
++      for use, reproduction, or distribution of Your modifications, or
+THIRD_PARTY_NOTICES.md:1352: trailing whitespace.
++      for any such Derivative Works as a whole, provided Your use,
+THIRD_PARTY_NOTICES.md:1353: trailing whitespace.
++      reproduction, and distribution of the Work otherwise complies with
+THIRD_PARTY_NOTICES.md:1354: trailing whitespace.
++      the conditions stated in this License.
+THIRD_PARTY_NOTICES.md:1355: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1356: trailing whitespace.
++   5. Submission of Contributions. Unless You explicitly state otherwise,
+THIRD_PARTY_NOTICES.md:1357: trailing whitespace.
++      any Contribution intentionally submitted for inclusion in the Work
+THIRD_PARTY_NOTICES.md:1358: trailing whitespace.
++      by You to the Licensor shall be under the terms and conditions of
+THIRD_PARTY_NOTICES.md:1359: trailing whitespace.
++      this License, without any additional terms or conditions.
+THIRD_PARTY_NOTICES.md:1360: trailing whitespace.
++      Notwithstanding the above, nothing herein shall supersede or modify
+THIRD_PARTY_NOTICES.md:1361: trailing whitespace.
++      the terms of any separate license agreement you may have executed
+THIRD_PARTY_NOTICES.md:1362: trailing whitespace.
++      with Licensor regarding such Contributions.
+THIRD_PARTY_NOTICES.md:1363: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1364: trailing whitespace.
++   6. Trademarks. This License does not grant permission to use the trade
+THIRD_PARTY_NOTICES.md:1365: trailing whitespace.
++      names, trademarks, service marks, or product names of the Licensor,
+THIRD_PARTY_NOTICES.md:1366: trailing whitespace.
++      except as required for reasonable and customary use in describing the
+THIRD_PARTY_NOTICES.md:1367: trailing whitespace.
++      origin of the Work and reproducing the content of the NOTICE file.
+THIRD_PARTY_NOTICES.md:1368: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1369: trailing whitespace.
++   7. Disclaimer of Warranty. Unless required by applicable law or
+THIRD_PARTY_NOTICES.md:1370: trailing whitespace.
++      agreed to in writing, Licensor provides the Work (and each
+THIRD_PARTY_NOTICES.md:1371: trailing whitespace.
++      Contributor provides its Contributions) on an "AS IS" BASIS,
+THIRD_PARTY_NOTICES.md:1372: trailing whitespace.
++      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+THIRD_PARTY_NOTICES.md:1373: trailing whitespace.
++      implied, including, without limitation, any warranties or conditions
+THIRD_PARTY_NOTICES.md:1374: trailing whitespace.
++      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+THIRD_PARTY_NOTICES.md:1375: trailing whitespace.
++      PARTICULAR PURPOSE. You are solely responsible for determining the
+THIRD_PARTY_NOTICES.md:1376: trailing whitespace.
++      appropriateness of using or redistributing the Work and assume any
+THIRD_PARTY_NOTICES.md:1377: trailing whitespace.
++      risks associated with Your exercise of permissions under this License.
+THIRD_PARTY_NOTICES.md:1378: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1379: trailing whitespace.
++   8. Limitation of Liability. In no event and under no legal theory,
+THIRD_PARTY_NOTICES.md:1380: trailing whitespace.
++      whether in tort (including negligence), contract, or otherwise,
+THIRD_PARTY_NOTICES.md:1381: trailing whitespace.
++      unless required by applicable law (such as deliberate and grossly
+THIRD_PARTY_NOTICES.md:1382: trailing whitespace.
++      negligent acts) or agreed to in writing, shall any Contributor be
+THIRD_PARTY_NOTICES.md:1383: trailing whitespace.
++      liable to You for damages, including any direct, indirect, special,
+THIRD_PARTY_NOTICES.md:1384: trailing whitespace.
++      incidental, or consequential damages of any character arising as a
+THIRD_PARTY_NOTICES.md:1385: trailing whitespace.
++      result of this License or out of the use or inability to use the
+THIRD_PARTY_NOTICES.md:1386: trailing whitespace.
++      Work (including but not limited to damages for loss of goodwill,
+THIRD_PARTY_NOTICES.md:1387: trailing whitespace.
++      work stoppage, computer failure or malfunction, or any and all
+THIRD_PARTY_NOTICES.md:1388: trailing whitespace.
++      other commercial damages or losses), even if such Contributor
+THIRD_PARTY_NOTICES.md:1389: trailing whitespace.
++      has been advised of the possibility of such damages.
+THIRD_PARTY_NOTICES.md:1390: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1391: trailing whitespace.
++   9. Accepting Warranty or Additional Liability. While redistributing
+THIRD_PARTY_NOTICES.md:1392: trailing whitespace.
++      the Work or Derivative Works thereof, You may choose to offer,
+THIRD_PARTY_NOTICES.md:1393: trailing whitespace.
++      and charge a fee for, acceptance of support, warranty, indemnity,
+THIRD_PARTY_NOTICES.md:1394: trailing whitespace.
++      or other liability obligations and/or rights consistent with this
+THIRD_PARTY_NOTICES.md:1395: trailing whitespace.
++      License. However, in accepting such obligations, You may act only
+THIRD_PARTY_NOTICES.md:1396: trailing whitespace.
++      on Your own behalf and on Your sole responsibility, not on behalf
+THIRD_PARTY_NOTICES.md:1397: trailing whitespace.
++      of any other Contributor, and only if You agree to indemnify,
+THIRD_PARTY_NOTICES.md:1398: trailing whitespace.
++      defend, and hold each Contributor harmless for any liability
+THIRD_PARTY_NOTICES.md:1399: trailing whitespace.
++      incurred by, or claims asserted against, such Contributor by reason
+THIRD_PARTY_NOTICES.md:1400: trailing whitespace.
++      of your accepting any such warranty or additional liability.
+THIRD_PARTY_NOTICES.md:1401: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1402: trailing whitespace.
++   END OF TERMS AND CONDITIONS
+THIRD_PARTY_NOTICES.md:1403: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1404: trailing whitespace.
++   APPENDIX: How to apply the Apache License to your work.
+THIRD_PARTY_NOTICES.md:1405: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1406: trailing whitespace.
++      To apply the Apache License to your work, attach the following
+THIRD_PARTY_NOTICES.md:1407: trailing whitespace.
++      boilerplate notice, with the fields enclosed by brackets "[]"
+THIRD_PARTY_NOTICES.md:1408: trailing whitespace.
++      replaced with your own identifying information. (Don't include
+THIRD_PARTY_NOTICES.md:1409: trailing whitespace.
++      the brackets!)  The text should be enclosed in the appropriate
+THIRD_PARTY_NOTICES.md:1410: trailing whitespace.
++      comment syntax for the file format. We also recommend that a
+THIRD_PARTY_NOTICES.md:1411: trailing whitespace.
++      file or class name and description of purpose be included on the
+THIRD_PARTY_NOTICES.md:1412: trailing whitespace.
++      same "printed page" as the copyright notice for easier
+THIRD_PARTY_NOTICES.md:1413: trailing whitespace.
++      identification within third-party archives.
+THIRD_PARTY_NOTICES.md:1414: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1415: trailing whitespace.
++   Portions Copyright (c) Microsoft Corporation.
+THIRD_PARTY_NOTICES.md:1416: trailing whitespace.
++   Portions Copyright 2017 Google Inc.
+THIRD_PARTY_NOTICES.md:1417: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1418: trailing whitespace.
++   Licensed under the Apache License, Version 2.0 (the "License");
+THIRD_PARTY_NOTICES.md:1419: trailing whitespace.
++   you may not use this file except in compliance with the License.
+THIRD_PARTY_NOTICES.md:1420: trailing whitespace.
++   You may obtain a copy of the License at
+THIRD_PARTY_NOTICES.md:1421: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1422: trailing whitespace.
++       http://www.apache.org/licenses/LICENSE-2.0
+THIRD_PARTY_NOTICES.md:1423: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:1424: trailing whitespace.
++   Unless required by applicable law or agreed to in writing, software
+THIRD_PARTY_NOTICES.md:1425: trailing whitespace.
++   distributed under the License is distributed on an "AS IS" BASIS,
+THIRD_PARTY_NOTICES.md:1426: trailing whitespace.
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+THIRD_PARTY_NOTICES.md:1427: trailing whitespace.
++   See the License for the specific language governing permissions and
+THIRD_PARTY_NOTICES.md:3259: trailing whitespace.
++     for the public: 
+THIRD_PARTY_NOTICES.md:3696: trailing whitespace.
++The MIT License (MIT)
+THIRD_PARTY_NOTICES.md:3697: trailing whitespace.
++Copyright (c) 2015 Dmitry Ivanov
+THIRD_PARTY_NOTICES.md:3698: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:3699: trailing whitespace.
++Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+THIRD_PARTY_NOTICES.md:3700: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:3701: trailing whitespace.
++The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+THIRD_PARTY_NOTICES.md:3702: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5066: trailing whitespace.
++Apache License
+THIRD_PARTY_NOTICES.md:5067: trailing whitespace.
++                           Version 2.0, January 2004
+THIRD_PARTY_NOTICES.md:5068: trailing whitespace.
++                        http://www.apache.org/licenses/
+THIRD_PARTY_NOTICES.md:5069: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5070: trailing whitespace.
++   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+THIRD_PARTY_NOTICES.md:5071: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5072: trailing whitespace.
++   1. Definitions.
+THIRD_PARTY_NOTICES.md:5073: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5074: trailing whitespace.
++      "License" shall mean the terms and conditions for use, reproduction,
+THIRD_PARTY_NOTICES.md:5075: trailing whitespace.
++      and distribution as defined by Sections 1 through 9 of this document.
+THIRD_PARTY_NOTICES.md:5076: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5077: trailing whitespace.
++      "Licensor" shall mean the copyright owner or entity authorized by
+THIRD_PARTY_NOTICES.md:5078: trailing whitespace.
++      the copyright owner that is granting the License.
+THIRD_PARTY_NOTICES.md:5079: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5080: trailing whitespace.
++      "Legal Entity" shall mean the union of the acting entity and all
+THIRD_PARTY_NOTICES.md:5081: trailing whitespace.
++      other entities that control, are controlled by, or are under common
+THIRD_PARTY_NOTICES.md:5082: trailing whitespace.
++      control with that entity. For the purposes of this definition,
+THIRD_PARTY_NOTICES.md:5083: trailing whitespace.
++      "control" means (i) the power, direct or indirect, to cause the
+THIRD_PARTY_NOTICES.md:5084: trailing whitespace.
++      direction or management of such entity, whether by contract or
+THIRD_PARTY_NOTICES.md:5085: trailing whitespace.
++      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+THIRD_PARTY_NOTICES.md:5086: trailing whitespace.
++      outstanding shares, or (iii) beneficial ownership of such entity.
+THIRD_PARTY_NOTICES.md:5087: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5088: trailing whitespace.
++      "You" (or "Your") shall mean an individual or Legal Entity
+THIRD_PARTY_NOTICES.md:5089: trailing whitespace.
++      exercising permissions granted by this License.
+THIRD_PARTY_NOTICES.md:5090: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5091: trailing whitespace.
++      "Source" form shall mean the preferred form for making modifications,
+THIRD_PARTY_NOTICES.md:5092: trailing whitespace.
++      including but not limited to software source code, documentation
+THIRD_PARTY_NOTICES.md:5093: trailing whitespace.
++      source, and configuration files.
+THIRD_PARTY_NOTICES.md:5094: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5095: trailing whitespace.
++      "Object" form shall mean any form resulting from mechanical
+THIRD_PARTY_NOTICES.md:5096: trailing whitespace.
++      transformation or translation of a Source form, including but
+THIRD_PARTY_NOTICES.md:5097: trailing whitespace.
++      not limited to compiled object code, generated documentation,
+THIRD_PARTY_NOTICES.md:5098: trailing whitespace.
++      and conversions to other media types.
+THIRD_PARTY_NOTICES.md:5099: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5100: trailing whitespace.
++      "Work" shall mean the work of authorship, whether in Source or
+THIRD_PARTY_NOTICES.md:5101: trailing whitespace.
++      Object form, made available under the License, as indicated by a
+THIRD_PARTY_NOTICES.md:5102: trailing whitespace.
++      copyright notice that is included in or attached to the work
+THIRD_PARTY_NOTICES.md:5103: trailing whitespace.
++      (an example is provided in the Appendix below).
+THIRD_PARTY_NOTICES.md:5104: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5105: trailing whitespace.
++      "Derivative Works" shall mean any work, whether in Source or Object
+THIRD_PARTY_NOTICES.md:5106: trailing whitespace.
++      form, that is based on (or derived from) the Work and for which the
+THIRD_PARTY_NOTICES.md:5107: trailing whitespace.
++      editorial revisions, annotations, elaborations, or other modifications
+THIRD_PARTY_NOTICES.md:5108: trailing whitespace.
++      represent, as a whole, an original work of authorship. For the purposes
+THIRD_PARTY_NOTICES.md:5109: trailing whitespace.
++      of this License, Derivative Works shall not include works that remain
+THIRD_PARTY_NOTICES.md:5110: trailing whitespace.
++      separable from, or merely link (or bind by name) to the interfaces of,
+THIRD_PARTY_NOTICES.md:5111: trailing whitespace.
++      the Work and Derivative Works thereof.
+THIRD_PARTY_NOTICES.md:5112: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5113: trailing whitespace.
++      "Contribution" shall mean any work of authorship, including
+THIRD_PARTY_NOTICES.md:5114: trailing whitespace.
++      the original version of the Work and any modifications or additions
+THIRD_PARTY_NOTICES.md:5115: trailing whitespace.
++      to that Work or Derivative Works thereof, that is intentionally
+THIRD_PARTY_NOTICES.md:5116: trailing whitespace.
++      submitted to Licensor for inclusion in the Work by the copyright owner
+THIRD_PARTY_NOTICES.md:5117: trailing whitespace.
++      or by an individual or Legal Entity authorized to submit on behalf of
+THIRD_PARTY_NOTICES.md:5118: trailing whitespace.
++      the copyright owner. For the purposes of this definition, "submitted"
+THIRD_PARTY_NOTICES.md:5119: trailing whitespace.
++      means any form of electronic, verbal, or written communication sent
+THIRD_PARTY_NOTICES.md:5120: trailing whitespace.
++      to the Licensor or its representatives, including but not limited to
+THIRD_PARTY_NOTICES.md:5121: trailing whitespace.
++      communication on electronic mailing lists, source code control systems,
+THIRD_PARTY_NOTICES.md:5122: trailing whitespace.
++      and issue tracking systems that are managed by, or on behalf of, the
+THIRD_PARTY_NOTICES.md:5123: trailing whitespace.
++      Licensor for the purpose of discussing and improving the Work, but
+THIRD_PARTY_NOTICES.md:5124: trailing whitespace.
++      excluding communication that is conspicuously marked or otherwise
+THIRD_PARTY_NOTICES.md:5125: trailing whitespace.
++      designated in writing by the copyright owner as "Not a Contribution."
+THIRD_PARTY_NOTICES.md:5126: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5127: trailing whitespace.
++      "Contributor" shall mean Licensor and any individual or Legal Entity
+THIRD_PARTY_NOTICES.md:5128: trailing whitespace.
++      on behalf of whom a Contribution has been received by Licensor and
+THIRD_PARTY_NOTICES.md:5129: trailing whitespace.
++      subsequently incorporated within the Work.
+THIRD_PARTY_NOTICES.md:5130: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5131: trailing whitespace.
++   2. Grant of Copyright License. Subject to the terms and conditions of
+THIRD_PARTY_NOTICES.md:5132: trailing whitespace.
++      this License, each Contributor hereby grants to You a perpetual,
+THIRD_PARTY_NOTICES.md:5133: trailing whitespace.
++      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+THIRD_PARTY_NOTICES.md:5134: trailing whitespace.
++      copyright license to reproduce, prepare Derivative Works of,
+THIRD_PARTY_NOTICES.md:5135: trailing whitespace.
++      publicly display, publicly perform, sublicense, and distribute the
+THIRD_PARTY_NOTICES.md:5136: trailing whitespace.
++      Work and such Derivative Works in Source or Object form.
+THIRD_PARTY_NOTICES.md:5137: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5138: trailing whitespace.
++   3. Grant of Patent License. Subject to the terms and conditions of
+THIRD_PARTY_NOTICES.md:5139: trailing whitespace.
++      this License, each Contributor hereby grants to You a perpetual,
+THIRD_PARTY_NOTICES.md:5140: trailing whitespace.
++      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+THIRD_PARTY_NOTICES.md:5141: trailing whitespace.
++      (except as stated in this section) patent license to make, have made,
+THIRD_PARTY_NOTICES.md:5142: trailing whitespace.
++      use, offer to sell, sell, import, and otherwise transfer the Work,
+THIRD_PARTY_NOTICES.md:5143: trailing whitespace.
++      where such license applies only to those patent claims licensable
+THIRD_PARTY_NOTICES.md:5144: trailing whitespace.
++      by such Contributor that are necessarily infringed by their
+THIRD_PARTY_NOTICES.md:5145: trailing whitespace.
++      Contribution(s) alone or by combination of their Contribution(s)
+THIRD_PARTY_NOTICES.md:5146: trailing whitespace.
++      with the Work to which such Contribution(s) was submitted. If You
+THIRD_PARTY_NOTICES.md:5147: trailing whitespace.
++      institute patent litigation against any entity (including a
+THIRD_PARTY_NOTICES.md:5148: trailing whitespace.
++      cross-claim or counterclaim in a lawsuit) alleging that the Work
+THIRD_PARTY_NOTICES.md:5149: trailing whitespace.
++      or a Contribution incorporated within the Work constitutes direct
+THIRD_PARTY_NOTICES.md:5150: trailing whitespace.
++      or contributory patent infringement, then any patent licenses
+THIRD_PARTY_NOTICES.md:5151: trailing whitespace.
++      granted to You under this License for that Work shall terminate
+THIRD_PARTY_NOTICES.md:5152: trailing whitespace.
++      as of the date such litigation is filed.
+THIRD_PARTY_NOTICES.md:5153: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5154: trailing whitespace.
++   4. Redistribution. You may reproduce and distribute copies of the
+THIRD_PARTY_NOTICES.md:5155: trailing whitespace.
++      Work or Derivative Works thereof in any medium, with or without
+THIRD_PARTY_NOTICES.md:5156: trailing whitespace.
++      modifications, and in Source or Object form, provided that You
+THIRD_PARTY_NOTICES.md:5157: trailing whitespace.
++      meet the following conditions:
+THIRD_PARTY_NOTICES.md:5158: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5159: trailing whitespace.
++      (a) You must give any other recipients of the Work or
+THIRD_PARTY_NOTICES.md:5160: trailing whitespace.
++          Derivative Works a copy of this License; and
+THIRD_PARTY_NOTICES.md:5161: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5162: trailing whitespace.
++      (b) You must cause any modified files to carry prominent notices
+THIRD_PARTY_NOTICES.md:5163: trailing whitespace.
++          stating that You changed the files; and
+THIRD_PARTY_NOTICES.md:5164: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5165: trailing whitespace.
++      (c) You must retain, in the Source form of any Derivative Works
+THIRD_PARTY_NOTICES.md:5166: trailing whitespace.
++          that You distribute, all copyright, patent, trademark, and
+THIRD_PARTY_NOTICES.md:5167: trailing whitespace.
++          attribution notices from the Source form of the Work,
+THIRD_PARTY_NOTICES.md:5168: trailing whitespace.
++          excluding those notices that do not pertain to any part of
+THIRD_PARTY_NOTICES.md:5169: trailing whitespace.
++          the Derivative Works; and
+THIRD_PARTY_NOTICES.md:5170: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5171: trailing whitespace.
++      (d) If the Work includes a "NOTICE" text file as part of its
+THIRD_PARTY_NOTICES.md:5172: trailing whitespace.
++          distribution, then any Derivative Works that You distribute must
+THIRD_PARTY_NOTICES.md:5173: trailing whitespace.
++          include a readable copy of the attribution notices contained
+THIRD_PARTY_NOTICES.md:5174: trailing whitespace.
++          within such NOTICE file, excluding those notices that do not
+THIRD_PARTY_NOTICES.md:5175: trailing whitespace.
++          pertain to any part of the Derivative Works, in at least one
+THIRD_PARTY_NOTICES.md:5176: trailing whitespace.
++          of the following places: within a NOTICE text file distributed
+THIRD_PARTY_NOTICES.md:5177: trailing whitespace.
++          as part of the Derivative Works; within the Source form or
+THIRD_PARTY_NOTICES.md:5178: trailing whitespace.
++          documentation, if provided along with the Derivative Works; or,
+THIRD_PARTY_NOTICES.md:5179: trailing whitespace.
++          within a display generated by the Derivative Works, if and
+THIRD_PARTY_NOTICES.md:5180: trailing whitespace.
++          wherever such third-party notices normally appear. The contents
+THIRD_PARTY_NOTICES.md:5181: trailing whitespace.
++          of the NOTICE file are for informational purposes only and
+THIRD_PARTY_NOTICES.md:5182: trailing whitespace.
++          do not modify the License. You may add Your own attribution
+THIRD_PARTY_NOTICES.md:5183: trailing whitespace.
++          notices within Derivative Works that You distribute, alongside
+THIRD_PARTY_NOTICES.md:5184: trailing whitespace.
++          or as an addendum to the NOTICE text from the Work, provided
+THIRD_PARTY_NOTICES.md:5185: trailing whitespace.
++          that such additional attribution notices cannot be construed
+THIRD_PARTY_NOTICES.md:5186: trailing whitespace.
++          as modifying the License.
+THIRD_PARTY_NOTICES.md:5187: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5188: trailing whitespace.
++      You may add Your own copyright statement to Your modifications and
+THIRD_PARTY_NOTICES.md:5189: trailing whitespace.
++      may provide additional or different license terms and conditions
+THIRD_PARTY_NOTICES.md:5190: trailing whitespace.
++      for use, reproduction, or distribution of Your modifications, or
+THIRD_PARTY_NOTICES.md:5191: trailing whitespace.
++      for any such Derivative Works as a whole, provided Your use,
+THIRD_PARTY_NOTICES.md:5192: trailing whitespace.
++      reproduction, and distribution of the Work otherwise complies with
+THIRD_PARTY_NOTICES.md:5193: trailing whitespace.
++      the conditions stated in this License.
+THIRD_PARTY_NOTICES.md:5194: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5195: trailing whitespace.
++   5. Submission of Contributions. Unless You explicitly state otherwise,
+THIRD_PARTY_NOTICES.md:5196: trailing whitespace.
++      any Contribution intentionally submitted for inclusion in the Work
+THIRD_PARTY_NOTICES.md:5197: trailing whitespace.
++      by You to the Licensor shall be under the terms and conditions of
+THIRD_PARTY_NOTICES.md:5198: trailing whitespace.
++      this License, without any additional terms or conditions.
+THIRD_PARTY_NOTICES.md:5199: trailing whitespace.
++      Notwithstanding the above, nothing herein shall supersede or modify
+THIRD_PARTY_NOTICES.md:5200: trailing whitespace.
++      the terms of any separate license agreement you may have executed
+THIRD_PARTY_NOTICES.md:5201: trailing whitespace.
++      with Licensor regarding such Contributions.
+THIRD_PARTY_NOTICES.md:5202: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5203: trailing whitespace.
++   6. Trademarks. This License does not grant permission to use the trade
+THIRD_PARTY_NOTICES.md:5204: trailing whitespace.
++      names, trademarks, service marks, or product names of the Licensor,
+THIRD_PARTY_NOTICES.md:5205: trailing whitespace.
++      except as required for reasonable and customary use in describing the
+THIRD_PARTY_NOTICES.md:5206: trailing whitespace.
++      origin of the Work and reproducing the content of the NOTICE file.
+THIRD_PARTY_NOTICES.md:5207: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5208: trailing whitespace.
++   7. Disclaimer of Warranty. Unless required by applicable law or
+THIRD_PARTY_NOTICES.md:5209: trailing whitespace.
++      agreed to in writing, Licensor provides the Work (and each
+THIRD_PARTY_NOTICES.md:5210: trailing whitespace.
++      Contributor provides its Contributions) on an "AS IS" BASIS,
+THIRD_PARTY_NOTICES.md:5211: trailing whitespace.
++      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+THIRD_PARTY_NOTICES.md:5212: trailing whitespace.
++      implied, including, without limitation, any warranties or conditions
+THIRD_PARTY_NOTICES.md:5213: trailing whitespace.
++      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+THIRD_PARTY_NOTICES.md:5214: trailing whitespace.
++      PARTICULAR PURPOSE. You are solely responsible for determining the
+THIRD_PARTY_NOTICES.md:5215: trailing whitespace.
++      appropriateness of using or redistributing the Work and assume any
+THIRD_PARTY_NOTICES.md:5216: trailing whitespace.
++      risks associated with Your exercise of permissions under this License.
+THIRD_PARTY_NOTICES.md:5217: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5218: trailing whitespace.
++   8. Limitation of Liability. In no event and under no legal theory,
+THIRD_PARTY_NOTICES.md:5219: trailing whitespace.
++      whether in tort (including negligence), contract, or otherwise,
+THIRD_PARTY_NOTICES.md:5220: trailing whitespace.
++      unless required by applicable law (such as deliberate and grossly
+THIRD_PARTY_NOTICES.md:5221: trailing whitespace.
++      negligent acts) or agreed to in writing, shall any Contributor be
+THIRD_PARTY_NOTICES.md:5222: trailing whitespace.
++      liable to You for damages, including any direct, indirect, special,
+THIRD_PARTY_NOTICES.md:5223: trailing whitespace.
++      incidental, or consequential damages of any character arising as a
+THIRD_PARTY_NOTICES.md:5224: trailing whitespace.
++      result of this License or out of the use or inability to use the
+THIRD_PARTY_NOTICES.md:5225: trailing whitespace.
++      Work (including but not limited to damages for loss of goodwill,
+THIRD_PARTY_NOTICES.md:5226: trailing whitespace.
++      work stoppage, computer failure or malfunction, or any and all
+THIRD_PARTY_NOTICES.md:5227: trailing whitespace.
++      other commercial damages or losses), even if such Contributor
+THIRD_PARTY_NOTICES.md:5228: trailing whitespace.
++      has been advised of the possibility of such damages.
+THIRD_PARTY_NOTICES.md:5229: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5230: trailing whitespace.
++   9. Accepting Warranty or Additional Liability. While redistributing
+THIRD_PARTY_NOTICES.md:5231: trailing whitespace.
++      the Work or Derivative Works thereof, You may choose to offer,
+THIRD_PARTY_NOTICES.md:5232: trailing whitespace.
++      and charge a fee for, acceptance of support, warranty, indemnity,
+THIRD_PARTY_NOTICES.md:5233: trailing whitespace.
++      or other liability obligations and/or rights consistent with this
+THIRD_PARTY_NOTICES.md:5234: trailing whitespace.
++      License. However, in accepting such obligations, You may act only
+THIRD_PARTY_NOTICES.md:5235: trailing whitespace.
++      on Your own behalf and on Your sole responsibility, not on behalf
+THIRD_PARTY_NOTICES.md:5236: trailing whitespace.
++      of any other Contributor, and only if You agree to indemnify,
+THIRD_PARTY_NOTICES.md:5237: trailing whitespace.
++      defend, and hold each Contributor harmless for any liability
+THIRD_PARTY_NOTICES.md:5238: trailing whitespace.
++      incurred by, or claims asserted against, such Contributor by reason
+THIRD_PARTY_NOTICES.md:5239: trailing whitespace.
++      of your accepting any such warranty or additional liability.
+THIRD_PARTY_NOTICES.md:5240: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5241: trailing whitespace.
++   END OF TERMS AND CONDITIONS
+THIRD_PARTY_NOTICES.md:5242: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5243: trailing whitespace.
++   APPENDIX: How to apply the Apache License to your work.
+THIRD_PARTY_NOTICES.md:5244: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5245: trailing whitespace.
++      To apply the Apache License to your work, attach the following
+THIRD_PARTY_NOTICES.md:5246: trailing whitespace.
++      boilerplate notice, with the fields enclosed by brackets "[]"
+THIRD_PARTY_NOTICES.md:5247: trailing whitespace.
++      replaced with your own identifying information. (Don't include
+THIRD_PARTY_NOTICES.md:5248: trailing whitespace.
++      the brackets!)  The text should be enclosed in the appropriate
+THIRD_PARTY_NOTICES.md:5249: trailing whitespace.
++      comment syntax for the file format. We also recommend that a
+THIRD_PARTY_NOTICES.md:5250: trailing whitespace.
++      file or class name and description of purpose be included on the
+THIRD_PARTY_NOTICES.md:5251: trailing whitespace.
++      same "printed page" as the copyright notice for easier
+THIRD_PARTY_NOTICES.md:5252: trailing whitespace.
++      identification within third-party archives.
+THIRD_PARTY_NOTICES.md:5253: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5254: trailing whitespace.
++   Portions Copyright (c) Microsoft Corporation.
+THIRD_PARTY_NOTICES.md:5255: trailing whitespace.
++   Portions Copyright 2017 Google Inc.
+THIRD_PARTY_NOTICES.md:5256: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5257: trailing whitespace.
++   Licensed under the Apache License, Version 2.0 (the "License");
+THIRD_PARTY_NOTICES.md:5258: trailing whitespace.
++   you may not use this file except in compliance with the License.
+THIRD_PARTY_NOTICES.md:5259: trailing whitespace.
++   You may obtain a copy of the License at
+THIRD_PARTY_NOTICES.md:5260: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5261: trailing whitespace.
++       http://www.apache.org/licenses/LICENSE-2.0
+THIRD_PARTY_NOTICES.md:5262: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5263: trailing whitespace.
++   Unless required by applicable law or agreed to in writing, software
+THIRD_PARTY_NOTICES.md:5264: trailing whitespace.
++   distributed under the License is distributed on an "AS IS" BASIS,
+THIRD_PARTY_NOTICES.md:5265: trailing whitespace.
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+THIRD_PARTY_NOTICES.md:5266: trailing whitespace.
++   See the License for the specific language governing permissions and
+THIRD_PARTY_NOTICES.md:5273: trailing whitespace.
++Apache License
+THIRD_PARTY_NOTICES.md:5274: trailing whitespace.
++                           Version 2.0, January 2004
+THIRD_PARTY_NOTICES.md:5275: trailing whitespace.
++                        http://www.apache.org/licenses/
+THIRD_PARTY_NOTICES.md:5276: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5277: trailing whitespace.
++   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+THIRD_PARTY_NOTICES.md:5278: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5279: trailing whitespace.
++   1. Definitions.
+THIRD_PARTY_NOTICES.md:5280: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5281: trailing whitespace.
++      "License" shall mean the terms and conditions for use, reproduction,
+THIRD_PARTY_NOTICES.md:5282: trailing whitespace.
++      and distribution as defined by Sections 1 through 9 of this document.
+THIRD_PARTY_NOTICES.md:5283: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5284: trailing whitespace.
++      "Licensor" shall mean the copyright owner or entity authorized by
+THIRD_PARTY_NOTICES.md:5285: trailing whitespace.
++      the copyright owner that is granting the License.
+THIRD_PARTY_NOTICES.md:5286: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5287: trailing whitespace.
++      "Legal Entity" shall mean the union of the acting entity and all
+THIRD_PARTY_NOTICES.md:5288: trailing whitespace.
++      other entities that control, are controlled by, or are under common
+THIRD_PARTY_NOTICES.md:5289: trailing whitespace.
++      control with that entity. For the purposes of this definition,
+THIRD_PARTY_NOTICES.md:5290: trailing whitespace.
++      "control" means (i) the power, direct or indirect, to cause the
+THIRD_PARTY_NOTICES.md:5291: trailing whitespace.
++      direction or management of such entity, whether by contract or
+THIRD_PARTY_NOTICES.md:5292: trailing whitespace.
++      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+THIRD_PARTY_NOTICES.md:5293: trailing whitespace.
++      outstanding shares, or (iii) beneficial ownership of such entity.
+THIRD_PARTY_NOTICES.md:5294: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5295: trailing whitespace.
++      "You" (or "Your") shall mean an individual or Legal Entity
+THIRD_PARTY_NOTICES.md:5296: trailing whitespace.
++      exercising permissions granted by this License.
+THIRD_PARTY_NOTICES.md:5297: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5298: trailing whitespace.
++      "Source" form shall mean the preferred form for making modifications,
+THIRD_PARTY_NOTICES.md:5299: trailing whitespace.
++      including but not limited to software source code, documentation
+THIRD_PARTY_NOTICES.md:5300: trailing whitespace.
++      source, and configuration files.
+THIRD_PARTY_NOTICES.md:5301: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5302: trailing whitespace.
++      "Object" form shall mean any form resulting from mechanical
+THIRD_PARTY_NOTICES.md:5303: trailing whitespace.
++      transformation or translation of a Source form, including but
+THIRD_PARTY_NOTICES.md:5304: trailing whitespace.
++      not limited to compiled object code, generated documentation,
+THIRD_PARTY_NOTICES.md:5305: trailing whitespace.
++      and conversions to other media types.
+THIRD_PARTY_NOTICES.md:5306: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5307: trailing whitespace.
++      "Work" shall mean the work of authorship, whether in Source or
+THIRD_PARTY_NOTICES.md:5308: trailing whitespace.
++      Object form, made available under the License, as indicated by a
+THIRD_PARTY_NOTICES.md:5309: trailing whitespace.
++      copyright notice that is included in or attached to the work
+THIRD_PARTY_NOTICES.md:5310: trailing whitespace.
++      (an example is provided in the Appendix below).
+THIRD_PARTY_NOTICES.md:5311: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5312: trailing whitespace.
++      "Derivative Works" shall mean any work, whether in Source or Object
+THIRD_PARTY_NOTICES.md:5313: trailing whitespace.
++      form, that is based on (or derived from) the Work and for which the
+THIRD_PARTY_NOTICES.md:5314: trailing whitespace.
++      editorial revisions, annotations, elaborations, or other modifications
+THIRD_PARTY_NOTICES.md:5315: trailing whitespace.
++      represent, as a whole, an original work of authorship. For the purposes
+THIRD_PARTY_NOTICES.md:5316: trailing whitespace.
++      of this License, Derivative Works shall not include works that remain
+THIRD_PARTY_NOTICES.md:5317: trailing whitespace.
++      separable from, or merely link (or bind by name) to the interfaces of,
+THIRD_PARTY_NOTICES.md:5318: trailing whitespace.
++      the Work and Derivative Works thereof.
+THIRD_PARTY_NOTICES.md:5319: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5320: trailing whitespace.
++      "Contribution" shall mean any work of authorship, including
+THIRD_PARTY_NOTICES.md:5321: trailing whitespace.
++      the original version of the Work and any modifications or additions
+THIRD_PARTY_NOTICES.md:5322: trailing whitespace.
++      to that Work or Derivative Works thereof, that is intentionally
+THIRD_PARTY_NOTICES.md:5323: trailing whitespace.
++      submitted to Licensor for inclusion in the Work by the copyright owner
+THIRD_PARTY_NOTICES.md:5324: trailing whitespace.
++      or by an individual or Legal Entity authorized to submit on behalf of
+THIRD_PARTY_NOTICES.md:5325: trailing whitespace.
++      the copyright owner. For the purposes of this definition, "submitted"
+THIRD_PARTY_NOTICES.md:5326: trailing whitespace.
++      means any form of electronic, verbal, or written communication sent
+THIRD_PARTY_NOTICES.md:5327: trailing whitespace.
++      to the Licensor or its representatives, including but not limited to
+THIRD_PARTY_NOTICES.md:5328: trailing whitespace.
++      communication on electronic mailing lists, source code control systems,
+THIRD_PARTY_NOTICES.md:5329: trailing whitespace.
++      and issue tracking systems that are managed by, or on behalf of, the
+THIRD_PARTY_NOTICES.md:5330: trailing whitespace.
++      Licensor for the purpose of discussing and improving the Work, but
+THIRD_PARTY_NOTICES.md:5331: trailing whitespace.
++      excluding communication that is conspicuously marked or otherwise
+THIRD_PARTY_NOTICES.md:5332: trailing whitespace.
++      designated in writing by the copyright owner as "Not a Contribution."
+THIRD_PARTY_NOTICES.md:5333: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5334: trailing whitespace.
++      "Contributor" shall mean Licensor and any individual or Legal Entity
+THIRD_PARTY_NOTICES.md:5335: trailing whitespace.
++      on behalf of whom a Contribution has been received by Licensor and
+THIRD_PARTY_NOTICES.md:5336: trailing whitespace.
++      subsequently incorporated within the Work.
+THIRD_PARTY_NOTICES.md:5337: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5338: trailing whitespace.
++   2. Grant of Copyright License. Subject to the terms and conditions of
+THIRD_PARTY_NOTICES.md:5339: trailing whitespace.
++      this License, each Contributor hereby grants to You a perpetual,
+THIRD_PARTY_NOTICES.md:5340: trailing whitespace.
++      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+THIRD_PARTY_NOTICES.md:5341: trailing whitespace.
++      copyright license to reproduce, prepare Derivative Works of,
+THIRD_PARTY_NOTICES.md:5342: trailing whitespace.
++      publicly display, publicly perform, sublicense, and distribute the
+THIRD_PARTY_NOTICES.md:5343: trailing whitespace.
++      Work and such Derivative Works in Source or Object form.
+THIRD_PARTY_NOTICES.md:5344: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5345: trailing whitespace.
++   3. Grant of Patent License. Subject to the terms and conditions of
+THIRD_PARTY_NOTICES.md:5346: trailing whitespace.
++      this License, each Contributor hereby grants to You a perpetual,
+THIRD_PARTY_NOTICES.md:5347: trailing whitespace.
++      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+THIRD_PARTY_NOTICES.md:5348: trailing whitespace.
++      (except as stated in this section) patent license to make, have made,
+THIRD_PARTY_NOTICES.md:5349: trailing whitespace.
++      use, offer to sell, sell, import, and otherwise transfer the Work,
+THIRD_PARTY_NOTICES.md:5350: trailing whitespace.
++      where such license applies only to those patent claims licensable
+THIRD_PARTY_NOTICES.md:5351: trailing whitespace.
++      by such Contributor that are necessarily infringed by their
+THIRD_PARTY_NOTICES.md:5352: trailing whitespace.
++      Contribution(s) alone or by combination of their Contribution(s)
+THIRD_PARTY_NOTICES.md:5353: trailing whitespace.
++      with the Work to which such Contribution(s) was submitted. If You
+THIRD_PARTY_NOTICES.md:5354: trailing whitespace.
++      institute patent litigation against any entity (including a
+THIRD_PARTY_NOTICES.md:5355: trailing whitespace.
++      cross-claim or counterclaim in a lawsuit) alleging that the Work
+THIRD_PARTY_NOTICES.md:5356: trailing whitespace.
++      or a Contribution incorporated within the Work constitutes direct
+THIRD_PARTY_NOTICES.md:5357: trailing whitespace.
++      or contributory patent infringement, then any patent licenses
+THIRD_PARTY_NOTICES.md:5358: trailing whitespace.
++      granted to You under this License for that Work shall terminate
+THIRD_PARTY_NOTICES.md:5359: trailing whitespace.
++      as of the date such litigation is filed.
+THIRD_PARTY_NOTICES.md:5360: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5361: trailing whitespace.
++   4. Redistribution. You may reproduce and distribute copies of the
+THIRD_PARTY_NOTICES.md:5362: trailing whitespace.
++      Work or Derivative Works thereof in any medium, with or without
+THIRD_PARTY_NOTICES.md:5363: trailing whitespace.
++      modifications, and in Source or Object form, provided that You
+THIRD_PARTY_NOTICES.md:5364: trailing whitespace.
++      meet the following conditions:
+THIRD_PARTY_NOTICES.md:5365: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5366: trailing whitespace.
++      (a) You must give any other recipients of the Work or
+THIRD_PARTY_NOTICES.md:5367: trailing whitespace.
++          Derivative Works a copy of this License; and
+THIRD_PARTY_NOTICES.md:5368: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5369: trailing whitespace.
++      (b) You must cause any modified files to carry prominent notices
+THIRD_PARTY_NOTICES.md:5370: trailing whitespace.
++          stating that You changed the files; and
+THIRD_PARTY_NOTICES.md:5371: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5372: trailing whitespace.
++      (c) You must retain, in the Source form of any Derivative Works
+THIRD_PARTY_NOTICES.md:5373: trailing whitespace.
++          that You distribute, all copyright, patent, trademark, and
+THIRD_PARTY_NOTICES.md:5374: trailing whitespace.
++          attribution notices from the Source form of the Work,
+THIRD_PARTY_NOTICES.md:5375: trailing whitespace.
++          excluding those notices that do not pertain to any part of
+THIRD_PARTY_NOTICES.md:5376: trailing whitespace.
++          the Derivative Works; and
+THIRD_PARTY_NOTICES.md:5377: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5378: trailing whitespace.
++      (d) If the Work includes a "NOTICE" text file as part of its
+THIRD_PARTY_NOTICES.md:5379: trailing whitespace.
++          distribution, then any Derivative Works that You distribute must
+THIRD_PARTY_NOTICES.md:5380: trailing whitespace.
++          include a readable copy of the attribution notices contained
+THIRD_PARTY_NOTICES.md:5381: trailing whitespace.
++          within such NOTICE file, excluding those notices that do not
+THIRD_PARTY_NOTICES.md:5382: trailing whitespace.
++          pertain to any part of the Derivative Works, in at least one
+THIRD_PARTY_NOTICES.md:5383: trailing whitespace.
++          of the following places: within a NOTICE text file distributed
+THIRD_PARTY_NOTICES.md:5384: trailing whitespace.
++          as part of the Derivative Works; within the Source form or
+THIRD_PARTY_NOTICES.md:5385: trailing whitespace.
++          documentation, if provided along with the Derivative Works; or,
+THIRD_PARTY_NOTICES.md:5386: trailing whitespace.
++          within a display generated by the Derivative Works, if and
+THIRD_PARTY_NOTICES.md:5387: trailing whitespace.
++          wherever such third-party notices normally appear. The contents
+THIRD_PARTY_NOTICES.md:5388: trailing whitespace.
++          of the NOTICE file are for informational purposes only and
+THIRD_PARTY_NOTICES.md:5389: trailing whitespace.
++          do not modify the License. You may add Your own attribution
+THIRD_PARTY_NOTICES.md:5390: trailing whitespace.
++          notices within Derivative Works that You distribute, alongside
+THIRD_PARTY_NOTICES.md:5391: trailing whitespace.
++          or as an addendum to the NOTICE text from the Work, provided
+THIRD_PARTY_NOTICES.md:5392: trailing whitespace.
++          that such additional attribution notices cannot be construed
+THIRD_PARTY_NOTICES.md:5393: trailing whitespace.
++          as modifying the License.
+THIRD_PARTY_NOTICES.md:5394: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5395: trailing whitespace.
++      You may add Your own copyright statement to Your modifications and
+THIRD_PARTY_NOTICES.md:5396: trailing whitespace.
++      may provide additional or different license terms and conditions
+THIRD_PARTY_NOTICES.md:5397: trailing whitespace.
++      for use, reproduction, or distribution of Your modifications, or
+THIRD_PARTY_NOTICES.md:5398: trailing whitespace.
++      for any such Derivative Works as a whole, provided Your use,
+THIRD_PARTY_NOTICES.md:5399: trailing whitespace.
++      reproduction, and distribution of the Work otherwise complies with
+THIRD_PARTY_NOTICES.md:5400: trailing whitespace.
++      the conditions stated in this License.
+THIRD_PARTY_NOTICES.md:5401: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5402: trailing whitespace.
++   5. Submission of Contributions. Unless You explicitly state otherwise,
+THIRD_PARTY_NOTICES.md:5403: trailing whitespace.
++      any Contribution intentionally submitted for inclusion in the Work
+THIRD_PARTY_NOTICES.md:5404: trailing whitespace.
++      by You to the Licensor shall be under the terms and conditions of
+THIRD_PARTY_NOTICES.md:5405: trailing whitespace.
++      this License, without any additional terms or conditions.
+THIRD_PARTY_NOTICES.md:5406: trailing whitespace.
++      Notwithstanding the above, nothing herein shall supersede or modify
+THIRD_PARTY_NOTICES.md:5407: trailing whitespace.
++      the terms of any separate license agreement you may have executed
+THIRD_PARTY_NOTICES.md:5408: trailing whitespace.
++      with Licensor regarding such Contributions.
+THIRD_PARTY_NOTICES.md:5409: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5410: trailing whitespace.
++   6. Trademarks. This License does not grant permission to use the trade
+THIRD_PARTY_NOTICES.md:5411: trailing whitespace.
++      names, trademarks, service marks, or product names of the Licensor,
+THIRD_PARTY_NOTICES.md:5412: trailing whitespace.
++      except as required for reasonable and customary use in describing the
+THIRD_PARTY_NOTICES.md:5413: trailing whitespace.
++      origin of the Work and reproducing the content of the NOTICE file.
+THIRD_PARTY_NOTICES.md:5414: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5415: trailing whitespace.
++   7. Disclaimer of Warranty. Unless required by applicable law or
+THIRD_PARTY_NOTICES.md:5416: trailing whitespace.
++      agreed to in writing, Licensor provides the Work (and each
+THIRD_PARTY_NOTICES.md:5417: trailing whitespace.
++      Contributor provides its Contributions) on an "AS IS" BASIS,
+THIRD_PARTY_NOTICES.md:5418: trailing whitespace.
++      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+THIRD_PARTY_NOTICES.md:5419: trailing whitespace.
++      implied, including, without limitation, any warranties or conditions
+THIRD_PARTY_NOTICES.md:5420: trailing whitespace.
++      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+THIRD_PARTY_NOTICES.md:5421: trailing whitespace.
++      PARTICULAR PURPOSE. You are solely responsible for determining the
+THIRD_PARTY_NOTICES.md:5422: trailing whitespace.
++      appropriateness of using or redistributing the Work and assume any
+THIRD_PARTY_NOTICES.md:5423: trailing whitespace.
++      risks associated with Your exercise of permissions under this License.
+THIRD_PARTY_NOTICES.md:5424: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5425: trailing whitespace.
++   8. Limitation of Liability. In no event and under no legal theory,
+THIRD_PARTY_NOTICES.md:5426: trailing whitespace.
++      whether in tort (including negligence), contract, or otherwise,
+THIRD_PARTY_NOTICES.md:5427: trailing whitespace.
++      unless required by applicable law (such as deliberate and grossly
+THIRD_PARTY_NOTICES.md:5428: trailing whitespace.
++      negligent acts) or agreed to in writing, shall any Contributor be
+THIRD_PARTY_NOTICES.md:5429: trailing whitespace.
++      liable to You for damages, including any direct, indirect, special,
+THIRD_PARTY_NOTICES.md:5430: trailing whitespace.
++      incidental, or consequential damages of any character arising as a
+THIRD_PARTY_NOTICES.md:5431: trailing whitespace.
++      result of this License or out of the use or inability to use the
+THIRD_PARTY_NOTICES.md:5432: trailing whitespace.
++      Work (including but not limited to damages for loss of goodwill,
+THIRD_PARTY_NOTICES.md:5433: trailing whitespace.
++      work stoppage, computer failure or malfunction, or any and all
+THIRD_PARTY_NOTICES.md:5434: trailing whitespace.
++      other commercial damages or losses), even if such Contributor
+THIRD_PARTY_NOTICES.md:5435: trailing whitespace.
++      has been advised of the possibility of such damages.
+THIRD_PARTY_NOTICES.md:5436: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5437: trailing whitespace.
++   9. Accepting Warranty or Additional Liability. While redistributing
+THIRD_PARTY_NOTICES.md:5438: trailing whitespace.
++      the Work or Derivative Works thereof, You may choose to offer,
+THIRD_PARTY_NOTICES.md:5439: trailing whitespace.
++      and charge a fee for, acceptance of support, warranty, indemnity,
+THIRD_PARTY_NOTICES.md:5440: trailing whitespace.
++      or other liability obligations and/or rights consistent with this
+THIRD_PARTY_NOTICES.md:5441: trailing whitespace.
++      License. However, in accepting such obligations, You may act only
+THIRD_PARTY_NOTICES.md:5442: trailing whitespace.
++      on Your own behalf and on Your sole responsibility, not on behalf
+THIRD_PARTY_NOTICES.md:5443: trailing whitespace.
++      of any other Contributor, and only if You agree to indemnify,
+THIRD_PARTY_NOTICES.md:5444: trailing whitespace.
++      defend, and hold each Contributor harmless for any liability
+THIRD_PARTY_NOTICES.md:5445: trailing whitespace.
++      incurred by, or claims asserted against, such Contributor by reason
+THIRD_PARTY_NOTICES.md:5446: trailing whitespace.
++      of your accepting any such warranty or additional liability.
+THIRD_PARTY_NOTICES.md:5447: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5448: trailing whitespace.
++   END OF TERMS AND CONDITIONS
+THIRD_PARTY_NOTICES.md:5449: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5450: trailing whitespace.
++   APPENDIX: How to apply the Apache License to your work.
+THIRD_PARTY_NOTICES.md:5451: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5452: trailing whitespace.
++      To apply the Apache License to your work, attach the following
+THIRD_PARTY_NOTICES.md:5453: trailing whitespace.
++      boilerplate notice, with the fields enclosed by brackets "[]"
+THIRD_PARTY_NOTICES.md:5454: trailing whitespace.
++      replaced with your own identifying information. (Don't include
+THIRD_PARTY_NOTICES.md:5455: trailing whitespace.
++      the brackets!)  The text should be enclosed in the appropriate
+THIRD_PARTY_NOTICES.md:5456: trailing whitespace.
++      comment syntax for the file format. We also recommend that a
+THIRD_PARTY_NOTICES.md:5457: trailing whitespace.
++      file or class name and description of purpose be included on the
+THIRD_PARTY_NOTICES.md:5458: trailing whitespace.
++      same "printed page" as the copyright notice for easier
+THIRD_PARTY_NOTICES.md:5459: trailing whitespace.
++      identification within third-party archives.
+THIRD_PARTY_NOTICES.md:5460: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5461: trailing whitespace.
++   Portions Copyright (c) Microsoft Corporation.
+THIRD_PARTY_NOTICES.md:5462: trailing whitespace.
++   Portions Copyright 2017 Google Inc.
+THIRD_PARTY_NOTICES.md:5463: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5464: trailing whitespace.
++   Licensed under the Apache License, Version 2.0 (the "License");
+THIRD_PARTY_NOTICES.md:5465: trailing whitespace.
++   you may not use this file except in compliance with the License.
+THIRD_PARTY_NOTICES.md:5466: trailing whitespace.
++   You may obtain a copy of the License at
+THIRD_PARTY_NOTICES.md:5467: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5468: trailing whitespace.
++       http://www.apache.org/licenses/LICENSE-2.0
+THIRD_PARTY_NOTICES.md:5469: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:5470: trailing whitespace.
++   Unless required by applicable law or agreed to in writing, software
+THIRD_PARTY_NOTICES.md:5471: trailing whitespace.
++   distributed under the License is distributed on an "AS IS" BASIS,
+THIRD_PARTY_NOTICES.md:5472: trailing whitespace.
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+THIRD_PARTY_NOTICES.md:5473: trailing whitespace.
++   See the License for the specific language governing permissions and
+THIRD_PARTY_NOTICES.md:6493: trailing whitespace.
++Copyright (c) Microsoft Corporation.
+THIRD_PARTY_NOTICES.md:6494: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:6495: trailing whitespace.
++Permission to use, copy, modify, and/or distribute this software for any
+THIRD_PARTY_NOTICES.md:6496: trailing whitespace.
++purpose with or without fee is hereby granted.
+THIRD_PARTY_NOTICES.md:6497: trailing whitespace.
++
+THIRD_PARTY_NOTICES.md:6498: trailing whitespace.
++THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+THIRD_PARTY_NOTICES.md:6499: trailing whitespace.
++REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+THIRD_PARTY_NOTICES.md:6500: trailing whitespace.
++AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+THIRD_PARTY_NOTICES.md:6501: trailing whitespace.
++INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+THIRD_PARTY_NOTICES.md:6502: trailing whitespace.
++LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+THIRD_PARTY_NOTICES.md:6503: trailing whitespace.
++OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+git_diff_check_exit_code=2
+
+Commande : git diff --exit-code -- electron src/lib/license keys
+protected_diff_exit_code=0
+
+=== FINAL HYGIENE ===
+{
+  "requiredReports": "14/14",
+  "missing": [],
+  "journalMarkers": "14/14",
+  "aqSections": "ABCDEFGHIJKLMNOPQ",
+  "aqSequenceValid": true,
+  "finalLine": "**NON PRÊT POUR LA PRODUCTION**",
+  "evidenceAndChangedFiles": 78,
+  "textFiles": 78,
+  "jsonFiles": 15,
+  "secretFindings": [],
+  "devDbMatchesInitial": true,
+  "scope": "Targeted hygiene only; does not replace Gitleaks or history scan"
+}
+hygiene_exit_code=1

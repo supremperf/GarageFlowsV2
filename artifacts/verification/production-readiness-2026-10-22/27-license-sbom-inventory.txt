@@ -1,0 +1,55 @@
+Commande 1 : inventaire license-checker production (JSON dans /tmp)
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/user/GarageFlowsV2/node_modules/license-checker/bin/license-checker'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v22.22.3
+license_checker_exit_code=1
+Commande 2 : npm sbom --omit=dev (JSON dans /tmp)
+npm error code EUSAGE
+npm error
+npm error Must specify --sbom-format flag with one of: cyclonedx, spdx.
+npm error
+npm error Generate a Software Bill of Materials (SBOM)
+npm error
+npm error Usage:
+npm error npm sbom
+npm error
+npm error Options:
+npm error [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+npm error [--package-lock-only] [--sbom-format <cyclonedx|spdx>]
+npm error [--sbom-type <library|application|framework>]
+npm error [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+npm error [-ws|--workspaces]
+npm error
+npm error Run "npm help sbom" for more info
+npm error A complete log of this run can be found in: /home/user/.npm/_logs/2026-10-22T17_08_00_872Z-debug-0.log
+npm_sbom_exit_code=1
+<anonymous_script>:1
+
+
+SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at [stdin]:2:21
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:446:12
+    at [stdin]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:444:60)
+    at evalFunction (node:internal/process/execution:279:30)
+    at evalTypeScript (node:internal/process/execution:291:3)
+    at node:internal/main/eval_stdin:53:5
+    at Socket.<anonymous> (node:internal/process/execution:201:5)
+
+Node.js v22.22.3

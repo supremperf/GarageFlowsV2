@@ -1,0 +1,11 @@
+Commande : PATH du venv + trois suites Python/keygen
+
+ RUN  v4.1.12 /home/user/GarageFlowsV2
+
+No test files found, exiting with code 1
+
+filter: src/lib/__tests__/keygen-python-integration.test.ts, src/lib/__tests__/python-scripts.test.ts, src/lib/__tests__/secret-scan-python.test.ts
+include: src/**/*.test.ts, src/**/*.spec.ts
+exclude:  **/node_modules/**, **/.git/**
+
+exit_code=1

@@ -1,0 +1,10 @@
+
+> garageflow@1.1.0 check:perf-budget
+> node scripts/check-perf-budget.mjs
+
+Budget de performance — mesure du bundle client :
+  Total JS client : 3.49 MiB (budget 3.65 MiB)
+  Plus gros chunk : 322.3 KiB — .next/static/chunks/164f4fb6.f11ea67e0ec94950.js (budget 512.0 KiB)
+  Fichiers .js scannés : 242
+
+✅ Budget de performance respecté.

@@ -1,0 +1,38 @@
+date_utc=2026-10-22T19:01:57Z
+Commande : PATH=/tmp/gf-python-venv/bin:$PATH npm run test -- --reporter=json --outputFile=MASTER4_EVIDENCE/vitest-final-results.json
+
+> garageflow@1.1.0 test
+> vitest run --reporter=json --outputFile=MASTER4_EVIDENCE/vitest-final-results.json
+
+(node:26612) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✗ Domaine « cdn.exemple.test » absent de la liste blanche des postes.
+    Autorisés : api.garageflows.fr, garageflows.fr, app.garageflows.fr
+    (voir ALLOWED_DOWNLOAD_HOSTS dans electron/update-verify.js)
+
+
+  ✗ --download-url doit être en HTTPS.
+
+
+  ✗ Version non SemVer : derniere
+
+
+  ✗ Clé privée de signature absente.
+    Renseignez GF_UPDATE_SIGNING_KEY (PEM PKCS#8) ou GF_UPDATE_SIGNING_KEY_FILE.
+    Pour créer une paire : node scripts/sign-release-manifest.mjs --gen-key --key-id <id>
+
+(node:28023) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28510) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28590) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28692) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29024) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+JSON report written to /home/user/GarageFlowsV2/MASTER4_EVIDENCE/vitest-final-results.json
+vitest_exit_code=1
+env_unchanged=true
+dev_db_unchanged=true

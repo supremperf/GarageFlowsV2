@@ -2,14 +2,14 @@
 
 > Généré par `npm run config:audit`. Inventaire statique de tous les fichiers suivis et lecture des fichiers texte ; analyse des points de configuration et des composants structurants. Ce n’est ni une preuve d’absence de bogue dans chaque fonction ni un test des comptes externes.
 
-- 2289 fichiers inventoriés, 2279 textes lus, 10 binaires identifiés (non interprétés).
-- 1134 fichiers de code/configuration balayés pour les lectures littérales d’environnement.
-- 164 routes API, 47 modèles PostgreSQL, 22 migrations serveur.
-- 122 variables canoniques : 56 application, 11 platform, 11 manual, 39 unused, 2 runtime, 1 keygen, 2 publisher.
+- 2907 fichiers inventoriés, 2803 textes lus, 104 binaires identifiés (non interprétés).
+- 1283 fichiers de code/configuration balayés pour les lectures littérales d’environnement.
+- 169 routes API, 47 modèles PostgreSQL, 22 migrations serveur.
+- 146 variables canoniques : 67 application, 11 platform, 24 manual, 39 unused, 2 runtime, 1 keygen, 2 publisher.
 
 ## Architecture et conséquences pour config
 
-- Next.js 14 App Router : interface, API, instrumentation de validation, sessions et contrôle de licence serveur. Deux clients Prisma sont générés ; `src/lib/db.ts` choisit SQLite/PostgreSQL depuis le schéma de connexion.
+- Next.js 15.5.27 App Router : interface, API, instrumentation de validation, sessions et contrôle de licence serveur. Deux clients Prisma sont générés ; `src/lib/db.ts` choisit SQLite/PostgreSQL depuis le schéma de connexion.
 - Electron : serveur Next local sur loopback, SQLite dans userData, secrets par installation, photos sur disque, mise à jour vérifiée et intégrité. Les secrets d’un poste installé ne doivent pas être remplacés par ceux du serveur.
 - PWA/Vercel : PostgreSQL durable et Redis REST distribué obligatoires. Pas de chemin de disque local fictif pour rendre persistantes les sauvegardes. Les variables runtime Vercel restent gérées par Vercel.
 - Licence : P-256 privé côté émetteur/keygen ; clé publique embarquée en Electron et Next. Record-MAC HMAC et pepper distincts. Le keygen attend `keys/private.pem`, `keys/public.pem` et `keys/server_config.json`.
@@ -31,18 +31,19 @@
 
 | Répertoire | Fichiers |
 |---|---:|
-| docs | 1128 |
-| src | 888 |
-| scripts | 116 |
-| (racine) | 46 |
+| docs | 1509 |
+| src | 932 |
+| scripts | 152 |
+| (racine) | 69 |
+| artifacts | 69 |
+| tests | 51 |
+| configuation automatique | 36 |
 | prisma | 30 |
-| tests | 25 |
-| electron | 24 |
+| electron | 28 |
 | vendor | 12 |
 | public | 10 |
 | e2e | 6 |
 | .github | 3 |
-| artifacts | 1 |
 
 ## Couverture du contrat complet
 
@@ -52,7 +53,7 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 |---|---|---|---:|
 | `ANTHROPIC_API_KEY` | application | .env.server.local / Vercel (selon profil) | 5 |
 | `APPDATA` | platform | OS / Electron / Next / Vercel / tests | 1 |
-| `DATABASE_URL` | application | .env.server.local / Vercel (selon profil) | 96 |
+| `DATABASE_URL` | application | .env.server.local / Vercel (selon profil) | 97 |
 | `DEMO_RESET_FORCE` | manual | outil/opération concernée seulement | 1 |
 | `DEVICE_TOKEN_PEPPER` | application | .env.server.local / Vercel (selon profil) | 6 |
 | `DIRECT_URL` | application | .env.server.local / Vercel (selon profil) | 8 |
@@ -63,10 +64,11 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `EINVOICING_OUTGOING_ENABLED` | application | .env.server.local / Vercel (selon profil) | 2 |
 | `EINVOICING_PAYMENT_REPORTING_ENABLED` | application | .env.server.local / Vercel (selon profil) | 0 |
 | `EINVOICING_PROVIDER_CATALOG_ENABLED` | application | .env.server.local / Vercel (selon profil) | 0 |
+| `EINVOICING_QUEUE_TOKEN` | application | .env.server.local / Vercel (selon profil) | 2 |
 | `EINVOICING_SANDBOX_ONLY` | application | .env.server.local / Vercel (selon profil) | 2 |
-| `ELECTRON` | platform | OS / Electron / Next / Vercel / tests | 22 |
+| `ELECTRON` | platform | OS / Electron / Next / Vercel / tests | 19 |
 | `ELECTRON_DEV` | platform | OS / Electron / Next / Vercel / tests | 2 |
-| `GARAGEFLOW_API_KEY` | application | .env.server.local / Vercel (selon profil) | 9 |
+| `GARAGEFLOW_API_KEY` | application | .env.server.local / Vercel (selon profil) | 10 |
 | `GARAGEFLOW_LLM` | application | .env.server.local / Vercel (selon profil) | 3 |
 | `GARAGEFLOW_LLM_MODEL` | application | .env.server.local / Vercel (selon profil) | 3 |
 | `GF_ALLOW_DEBUG` | manual | outil/opération concernée seulement | 1 |
@@ -105,14 +107,14 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `GF_BRAND_WORDMARK_PRIMARY` | unused | aucune | 0 |
 | `GF_BRAND_WORDMARK_SECONDARY` | unused | aucune | 0 |
 | `GF_CONFIGURER_API_TEST_MODE` | manual | outil/opération concernée seulement | 0 |
-| `GF_DB_MAC_SECRET` | application | .env.server.local / Vercel (selon profil) | 16 |
+| `GF_DB_MAC_SECRET` | application | .env.server.local / Vercel (selon profil) | 15 |
 | `GF_DEBUG` | runtime | Electron userData / mémoire | 1 |
 | `GF_DEVICE_AUTH_DEADLINE` | application | .env.server.local / Vercel (selon profil) | 3 |
 | `GF_E2E_CHROMIUM` | platform | OS / Electron / Next / Vercel / tests | 0 |
 | `GF_EINVOICE_CREDENTIALS_KEY` | application | .env.server.local / Vercel (selon profil) | 4 |
 | `GF_EINVOICE_CREDENTIALS_KEY_VERSION` | application | .env.server.local / Vercel (selon profil) | 2 |
 | `GF_INTEGRITY_MODE` | application | .env / défaut compilé Electron | 1 |
-| `GF_INTERNAL_EXPORT_KEY` | runtime | Electron userData / mémoire | 2 |
+| `GF_INTERNAL_EXPORT_KEY` | runtime | Electron userData / mémoire | 3 |
 | `GF_KEYGEN_MAX_MECHANIC` | keygen | keys/server_config.json + lanceur keygen | 2 |
 | `GF_LICENSE_SERVER` | application | .env / défaut compilé Electron | 2 |
 | `GF_MAX_MECHANIC_KEYS` | application | .env.server.local / Vercel (selon profil) | 3 |
@@ -122,7 +124,7 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `GF_PACKAGE_DESKTOP` | manual | outil/opération concernée seulement | 1 |
 | `GF_PHOTOS_DIR` | application | .env.server.local / Vercel (selon profil) | 15 |
 | `GF_PORTAL_SECRET` | application | .env.server.local / Vercel (selon profil) | 20 |
-| `GF_PRIVATE_KEY` | application | .env.server.local / Vercel (selon profil) | 4 |
+| `GF_PRIVATE_KEY` | application | .env.server.local / Vercel (selon profil) | 3 |
 | `GF_PROBE_NAMES` | manual | outil/opération concernée seulement | 1 |
 | `GF_SIGNATURE_SECRET` | application | .env.server.local / Vercel (selon profil) | 1 |
 | `GF_SMTP_CIPHER_KEY` | application | .env.server.local / Vercel (selon profil) | 6 |
@@ -131,8 +133,8 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `GF_TOTP_ENC_KEY_OLD` | application | .env.server.local / Vercel (selon profil) | 2 |
 | `GF_UPDATE_CHANNEL` | application | .env / défaut compilé Electron | 1 |
 | `GF_UPDATE_SERVER` | application | .env / défaut compilé Electron | 1 |
-| `GF_UPDATE_SIGNING_KEY` | publisher | coffre hors dépôt + GarageFlow-configuration/publisher.json (chemin/keyId seulement) | 2 |
-| `GF_UPDATE_SIGNING_KEY_FILE` | publisher | coffre hors dépôt + GarageFlow-configuration/publisher.json (chemin/keyId seulement) | 2 |
+| `GF_UPDATE_SIGNING_KEY` | publisher | coffre hors dépôt + GarageFlow-configuration/publisher.json (chemin/keyId seulement) | 3 |
+| `GF_UPDATE_SIGNING_KEY_FILE` | publisher | coffre hors dépôt + GarageFlow-configuration/publisher.json (chemin/keyId seulement) | 3 |
 | `HOSTNAME` | platform | OS / Electron / Next / Vercel / tests | 1 |
 | `LICENSE_ENFORCEMENT` | application | .env.server.local / Vercel (selon profil) | 2 |
 | `NEXT_PUBLIC_GF_BRAND_ACCENT_COLOR` | unused | aucune | 0 |
@@ -147,9 +149,9 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `NEXT_PUBLIC_GF_BRAND_WORDMARK_PRIMARY` | unused | aucune | 0 |
 | `NEXT_PUBLIC_GF_BRAND_WORDMARK_SECONDARY` | unused | aucune | 0 |
 | `NEXT_RUNTIME` | platform | OS / Electron / Next / Vercel / tests | 1 |
-| `NEXTAUTH_SECRET` | application | .env.server.local / Vercel (selon profil) | 35 |
+| `NEXTAUTH_SECRET` | application | .env.server.local / Vercel (selon profil) | 36 |
 | `NEXTAUTH_URL` | application | .env.server.local / Vercel (selon profil) | 5 |
-| `NODE_ENV` | platform | OS / Electron / Next / Vercel / tests | 13 |
+| `NODE_ENV` | platform | OS / Electron / Next / Vercel / tests | 14 |
 | `NODE_INSPECTOR_IPC` | platform | OS / Electron / Next / Vercel / tests | 1 |
 | `RATE_LIMIT_ADMIN_MAX` | application | .env.server.local / Vercel (selon profil) | 0 |
 | `RATE_LIMIT_ADMIN_WINDOW_SECONDS` | application | .env.server.local / Vercel (selon profil) | 0 |
@@ -165,12 +167,35 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `TEST_POSTGRES_URL` | platform | OS / Electron / Next / Vercel / tests | 7 |
 | `TEST_REDIS_URL` | platform | OS / Electron / Next / Vercel / tests | 3 |
 | `TRUST_PROXY_HEADERS` | application | .env.server.local / Vercel (selon profil) | 6 |
-| `UPSTASH_REDIS_REST_TOKEN` | application | .env.server.local / Vercel (selon profil) | 9 |
-| `UPSTASH_REDIS_REST_URL` | application | .env.server.local / Vercel (selon profil) | 9 |
+| `UPSTASH_REDIS_REST_TOKEN` | application | .env.server.local / Vercel (selon profil) | 8 |
+| `UPSTASH_REDIS_REST_URL` | application | .env.server.local / Vercel (selon profil) | 8 |
 | `UPSTASH_REDIS_TIMEOUT_MS` | application | .env.server.local / Vercel (selon profil) | 2 |
-| `VERCEL` | platform | OS / Electron / Next / Vercel / tests | 7 |
+| `VERCEL` | platform | OS / Electron / Next / Vercel / tests | 6 |
 | `VERCEL_TOKEN` | manual | outil/opération concernée seulement | 0 |
 | `E2E_NON_PRODUCTION` | manual | outil/opération concernée seulement | 1 |
 | `E2E_STAGING_URL` | manual | outil/opération concernée seulement | 0 |
+| `NEXT_PUBLIC_DEBUG` | manual | outil/opération concernée seulement | 4 |
+| `NEXT_PUBLIC_VERCEL_BLOB_API_URL` | manual | outil/opération concernée seulement | 1 |
+| `VERCEL_BLOB_API_URL` | manual | outil/opération concernée seulement | 1 |
+| `BLOB_READ_WRITE_TOKEN` | manual | outil/opération concernée seulement | 0 |
+| `GF_ANCHOR_RESTORE_NETWORK` | manual | outil/opération concernée seulement | 0 |
+| `GF_NO_ANCHOR_RESTORE` | manual | outil/opération concernée seulement | 1 |
+| `GF_VERCEL_PROJECT` | manual | outil/opération concernée seulement | 1 |
+| `CRON_SECRET` | manual | outil/opération concernée seulement | 0 |
+| `GF_PRODUCTION_DB_FINGERPRINT` | manual | outil/opération concernée seulement | 1 |
+| `GF_SCREENSHOT_SCAN_MAX_BYTES` | application | .env.server.local / Vercel (selon profil) | 1 |
+| `GF_SCREENSHOT_SCAN_PATTERNS` | application | .env.server.local / Vercel (selon profil) | 1 |
+| `GF_SCREENSHOT_SCAN_PERSIST` | application | .env.server.local / Vercel (selon profil) | 2 |
+| `GF_SCREENSHOT_SCAN_PORT` | application | .env.server.local / Vercel (selon profil) | 2 |
+| `GF_SCREENSHOT_SCAN_SERVER_URL` | application | .env.server.local / Vercel (selon profil) | 1 |
+| `GF_SCREENSHOT_SCAN_VERBOSE` | application | .env.server.local / Vercel (selon profil) | 1 |
+| `GF_SCREENSHOT_SECRET_SCAN_ENABLED` | application | .env.server.local / Vercel (selon profil) | 2 |
+| `GF_SCREENSHOT_TESSERACT` | application | .env.server.local / Vercel (selon profil) | 2 |
+| `GF_SCREENSHOT_TESSERACT_LANG` | application | .env.server.local / Vercel (selon profil) | 1 |
+| `GF_UPDATE_DOWNLOAD_BASE_URL` | application | .env.server.local / Vercel (selon profil) | 1 |
+| `GF_E2E_URL` | manual | outil/opération concernée seulement | 1 |
+| `GF_E2E_KEY` | manual | outil/opération concernée seulement | 1 |
+| `GF_E2E_ALLOW_REMOTE` | manual | outil/opération concernée seulement | 1 |
+| `GF_E2E_ACTIVATE_MAX` | manual | outil/opération concernée seulement | 1 |
 
 Les recherches littérales ne prouvent pas l’absence d’un consommateur dynamique et peuvent relever des commentaires/tests. Le manifeste conserve les consommateurs déclarés ; cette matrice complète la garde `check:env-consistency`, elle ne la remplace pas.

@@ -1,0 +1,75 @@
+Commande : npm run check:consistency
+
+> garageflow@1.1.0 check:consistency
+> npm run check:branding && npm run check:docs && npm run check:pwa && npm run check:money && npm run check:money-calculations && npm run check:money-json && npm run check:env-consistency && npm run check:migration-safety && npm run check:sqlite-template && npm run check:pg-migrations && npm run check:converge-additive && npm run check:critical-files && npm run check:public-key && npm run keys:check
+
+
+> garageflow@1.1.0 check:branding
+> node scripts/check-branding.mjs
+
+Marque — exceptions techniques ACTIVES (précises, documentées) :
+   • electron/main.js — User-Agent HTTP « GarageFlow/<version> »  (2)
+   • electron/main.js — sel de MAC base — NE PAS changer  (1)
+   • electron/main.js — sel de chiffrement (KDF) — NE PAS changer  (1)
+   • electron/main.js — serviceName Electron (keytar/identité OS)  (1)
+   • electron/secure-key.js — sel KDF secure-key — NE PAS changer  (1)
+   • electron/update-verify.js — doit correspondre au champ « product » du flux de MàJ (identité interne, non visible)  (1)
+   • electron/user-data-path.js — nom du dossier de données HISTORIQUE — compat installations existantes  (1)
+   • scripts/config-full.cjs — chemin physique du coffre de configuration existant — compat des plans/reprises  (4)
+   • scripts/config-keygen.cjs — chemin physique du runtime keygen existant — compat config  (1)
+   • scripts/config-keys.cjs — chemin physique du registre de clés existant — ne pas orpheliner les originaux  (1)
+   • scripts/config-manager.cjs — chemin physique du coffre existant — état transactionnel privé du gestionnaire  (1)
+   • scripts/config-policy.cjs — destination physique du coffre éditeur existant — compat des plans config  (1)
+   • scripts/config-rebuild.cjs — chemin physique du coffre de configuration existant — sauvegardes et journal de reconstruction  (2)
+   • scripts/config-release.cjs — chemin physique du coffre éditeur existant — compat signature  (1)
+   • scripts/config-services.cjs — chemin physique du coffre éditeur existant — compat signature  (1)
+   • scripts/keygen_server.py — User-Agent keygen (compat control-plane)  (1)
+   • scripts/lib/config-cloud.cjs — chemin physique du coffre existant — corps API temporaires privés  (2)
+   • scripts/lib/config-secrets-auto.cjs — chemin physique du coffre local existant — compatibilité des reçus de configuration  (1)
+   • scripts/lib/repository-audit-map.cjs — chemin physique du coffre local exclu de la lecture d’inventaire — compat config  (1)
+   • scripts/restore.js — chemin du dossier de données historique (restore.js / userData pin)  (3)
+   • scripts/sign-release-manifest.mjs — le manifeste signé DOIT porter la même identité « product » que EXPECTED_PRODUCT, sinon chaque poste rejette la mise à jour (identité interne, non visible)  (1)
+   • src/app/admin/licenses/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/license/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/login/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/register/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (4)
+   • src/components/GarageFlowLogo.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/Header.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/LicenseChangeModal.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/UpdateModal.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/integration/publication-mise-a-jour.test.ts — manifeste de test de PUBLICATION : le champ « product » doit valoir EXPECTED_PRODUCT, sinon le poste rejette la mise à jour — écrire « GarageFlows » ici ferait affirmer au test un contrat que la production refuse  (1)
+   • src/lib/__tests__/release-signing-chain.test.ts — chemin du dossier de données historique (restore.js / userData pin)  (1)
+   • src/lib/__tests__/update-verify.test.ts — reflète l'identité « product » du flux de MàJ (voir EXPECTED_PRODUCT)  (1)
+   • src/lib/__tests__/user-data-path.test.ts — assertion de compat : le dossier historique ne doit JAMAIS être renommé  (1)
+   • src/lib/__tests__/user-data-path.test.ts — intitulé du test de compat du dossier historique  (1)
+   • src/lib/signature/__tests__/signature.test.ts — User-Agent HTTP « GarageFlow/<version> »  (1)
+
+✅ Marque cohérente : « GarageFlows » dans tout le visible (1129 fichiers). Exceptions techniques uniquement.
+
+> garageflow@1.1.0 check:docs
+> node scripts/check-docs-consistency.mjs
+
+
+❌ Cohérence docs : 1 incohérence(s) dans les documents actifs :
+   [test-count] MISSION_3_FINAL_VERDICT.md:34  compte de tests courant 3517 != baseline (4272/3420)
+      La passe complète finale de la porte, avec Next 15.5.28 et le venv Python corrigé, produit : **3 517 tests réussis, 3 éc
+
+   → Corrigez le document, marquez-le HISTORIQUE (« doc-status: historique »),
+     ou pointez vers la baseline canonique docs/audit/FINAL_VERIFICATION_BASELINE.md.
+
+check_consistency_exit_code=1
+
+Commande : node scripts/check-docs-consistency.mjs
+
+❌ Cohérence docs : 1 incohérence(s) dans les documents actifs :
+   [test-count] MISSION_3_FINAL_VERDICT.md:34  compte de tests courant 3517 != baseline (4272/3420)
+      La passe complète finale de la porte, avec Next 15.5.28 et le venv Python corrigé, produit : **3 517 tests réussis, 3 éc
+
+   → Corrigez le document, marquez-le HISTORIQUE (« doc-status: historique »),
+     ou pointez vers la baseline canonique docs/audit/FINAL_VERIFICATION_BASELINE.md.
+
+docs_consistency_exit_code=1
+
+Commande : git diff --check
+git_diff_check_exit_code=0

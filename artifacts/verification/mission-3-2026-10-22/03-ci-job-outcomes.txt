@@ -1,0 +1,42 @@
+Lecture des conclusions de jobs du run CI exact, sans télécharger les logs.
+jobs_api_exit_code=0
+job 119903145350 Full dependency tree — zero vulnerabilities completed success
+job 119903145372 E2E (Playwright — responsive, auto-démarrage) completed success
+ step 9 Upload Playwright report on failure skipped
+job 119903145515 Native base (TypeScript, standard build, fixed JS budget) completed failure
+ step 7 Standard TypeScript (no diagnostic declarations) failure
+ step 8 Standard production build (no alternate flags) skipped
+ step 9 Immutable client JS budget (3829408 bytes) skipped
+ step 17 Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 skipped
+job 119903145693 Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL) completed failure
+ step 12 TypeScript failure
+ step 13 ESLint skipped
+ step 14 Branding consistency (strict) skipped
+ step 15 PWA manifests & icon dimensions skipped
+ step 16 Money fields (ZERO monetary Float) skipped
+ step 17 Money calculations (no direct float math) skipped
+ step 18 Money JSON (v2 writers only) skipped
+ step 19 Migration safety invariants skipped
+ step 20 SQLite template (integrity + baseline + checksums) skipped
+ step 21 PostgreSQL migrations (per-column verification) skipped
+ step 22 Docs consistency skipped
+ step 23 Configuration — résolution automatique des secrets (offline) skipped
+ step 24 Critical security/licence files present & coherent skipped
+ step 25 PostgreSQL migrations on empty database + smoke test skipped
+ step 26 Python for real keygen integration (no silent fallback) skipped
+ step 27 Install hash-locked keygen test dependencies skipped
+ step 28 Keygen and screenshot secret-scan (Python, real crypto) skipped
+ step 29 Copilot budget guards and frozen validation integrity (offline) skipped
+ step 30 Tests (unit + integration) skipped
+ step 31 Build skipped
+ step 32 Performance budget (client bundle) skipped
+ step 33 Dependency security regression tests skipped
+ step 34 Dependency audit gate (all packages, LOW through CRITICAL) skipped
+ step 66 Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 skipped
+job 119903145785 Secret scan (Gitleaks) completed failure
+ step 4 Gitleaks — scan working tree failure
+job 119903793006 Final release gate (full) completed skipped
+job 119904564500 Required validation completed failure
+ step 2 Refuse failed, cancelled or skipped mandatory jobs failure
+job 119904630435 Windows candidate packaging and inspection (not publication) completed skipped
+job 119904630555 Authenticated browser validation (approved staging only) completed skipped

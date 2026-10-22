@@ -1,0 +1,60 @@
+Prérequis et chaîne Windows officiels, sans produire de fichier factice.
+Commande : npm run preflight:release
+
+> garageflow@1.1.0 preflight:release
+> node scripts/preflight-release.cjs
+
+
+🔎 Contrôles avant empaquetage
+   Node 22.22.3 — linux/x64
+   Cible : Windows x64 (NSIS) — installeur utilisateur, sans droits administrateur
+   Version empaquetée : 1.1.0
+
+⚠️  Empaquetage demandé depuis un système non-Windows.
+     Le résultat dépend de Wine et de NSIS : la validation finale de l’installeur
+     doit être faite sur Windows (installation, désinstallation, lancement).
+✅ Prérequis réunis — poursuite de la construction.
+
+preflight_release_exit_code=0
+
+Commande : npm run dist
+
+> garageflow@1.1.0 dist
+> npm run preflight:release && cross-env GF_PACKAGE_DESKTOP=1 npm run build && npm run verify:standalone && electron-builder --win --x64 --publish never && npm run check:artifact-secrets && npm run check:artifact-fuses && npm run verify:installer
+
+
+> garageflow@1.1.0 preflight:release
+> node scripts/preflight-release.cjs
+
+
+🔎 Contrôles avant empaquetage
+   Node 22.22.3 — linux/x64
+   Cible : Windows x64 (NSIS) — installeur utilisateur, sans droits administrateur
+   Version empaquetée : 1.1.0
+
+⚠️  Empaquetage demandé depuis un système non-Windows.
+     Le résultat dépend de Wine et de NSIS : la validation finale de l’installeur
+     doit être faite sur Windows (installation, désinstallation, lancement).
+✅ Prérequis réunis — poursuite de la construction.
+
+
+> garageflow@1.1.0 build
+> prisma generate && prisma generate --schema prisma/server/schema.prisma && node scripts/next-build.cjs
+
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+dist_exit_code=1
+
+Commande : npm run verify:installer
+
+> garageflow@1.1.0 verify:installer
+> node scripts/verify-installer.cjs
+
+❌ Aucun dossier dist/ : la construction n’a pas été exécutée.
+   Correctif : `npm run dist`.
+verify_installer_exit_code=1
+
+=== ARTEFACTS WINDOWS ===
+release/GarageFlows-Setup.exe ABSENT
+dist/GarageFlows-Setup.exe ABSENT
+electron_binary=absent
+wine=absent

@@ -1,0 +1,174 @@
+Commande : node --test tests/final-release-gate-verdict.test.cjs (avant correction)
+TAP version 13
+# Subtest: la porte complète refuse les contrôles critiques NON EXÉCUTÉS même si tout le reste réussit
+not ok 1 - la porte complète refuse les contrôles critiques NON EXÉCUTÉS même si tout le reste réussit
+  ---
+  duration_ms: 41.815665
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/final-release-gate-verdict.test.cjs:58:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    
+    ════ GarageFlows — FINAL RELEASE GATE ════
+    
+    ▶ TypeScript (tsc --noEmit)… OK (0s)
+    ▶ ESLint… OK (0s)
+    ▶ Gardes de cohérence (check:consistency)… OK (0s)
+    ▶ Suite de tests (vitest) + baseline machine + baseline humaine… OK (0s)
+    ▶ Cohérence documentaire (post-baseline)… OK (0s)
+    ▶ Audit complet dépendances (tous niveaux)… OK (0s)
+    ▶ Audit runtime desktop empaqueté (Electron)… OK (0s)
+    ▶ Manifeste de release (commit-bound)… OK (0s)
+    ▶ Vérification d'artefact (identité + cohérence + secrets)… OK (0s)
+    ▶ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)… OK (0s)
+    ▶ Build de production (next build)… OK (0s)
+    ▶ Budget de performance (bundle client)… OK (0s)
+    
+    ════ RÉCAPITULATIF ════
+    ✅ TypeScript (tsc --noEmit)                                                  OK
+    ✅ ESLint                                                                     OK
+    ✅ Gardes de cohérence (check:consistency)                                    OK
+    ⏭️  Preuve de rotation des secrets                                             NON EXÉCUTÉ — .env absent — aucun secret à comparer (exécuter là où ils sont définis)
+    ✅ Suite de tests (vitest) + baseline machine + baseline humaine              OK
+    ✅ Cohérence documentaire (post-baseline)                                     OK
+    ⏭️  Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)  NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni
+    ⏭️  Migrations PostgreSQL sur base neuve + smoke test                          NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni
+    ⏭️  Rate-limit distribué multi-instance (Redis réel)                           NON EXÉCUTÉ — TEST_REDIS_URL non fourni
+    ✅ Audit complet dépendances (tous niveaux)                                   OK
+    ✅ Audit runtime desktop empaqueté (Electron)                                 OK
+    ✅ Manifeste de release (commit-bound)                                        OK
+    ✅ Vérification d'artefact (identité + cohérence + secrets)                   OK
+    ✅ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)        OK
+    ✅ Build de production (next build)                                           OK
+    ✅ Budget de performance (bundle client)                                      OK
+    
+    ⚠ 4 contrôle(s) NON EXÉCUTÉ(S) (environnement absent) — ils ne sont PAS réputés verts.
+    
+    ✅ GATE PASSÉ : tous les contrôles obligatoires exécutables sont verts.
+    
+    
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/final-release-gate-verdict.test.cjs:60:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: --fast reste un pré-contrôle local et ne revendique jamais une readiness production
+not ok 2 - --fast reste un pré-contrôle local et ne revendique jamais une readiness production
+  ---
+  duration_ms: 46.00349
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/final-release-gate-verdict.test.cjs:65:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /PRÉ-PR|pré-contrôle/i. Input:
+    
+    '\n' +
+      '════ GarageFlows — FINAL RELEASE GATE (--fast) ════\n' +
+      '\n' +
+      '▶ TypeScript (tsc --noEmit)… OK (0s)\n' +
+      '▶ ESLint… OK (0s)\n' +
+      '▶ Gardes de cohérence (check:consistency)… OK (0s)\n' +
+      '▶ Suite de tests (vitest) + baseline machine + baseline humaine… OK (0s)\n' +
+      '▶ Audit complet dépendances (tous niveaux)… OK (0s)\n' +
+      '▶ Audit runtime desktop empaqueté (Electron)… OK (0s)\n' +
+      '▶ Manifeste de release (commit-bound)… OK (0s)\n' +
+      "▶ Vérification d'artefact (identité + cohérence + secrets)… OK (0s)\n" +
+      "▶ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)… OK (0s)\n" +
+      '\n' +
+      '════ RÉCAPITULATIF ════\n' +
+      '✅ TypeScript (tsc --noEmit)                                                  OK\n' +
+      '✅ ESLint                                                                     OK\n' +
+      '✅ Gardes de cohérence (check:consistency)                                    OK\n' +
+      '⏭️  Preuve de rotation des secrets                                             NON EXÉCUTÉ — .env absent — aucun secret à comparer (exécuter là où ils sont définis)\n' +
+      '✅ Suite de tests (vitest) + baseline machine + baseline humaine              OK\n' +
+      '⏭️  Cohérence documentaire (post-baseline)                                     NON EXÉCUTÉ — --fast (déjà couvert par check:consistency)\n' +
+      '⏭️  Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)  NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni\n' +
+      '⏭️  Migrations PostgreSQL sur base neuve + smoke test                          NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni\n' +
+      '⏭️  Rate-limit distribué multi-instance (Redis réel)                           NON EXÉCUTÉ — TEST_REDIS_URL non fourni\n' +
+      '✅ Audit complet dépendances (tous niveaux)                                   OK\n' +
+      '✅ Audit runtime desktop empaqueté (Electron)                                 OK\n' +
+      '✅ Manifeste de release (commit-bound)                                        OK\n' +
+      "✅ Vérification d'artefact (identité + cohérence + secrets)                   OK\n" +
+      "✅ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)        OK\n" +
+      '⏭️  Build de production (next build)                                           NON EXÉCUTÉ — --fast\n' +
+      '⏭️  Budget de performance (bundle client)                                      NON EXÉCUTÉ — --fast\n' +
+      '\n' +
+      '⚠ 7 contrôle(s) NON EXÉCUTÉ(S) (environnement absent) — ils ne sont PAS réputés verts.\n' +
+      '\n' +
+      '✅ GATE PASSÉ : tous les contrôles obligatoires exécutables sont verts.\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    
+    ════ GarageFlows — FINAL RELEASE GATE (--fast) ════
+    
+    ▶ TypeScript (tsc --noEmit)… OK (0s)
+    ▶ ESLint… OK (0s)
+    ▶ Gardes de cohérence (check:consistency)… OK (0s)
+    ▶ Suite de tests (vitest) + baseline machine + baseline humaine… OK (0s)
+    ▶ Audit complet dépendances (tous niveaux)… OK (0s)
+    ▶ Audit runtime desktop empaqueté (Electron)… OK (0s)
+    ▶ Manifeste de release (commit-bound)… OK (0s)
+    ▶ Vérification d'artefact (identité + cohérence + secrets)… OK (0s)
+    ▶ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)… OK (0s)
+    
+    ════ RÉCAPITULATIF ════
+    ✅ TypeScript (tsc --noEmit)                                                  OK
+    ✅ ESLint                                                                     OK
+    ✅ Gardes de cohérence (check:consistency)                                    OK
+    ⏭️  Preuve de rotation des secrets                                             NON EXÉCUTÉ — .env absent — aucun secret à comparer (exécuter là où ils sont définis)
+    ✅ Suite de tests (vitest) + baseline machine + baseline humaine              OK
+    ⏭️  Cohérence documentaire (post-baseline)                                     NON EXÉCUTÉ — --fast (déjà couvert par check:consistency)
+    ⏭️  Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)  NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni
+    ⏭️  Migrations PostgreSQL sur base neuve + smoke test                          NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni
+    ⏭️  Rate-limit distribué multi-instance (Redis réel)                           NON EXÉCUTÉ — TEST_REDIS_URL non fourni
+    ✅ Audit complet dépendances (tous niveaux)                                   OK
+    ✅ Audit runtime desktop empaqueté (Electron)                                 OK
+    ✅ Manifeste de release (commit-bound)                                        OK
+    ✅ Vérification d'artefact (identité + cohérence + secrets)                   OK
+    ✅ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)        OK
+    ⏭️  Build de production (next build)                                           NON EXÉCUTÉ — --fast
+    ⏭️  Budget de performance (bundle client)                                      NON EXÉCUTÉ — --fast
+    
+    ⚠ 7 contrôle(s) NON EXÉCUTÉ(S) (environnement absent) — ils ne sont PAS réputés verts.
+    
+    ✅ GATE PASSÉ : tous les contrôles obligatoires exécutables sont verts.
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/final-release-gate-verdict.test.cjs:68:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: la porte complète reste verte lorsque chaque contrôle critique est exécuté et réussit
+ok 3 - la porte complète reste verte lorsque chaque contrôle critique est exécuté et réussit
+  ---
+  duration_ms: 37.053015
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 1
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 191.722539
+exit_code=1

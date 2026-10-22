@@ -1,0 +1,49 @@
+date_utc=2026-10-22T18:52:43Z
+Commande : npm run type-check
+typecheck_exit_code=1
+typecheck_error_lines=247
+typecheck_first_lines:
+scripts/migrate-money-json.ts(35,30): error TS2307: Cannot find module '../src/generated/server-client' or its corresponding type declarations.
+scripts/migrate-money-json.ts(67,14): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/admin/licenses/[id]/route.ts(137,54): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+src/app/api/admin/licenses/generate/route.ts(229,15): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/app/api/dashboard/route.ts(96,29): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/app/api/dashboard/route.ts(97,29): error TS7006: Parameter 'jp' implicitly has an 'any' type.
+src/app/api/dashboard/route.ts(113,34): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/app/api/einvoicing/invoices/[id]/submit/route.ts(146,22): error TS2339: Property 'description' does not exist on type 'LineWithEuros<ScaledLine>'.
+src/app/api/einvoicing/invoices/[id]/submit/route.ts(194,39): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/app/api/estimate/route.ts(138,35): error TS7006: Parameter 'm' implicitly has an 'any' type.
+src/app/api/export/fec/route.ts(35,13): error TS7006: Parameter 'rows' implicitly has an 'any' type.
+src/app/api/export/fec/route.ts(35,30): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/app/api/finance/route.ts(36,13): error TS7006: Parameter 'rows' implicitly has an 'any' type.
+src/app/api/finance/route.ts(36,30): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/app/api/finance/route.ts(54,41): error TS7006: Parameter 'inv' implicitly has an 'any' type.
+
+Commande : npm run build
+
+> garageflow@1.1.0 build
+> prisma generate && prisma generate --schema prisma/server/schema.prisma && node scripts/next-build.cjs
+
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+build_exit_code=1
+
+Commande : npm run verify:standalone
+
+> garageflow@1.1.0 verify:standalone
+> node scripts/verify-standalone-build.cjs
+
+
+❌ Sortie autonome Next.js inutilisable pour l’empaquetage.
+   Dossier .next/standalone absent : la compilation Next.js n'a pas produit de sortie autonome (output: 'standalone').
+
+   Cause la plus fréquente : une racine de workspace différente de celle du
+   projet (un package-lock.json dans le dossier utilisateur suffit à Next.js pour
+   l’adopter) décale toute la sortie d’un niveau.
+   Correctif : garder `outputFileTracingRoot` dans next.config.mjs, puis
+              supprimer .next et relancer `npm run build`.
+
+standalone_verify_exit_code=1
+build_id_present=false
+standalone_server_present=false
+static_resources_present=true
+dev_db_unchanged=true

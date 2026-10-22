@@ -1,0 +1,8 @@
+Restauration du venv Python de test, sans toucher aux bases ni aux secrets.
+venv_existing=false
+venv_create_exit_code=0
+ERROR: Could not open requirements file: [Errno 2] No such file or directory: 'scripts/requirements-test.txt'
+pip_install_exit_code=1
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ModuleNotFoundError: No module named 'cryptography'

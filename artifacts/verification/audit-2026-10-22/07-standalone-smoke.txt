@@ -1,0 +1,22 @@
+Smoke standalone local — 2026-10-22T16:36:03Z — ELECTRON=1, NODE_ENV=production
+/login                       HTTP 200 (9450 octets de réponse)
+/offline.html                HTTP 200 (3359 octets de réponse)
+/manifest.webmanifest        HTTP 200 (1061 octets de réponse)
+/api/ping                    HTTP 200 (11 octets de réponse)
+/api/version                 HTTP 200 (114 octets de réponse)
+/api/health                  HTTP 503 (148 octets de réponse)
+/api/clients                 HTTP 401 (50 octets de réponse)
+/api/admin/licenses          HTTP 403 (26 octets de réponse)
+/.next/static/chunks/1255-8dc91b756d944555.js HTTP 404
+
+En-têtes de sécurité observés sur /login :
+HTTP/1.1 200 OK
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self' data:; media-src 'self' blob:; object-src 'none'; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Strict-Transport-Security: max-age=63072000; includeSubDomains
+
+Correction du chemin du chunk (la requête précédente /.next/ était une URL de test erronée) :
+/_next/static/chunks/1255-8dc91b756d944555.js HTTP 200

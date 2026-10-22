@@ -35,6 +35,7 @@ function audit(root) {
     directories, extensions, references,
     prismaModels: (fs.readFileSync(path.join(root, 'prisma/server/schema.prisma'), 'utf8').match(/^model /gm) || []).length,
     postgresMigrations: fs.readdirSync(path.join(root, 'prisma/server/migrations')).filter(f => fs.existsSync(path.join(root, 'prisma/server/migrations', f, 'migration.sql'))).length,
+    nextVersion: JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).dependencies?.next || 'non déclarée',
     apiRoutes: files.filter(f => /^src\/app\/api\/.*\/route\.ts$/.test(f)).length }
 }
 function render(result) {
@@ -47,7 +48,7 @@ function render(result) {
     `- ${result.apiRoutes} routes API, ${result.prismaModels} modèles PostgreSQL, ${result.postgresMigrations} migrations serveur.`,
     `- ${policy.entries.length} variables canoniques : ${Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(', ')}.`, '',
     '## Architecture et conséquences pour config', '',
-    '- Next.js 14 App Router : interface, API, instrumentation de validation, sessions et contrôle de licence serveur. Deux clients Prisma sont générés ; `src/lib/db.ts` choisit SQLite/PostgreSQL depuis le schéma de connexion.',
+    `- Next.js ${result.nextVersion} App Router : interface, API, instrumentation de validation, sessions et contrôle de licence serveur. Deux clients Prisma sont générés ; \`src/lib/db.ts\` choisit SQLite/PostgreSQL depuis le schéma de connexion.`,
     '- Electron : serveur Next local sur loopback, SQLite dans userData, secrets par installation, photos sur disque, mise à jour vérifiée et intégrité. Les secrets d’un poste installé ne doivent pas être remplacés par ceux du serveur.',
     '- PWA/Vercel : PostgreSQL durable et Redis REST distribué obligatoires. Pas de chemin de disque local fictif pour rendre persistantes les sauvegardes. Les variables runtime Vercel restent gérées par Vercel.',
     '- Licence : P-256 privé côté émetteur/keygen ; clé publique embarquée en Electron et Next. Record-MAC HMAC et pepper distincts. Le keygen attend `keys/private.pem`, `keys/public.pem` et `keys/server_config.json`.',

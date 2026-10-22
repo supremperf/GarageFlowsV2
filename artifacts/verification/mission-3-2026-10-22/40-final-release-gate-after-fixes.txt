@@ -1,0 +1,85 @@
+Commande finale : PATH=/tmp/gf-python-venv/bin:$PATH npm run release:gate
+
+> garageflow@1.1.0 release:gate
+> node scripts/final-release-gate.mjs
+
+
+════ GarageFlows — FINAL RELEASE GATE ════
+
+▶ TypeScript (tsc --noEmit)… ÉCHEC (5s)
+    src/lib/sync/invoice-sync.ts(95,31): error TS7006: Parameter 'f' implicitly has an 'any' type.
+    src/lib/sync/invoice-sync.ts(111,21): error TS2347: Untyped function calls may not accept type arguments.
+    src/lib/sync/invoice-sync.ts(112,16): error TS7006: Parameter 'f' implicitly has an 'any' type.
+    src/lib/sync/invoice-sync.ts(113,29): error TS7006: Parameter 'max' implicitly has an 'any' type.
+    src/lib/sync/invoice-sync.ts(113,34): error TS7006: Parameter 'f' implicitly has an 'any' type.
+    src/lib/sync/job-sync.ts(168,39): error TS7006: Parameter 'j' implicitly has an 'any' type.
+    src/lib/sync/job-sync.ts(182,40): error TS7006: Parameter 't' implicitly has an 'any' type.
+    src/lib/sync/job-sync.ts(189,39): error TS7006: Parameter 'm' implicitly has an 'any' type.
+    src/lib/sync/job-sync.ts(189,42): error TS7006: Parameter 'j' implicitly has an 'any' type.
+    src/lib/sync/job-sync.ts(344,37): error TS7006: Parameter 'l' implicitly has an 'any' type.
+    src/lib/sync/job-sync.ts(349,36): error TS2345: Argument of type '{}' is not assignable to parameter of type 'Date'.
+      Type '{}' is missing the following properties from type 'Date': toDateString, toTimeString, toLocaleDateString, toLocaleTimeString, and 37 more.
+    src/lib/sync/quote-return.ts(127,40): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+    src/lib/sync/ticket-sync.ts(76,40): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+▶ ESLint… OK (12s)
+▶ Gardes de cohérence (check:consistency)… OK (3s)
+▶ Preuve de rotation des secrets… OK (0s)
+▶ Suite de tests (vitest) + baseline machine + baseline humaine… ÉCHEC (340s)
+    JSON report written to /home/user/GarageFlowsV2/artifacts/verification/test-results.json
+    
+      ✗ Clé privée de signature absente.
+        Renseignez GF_UPDATE_SIGNING_KEY (PEM PKCS#8) ou GF_UPDATE_SIGNING_KEY_FILE.
+        Pour créer une paire : node scripts/sign-release-manifest.mjs --gen-key --key-id <id>
+    
+    (node:20452) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+    (Use `node --trace-warnings ...` to show where the warning was created)
+    (node:20833) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+    (Use `node --trace-warnings ...` to show where the warning was created)
+    (node:20982) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+    (Use `node --trace-warnings ...` to show where the warning was created)
+    (node:21045) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+    (Use `node --trace-warnings ...` to show where the warning was created)
+    (node:21066) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+    (Use `node --trace-warnings ...` to show where the warning was created)
+▶ Cohérence documentaire (post-baseline)… OK (0s)
+▶ Audit complet dépendances (tous niveaux)… OK (1s)
+▶ Audit runtime desktop empaqueté (Electron)… OK (1s)
+▶ Manifeste de release (commit-bound)… OK (0s)
+▶ Vérification d'artefact (identité + cohérence + secrets)… OK (0s)
+▶ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)… OK (3s)
+▶ Build de production (next build)… ÉCHEC (3s)
+    > garageflow@1.1.0 build
+    > prisma generate && prisma generate --schema prisma/server/schema.prisma && node scripts/next-build.cjs
+    
+    
+    Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+════ RÉCAPITULATIF ════
+❌ TypeScript (tsc --noEmit)                                                  ÉCHEC — exit 1
+✅ ESLint                                                                     OK
+✅ Gardes de cohérence (check:consistency)                                    OK
+✅ Preuve de rotation des secrets                                             OK
+❌ Suite de tests (vitest) + baseline machine + baseline humaine              ÉCHEC — exit 1
+✅ Cohérence documentaire (post-baseline)                                     OK
+⏭️  Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)  NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni
+⏭️  Migrations PostgreSQL sur base neuve + smoke test                          NON EXÉCUTÉ — TEST_POSTGRES_URL non fourni
+⏭️  Rate-limit distribué multi-instance (Redis réel)                           NON EXÉCUTÉ — TEST_REDIS_URL non fourni
+✅ Audit complet dépendances (tous niveaux)                                   OK
+✅ Audit runtime desktop empaqueté (Electron)                                 OK
+✅ Manifeste de release (commit-bound)                                        OK
+✅ Vérification d'artefact (identité + cohérence + secrets)                   OK
+✅ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)        OK
+❌ Build de production (next build)                                           ÉCHEC — exit 1
+⏭️  Budget de performance (bundle client)                                      NON EXÉCUTÉ — .next/BUILD_ID ou .next/static absent — build de production non abouti
+
+⚠ 4 contrôle(s) NON EXÉCUTÉ(S) (environnement absent) — ils ne sont PAS réputés verts.
+
+❌ 4 contrôle(s) obligatoire(s) NON EXÉCUTÉ(S) : accès ou prérequis manquant, jamais une réussite.
+   - Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions) — TEST_POSTGRES_URL non fourni
+   - Migrations PostgreSQL sur base neuve + smoke test — TEST_POSTGRES_URL non fourni
+   - Rate-limit distribué multi-instance (Redis réel) — TEST_REDIS_URL non fourni
+   - Budget de performance (bundle client) — .next/BUILD_ID ou .next/static absent — build de production non abouti
+
+❌ GATE ÉCHOUÉ : 3 échec(s) et 4 contrôle(s) obligatoire(s) non exécuté(s).
+release_gate_exit_code=1
+dev_db_unchanged=true

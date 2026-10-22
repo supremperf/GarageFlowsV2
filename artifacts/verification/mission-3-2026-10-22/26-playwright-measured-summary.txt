@@ -1,0 +1,11 @@
+Résumé calculé depuis 21-playwright-list-and-run.txt.
+Total: 144 tests in 3 files
+playwright_list_exit_code=0
+  54 failed
+  90 skipped
+playwright_run_exit_code=1
+listed_position_144_count=1
+browser_missing_error_count=54
+error_context_files=54
+application_scenarios_executed=0
+interpretation=54 échecs avant lancement du navigateur ; 90 skips de scénarios authentifiés ; aucun succès E2E revendiqué.

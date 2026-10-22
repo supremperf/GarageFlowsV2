@@ -1,0 +1,56 @@
+date_utc=2026-10-22T18:51:37.488Z
+pending_total 869
+pending_inside_failed_suites 834
+pending_inside_nonfailed_suites 35
+files_with_pending 88
+
+NONFAILED FILES WITH PENDING
+15 /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts
+6 /home/user/GarageFlowsV2/src/lib/__tests__/licensed-session.postgres.int.test.ts
+5 /home/user/GarageFlowsV2/src/lib/__tests__/rate-limit-multi-instance.int.test.ts
+4 /home/user/GarageFlowsV2/src/lib/license/__tests__/forgery-resistance.test.ts
+2 /home/user/GarageFlowsV2/src/lib/license/__tests__/public-key-consistency.test.ts
+1 /home/user/GarageFlowsV2/src/__tests__/integrity-diagnostics.test.ts
+1 /home/user/GarageFlowsV2/src/lib/__tests__/document-numbering.postgres.int.test.ts
+1 /home/user/GarageFlowsV2/src/lib/__tests__/stock-concurrency.postgres.int.test.ts
+
+PENDING TITLE GROUPS IN NONFAILED FILES
+CONDITIONAL_OR_TEST_SKIP 7
+  /home/user/GarageFlowsV2/src/__tests__/integrity-diagnostics.test.ts :: matrice A–G G — build fraîchement généré (dist/win-unpacked réel) → aucun échec
+  /home/user/GarageFlowsV2/src/lib/license/__tests__/forgery-resistance.test.ts :: Acceptation / refus des licences 1. licence signée par la clé COURANTE → acceptée
+  /home/user/GarageFlowsV2/src/lib/license/__tests__/forgery-resistance.test.ts :: Acceptation / refus des licences 2. licence ALTÉRÉE → refusée
+  /home/user/GarageFlowsV2/src/lib/license/__tests__/forgery-resistance.test.ts :: Acceptation / refus des licences 5. licence expirée → refusée
+  /home/user/GarageFlowsV2/src/lib/license/__tests__/forgery-resistance.test.ts :: Acceptation / refus des licences 8. licence mécanicien sans parent → refusée
+  /home/user/GarageFlowsV2/src/lib/license/__tests__/public-key-consistency.test.ts :: bout en bout — jeton GF2 réel (optionnel : GF_TEST_LICENSE) un jeton GF2 signé par le keygen est ACCEPTÉ par verifyLicenseToken
+  /home/user/GarageFlowsV2/src/lib/license/__tests__/public-key-consistency.test.ts :: bout en bout — jeton GF2 réel (optionnel : GF_TEST_LICENSE) un jeton dont la signature est altérée est REJETÉ
+TEST_POSTGRES_URL_MISSING 23
+  /home/user/GarageFlowsV2/src/lib/__tests__/document-numbering.postgres.int.test.ts :: Numérotation de factures — concurrence réelle PostgreSQL 50 créations parallèles → 50 numéros distincts, contigus, aucun échec
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) la base neuve est utilisable sans AUCUNE modification manuelle
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) activation du premier appareil → deviceToken retourné, haché en base
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) réactivation même HWID → rotation du jeton, toujours UN SEUL appareil
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) CONCURRENCE seats=1 : 8 activations simultanées de HWID distincts → EXACTEMENT 1 admise
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) CONCURRENCE seats=2 : 10 activations simultanées → EXACTEMENT 2 admises
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) CONCURRENCE même HWID : 6 activations simultanées → un seul appareil, jetons tournés
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) refus au-delà du plafond, puis révocation d'un appareil → le siège se libère
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) reset admin → la machine révoquée peut se réactiver (si un siège est libre)
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) licence RÉVOQUÉE → tous ses jetons d'appareil refusés immédiatement
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) licence EXPIRÉE → jetons refusés
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) MAC effacé sur une licence active → jeton appareil refusé, sans rescellement
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) statut modifié sans MAC correspondant → refus intégrité avant autorisation
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) auto-désactivation (deactivateByToken) libère le siège
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) jeton inconnu / HWID d'une autre machine → refus typés
+  /home/user/GarageFlowsV2/src/lib/__tests__/license-devices.postgres.int.test.ts :: appareils par licence — PostgreSQL réel (migrations + concurrence) fonctionnement après « redémarrage » (nouveau client Prisma, mêmes données)
+  /home/user/GarageFlowsV2/src/lib/__tests__/licensed-session.postgres.int.test.ts :: session licenciée — PostgreSQL réel PWA : install id consomme un siège (appareil « pwa »)
+  /home/user/GarageFlowsV2/src/lib/__tests__/licensed-session.postgres.int.test.ts :: session licenciée — PostgreSQL réel session valide (licence + appareil PWA + garage) → ok, rattachement au 1er usage
+  /home/user/GarageFlowsV2/src/lib/__tests__/licensed-session.postgres.int.test.ts :: session licenciée — PostgreSQL réel usage inter-garages REFUSÉ (licence rattachée à un autre garage)
+  /home/user/GarageFlowsV2/src/lib/__tests__/licensed-session.postgres.int.test.ts :: session licenciée — PostgreSQL réel révocation d'appareil → session invalidée immédiatement
+  /home/user/GarageFlowsV2/src/lib/__tests__/licensed-session.postgres.int.test.ts :: session licenciée — PostgreSQL réel licence expirée → session refusée
+  /home/user/GarageFlowsV2/src/lib/__tests__/licensed-session.postgres.int.test.ts :: session licenciée — PostgreSQL réel CONCURRENCE PWA seats=1 : 6 install ids simultanés → EXACTEMENT 1 siège
+  /home/user/GarageFlowsV2/src/lib/__tests__/stock-concurrency.postgres.int.test.ts :: Décrément de stock — concurrence réelle PostgreSQL stock 5, 10 ajouts parallèles de 2 → 2 succès, 8 refus (409), stock final = 1, jamais négatif
+TEST_REDIS_URL_MISSING 5
+  /home/user/GarageFlowsV2/src/lib/__tests__/rate-limit-multi-instance.int.test.ts :: rate limiting distribué — partage réel entre instances (Redis requis) le compteur est partagé : instance B voit les hits de l'instance A, 429 + Retry-After
+  /home/user/GarageFlowsV2/src/lib/__tests__/rate-limit-multi-instance.int.test.ts :: rate limiting distribué — partage réel entre instances (Redis requis) l'incrément est atomique : 20 requêtes concurrentes sur 2 instances, max 10 ⇒ exactement 10 admises
+  /home/user/GarageFlowsV2/src/lib/__tests__/rate-limit-multi-instance.int.test.ts :: rate limiting distribué — partage réel entre instances (Redis requis) l'expiration de la fenêtre fonctionne sur le vrai Redis
+  /home/user/GarageFlowsV2/src/lib/__tests__/rate-limit-multi-instance.int.test.ts :: rate limiting distribué — partage réel entre instances (Redis requis) les clés Redis sont pseudonymisées : jamais de sujet en clair
+  /home/user/GarageFlowsV2/src/lib/__tests__/rate-limit-multi-instance.int.test.ts :: rate limiting distribué — partage réel entre instances (Redis requis) nettoyage
+skip_analysis_exit_code=0

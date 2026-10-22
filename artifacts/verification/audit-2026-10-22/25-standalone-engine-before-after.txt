@@ -1,0 +1,14 @@
+Fixture : client Prisma/index présents, aucun moteur natif, tous les autres éléments sains.
+Version HEAD (avant renforcement), exit=0
+🔎 Sortie autonome : .next/standalone
+✅ Sortie autonome complète (4 éléments vérifiés) — prête à être empaquetée.
+   Étape suivante : `npm run dist` (installeur Windows).
+
+Version courante (après renforcement), exit=1
+🔎 Sortie autonome : .next/standalone
+
+❌ Sortie autonome incomplète (1 problème(s)) :
+   • moteur Prisma natif absent : aucune bibliothèque query_engine/libquery_engine (.node) ni binaire query-engine dans node_modules/.prisma/client ; régénérez sans noEngine pour la cible empaquetée
+
+   Correctif : supprimer .next puis relancer `npm run build`.
+

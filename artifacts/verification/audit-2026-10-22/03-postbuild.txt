@@ -1,0 +1,24 @@
+
+> garageflow@1.1.0 postbuild
+> node scripts/post-build.js
+
+
+🔧 GarageFlows post-build
+
+  ℹ  .next/static déjà présent dans le standalone (build précédent réutilisé) — copie rafraîchie ci-dessous.
+  ✅ server.js found        (6.5 KB) → .next/standalone/server.js
+  ✅ static assets copied   (244 files) → .next/standalone/.next/static
+  ✅ public dir copied       (10 files) → .next/standalone/public
+  ✅ Prisma client copied   (12 files) → standalone node_modules/.prisma
+  ✅ aucun .env dans le standalone (rien à retirer)
+  ✅ Prisma schema + empty release template copied
+  ✅ public.pem copied      → standalone/keys
+  ✅ aucune clé privée dans standalone (0 purgée(s))
+  ✅ icon.ico found
+✅ release-manifest.json généré : 1.1.0+150654535.dirty
+  ✅ release-manifest.json généré + inclus → standalone (artefact rattachable)
+
+🎉 Post-build complete — ready for electron-builder
+
+(node:17649) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

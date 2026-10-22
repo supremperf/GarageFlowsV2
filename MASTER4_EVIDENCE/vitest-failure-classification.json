@@ -1,0 +1,536 @@
+{
+  "summary": {
+    "files": 365,
+    "passedFiles": 281,
+    "failedFiles": 84,
+    "passedTests": 3517,
+    "failedTests": 3,
+    "pendingTests": 869,
+    "failureCategories": {
+      "PRISMA_NATIVE": 79,
+      "SERVER_CLIENT": 5,
+      "OTHER": 0
+    },
+    "pendingInsideFailedSuites": 834,
+    "pendingInsideNonfailedSuites": 35,
+    "pendingReasons": {
+      "WINDOWS_ARTIFACT_MISSING": 1,
+      "SUITE_SETUP_FAILED": 834,
+      "TEST_POSTGRES_URL_MISSING": 23,
+      "TEST_REDIS_URL_MISSING": 5,
+      "KEYGEN_ACCEPTANCE_FIXTURE_OR_ENV_MISSING": 4,
+      "GF_TEST_LICENSE_MISSING": 2
+    }
+  },
+  "files": {
+    "PRISMA_NATIVE": [
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/business-workflow-e2e.test.ts",
+        "failedAssertions": 0,
+        "pending": 15,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/catalog.test.ts",
+        "failedAssertions": 0,
+        "pending": 9,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/client-email-garage-portail.test.ts",
+        "failedAssertions": 0,
+        "pending": 16,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/copilot-conversation.test.ts",
+        "failedAssertions": 0,
+        "pending": 9,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/copilot-cout-achat.test.ts",
+        "failedAssertions": 0,
+        "pending": 5,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/copilot-ecusson-verifie.test.ts",
+        "failedAssertions": 0,
+        "pending": 9,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/copilot-financial-authz-v15.test.ts",
+        "failedAssertions": 0,
+        "pending": 6,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/copilot-portee-et-porte-financiere.test.ts",
+        "failedAssertions": 0,
+        "pending": 18,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/copilot.test.ts",
+        "failedAssertions": 0,
+        "pending": 7,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/dashboard.test.ts",
+        "failedAssertions": 0,
+        "pending": 3,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/devis-signature-depuis-un-poste.test.ts",
+        "failedAssertions": 0,
+        "pending": 9,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/document-integrity-v15.test.ts",
+        "failedAssertions": 0,
+        "pending": 3,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/fec-injection-v15.test.ts",
+        "failedAssertions": 0,
+        "pending": 3,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/finance-margin.test.ts",
+        "failedAssertions": 0,
+        "pending": 1,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/intervention-rattache-client-vehicule.test.ts",
+        "failedAssertions": 0,
+        "pending": 8,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/invoice-authz.test.ts",
+        "failedAssertions": 0,
+        "pending": 7,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/invoice-document-integrity-p3.test.ts",
+        "failedAssertions": 0,
+        "pending": 15,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/invoice-stock-sync.test.ts",
+        "failedAssertions": 0,
+        "pending": 29,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/licence-admin-durcissement.test.ts",
+        "failedAssertions": 0,
+        "pending": 3,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/loaner-availability.test.ts",
+        "failedAssertions": 0,
+        "pending": 41,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/mechanic-avatar-archive.test.ts",
+        "failedAssertions": 0,
+        "pending": 19,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/mechanic-avatar-sync.test.ts",
+        "failedAssertions": 0,
+        "pending": 11,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/mechanic-scope-realtime.test.ts",
+        "failedAssertions": 0,
+        "pending": 14,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/messagerie-client-garage.test.ts",
+        "failedAssertions": 0,
+        "pending": 16,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/part-deletion-history.test.ts",
+        "failedAssertions": 0,
+        "pending": 3,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/part-inventory-adjustment.test.ts",
+        "failedAssertions": 0,
+        "pending": 13,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/planning-journee-complete.test.ts",
+        "failedAssertions": 0,
+        "pending": 5,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portail-2fa-cycle.test.ts",
+        "failedAssertions": 0,
+        "pending": 20,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portail-2fa-idor.test.ts",
+        "failedAssertions": 0,
+        "pending": 11,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portail-instantane-borne.test.ts",
+        "failedAssertions": 0,
+        "pending": 5,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portail-lien-revoque-a-la-republication.test.ts",
+        "failedAssertions": 0,
+        "pending": 8,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portail-mot-de-passe-provisoire.test.ts",
+        "failedAssertions": 0,
+        "pending": 6,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portal-access-lifecycle.test.ts",
+        "failedAssertions": 0,
+        "pending": 15,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portal-account-takeover-v15.test.ts",
+        "failedAssertions": 0,
+        "pending": 2,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portal-email-sync.test.ts",
+        "failedAssertions": 0,
+        "pending": 12,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portal-password-enforcement.test.ts",
+        "failedAssertions": 0,
+        "pending": 10,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portal-rbac-p3.test.ts",
+        "failedAssertions": 0,
+        "pending": 15,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/portal-token-isolation.test.ts",
+        "failedAssertions": 0,
+        "pending": 5,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/pulse-boucle-de-synchronisation.test.ts",
+        "failedAssertions": 0,
+        "pending": 6,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/purchase-order-receive-returned.test.ts",
+        "failedAssertions": 0,
+        "pending": 7,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/pwa-fenetre-et-photos.test.ts",
+        "failedAssertions": 0,
+        "pending": 13,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/quote-acceptance-proof.test.ts",
+        "failedAssertions": 0,
+        "pending": 10,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/quotes-generate.test.ts",
+        "failedAssertions": 0,
+        "pending": 7,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/rbac-enforcement-e2e.test.ts",
+        "failedAssertions": 0,
+        "pending": 5,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/reglages-appliques.test.ts",
+        "failedAssertions": 0,
+        "pending": 5,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/reglages-enfin-lus.test.ts",
+        "failedAssertions": 0,
+        "pending": 8,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/reglages-logo-et-cout-achat.test.ts",
+        "failedAssertions": 0,
+        "pending": 14,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/rendez-vous-client-garage.test.ts",
+        "failedAssertions": 0,
+        "pending": 16,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/robustness-v15.test.ts",
+        "failedAssertions": 0,
+        "pending": 4,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/scenario-maitre.test.ts",
+        "failedAssertions": 0,
+        "pending": 8,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/statistiques-au-centime.test.ts",
+        "failedAssertions": 0,
+        "pending": 9,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/status-mass-assignment-v15.test.ts",
+        "failedAssertions": 0,
+        "pending": 3,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/stock-money-p3.test.ts",
+        "failedAssertions": 0,
+        "pending": 11,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/stock-suppression-et-entrees.test.ts",
+        "failedAssertions": 0,
+        "pending": 8,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/stock-tracabilite-et-suppression.test.ts",
+        "failedAssertions": 0,
+        "pending": 10,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/supplier-linkage.test.ts",
+        "failedAssertions": 0,
+        "pending": 6,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/suppliers.test.ts",
+        "failedAssertions": 0,
+        "pending": 21,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/synchro-voie-de-retour.test.ts",
+        "failedAssertions": 0,
+        "pending": 24,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/tenant-idor-patch.test.ts",
+        "failedAssertions": 0,
+        "pending": 4,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/tenant-isolation-matrix.test.ts",
+        "failedAssertions": 0,
+        "pending": 42,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/__tests__/stock-double-deduction.int.test.ts",
+        "failedAssertions": 0,
+        "pending": 6,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/test-utils/__tests__/prepare-test-db.test.ts",
+        "failedAssertions": 3,
+        "pending": 0,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/backup/__tests__/restore-roundtrip.test.ts",
+        "failedAssertions": 0,
+        "pending": 6,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/einvoicing/__tests__/desktop-bridge.test.ts",
+        "failedAssertions": 0,
+        "pending": 20,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/job-tombstones.test.ts",
+        "failedAssertions": 0,
+        "pending": 6,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/mechanic-rattrapage.test.ts",
+        "failedAssertions": 0,
+        "pending": 9,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/messages-voie-de-retour.test.ts",
+        "failedAssertions": 0,
+        "pending": 9,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/passe-lecture-seule.test.ts",
+        "failedAssertions": 0,
+        "pending": 5,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/quote-return.test.ts",
+        "failedAssertions": 0,
+        "pending": 10,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts",
+        "failedAssertions": 0,
+        "pending": 10,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/app/api/clients/__tests__/portal-access-publication.test.ts",
+        "failedAssertions": 0,
+        "pending": 14,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/app/api/internal/__tests__/backup-coherent.test.ts",
+        "failedAssertions": 0,
+        "pending": 9,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/app/api/parts/__tests__/parts-pagination.test.ts",
+        "failedAssertions": 0,
+        "pending": 4,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/appointments-sync.test.ts",
+        "failedAssertions": 0,
+        "pending": 6,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/einvoicing-tunnel.test.ts",
+        "failedAssertions": 0,
+        "pending": 13,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/invoice-publication.test.ts",
+        "failedAssertions": 0,
+        "pending": 13,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/portal-account-publication.test.ts",
+        "failedAssertions": 0,
+        "pending": 9,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/quote-publication.test.ts",
+        "failedAssertions": 0,
+        "pending": 11,
+        "reason": "Native Prisma engine/client unavailable"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/tickets-sync.test.ts",
+        "failedAssertions": 0,
+        "pending": 9,
+        "reason": "Native Prisma engine/client unavailable"
+      }
+    ],
+    "SERVER_CLIENT": [
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/__tests__/audit-v21-fixes.test.ts",
+        "failedAssertions": 0,
+        "pending": 0,
+        "reason": "Generated PostgreSQL client absent"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/__tests__/license-devices-unit.test.ts",
+        "failedAssertions": 0,
+        "pending": 0,
+        "reason": "Generated PostgreSQL client absent"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/__tests__/mechanic-admin.test.ts",
+        "failedAssertions": 0,
+        "pending": 0,
+        "reason": "Generated PostgreSQL client absent"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/lib/__tests__/tenant-isolation.test.ts",
+        "failedAssertions": 0,
+        "pending": 7,
+        "reason": "Generated PostgreSQL client absent"
+      },
+      {
+        "file": "/home/user/GarageFlowsV2/src/integration/publication-mise-a-jour.test.ts",
+        "failedAssertions": 0,
+        "pending": 11,
+        "reason": "Generated PostgreSQL client absent; proven by targeted verbose run in log 22"
+      }
+    ],
+    "OTHER": []
+  }
+}

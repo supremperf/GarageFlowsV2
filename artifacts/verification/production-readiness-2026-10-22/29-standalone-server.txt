@@ -1,0 +1,24 @@
+   ▲ Next.js 15.5.27
+   - Local:        http://localhost:3100
+   - Network:      http://0.0.0.0:3100
+
+ ✓ Starting...
+ ✓ Ready in 219ms
+Failed to prepare server Error: An error occurred while loading instrumentation hook: Démarrage refusé — variables d'environnement invalides : DATABASE_URL (absente ou vide), NEXTAUTH_SECRET (absente, trop courte ou générique). Configurez-les (jamais dans le dépôt). Générez un secret : « openssl rand -base64 32 ».
+    at h (.next/server/chunks/4924.js:1:3427)
+    at Module.d (.next/server/instrumentation.js:1:154)
+Error: An error occurred while loading instrumentation hook: Démarrage refusé — variables d'environnement invalides : DATABASE_URL (absente ou vide), NEXTAUTH_SECRET (absente, trop courte ou générique). Configurez-les (jamais dans le dépôt). Générez un secret : « openssl rand -base64 32 ».
+    at h (.next/server/chunks/4924.js:1:3427)
+    at Module.d (.next/server/instrumentation.js:1:154)
+ ⨯ unhandledRejection:  Error: An error occurred while loading instrumentation hook: Démarrage refusé — variables d'environnement invalides : DATABASE_URL (absente ou vide), NEXTAUTH_SECRET (absente, trop courte ou générique). Configurez-les (jamais dans le dépôt). Générez un secret : « openssl rand -base64 32 ».
+    at h (.next/server/chunks/4924.js:1:3427)
+    at Module.d (.next/server/instrumentation.js:1:154)
+Failed to prepare server Error: An error occurred while loading instrumentation hook: Démarrage refusé — variables d'environnement invalides : DATABASE_URL (absente ou vide), NEXTAUTH_SECRET (absente, trop courte ou générique). Configurez-les (jamais dans le dépôt). Générez un secret : « openssl rand -base64 32 ».
+    at h (.next/server/chunks/4924.js:1:3427)
+    at Module.d (.next/server/instrumentation.js:1:154)
+Error: An error occurred while loading instrumentation hook: Démarrage refusé — variables d'environnement invalides : DATABASE_URL (absente ou vide), NEXTAUTH_SECRET (absente, trop courte ou générique). Configurez-les (jamais dans le dépôt). Générez un secret : « openssl rand -base64 32 ».
+    at h (.next/server/chunks/4924.js:1:3427)
+    at Module.d (.next/server/instrumentation.js:1:154)
+Error: An error occurred while loading instrumentation hook: Démarrage refusé — variables d'environnement invalides : DATABASE_URL (absente ou vide), NEXTAUTH_SECRET (absente, trop courte ou générique). Configurez-les (jamais dans le dépôt). Générez un secret : « openssl rand -base64 32 ».
+    at h (.next/server/chunks/4924.js:1:3427)
+    at Module.d (.next/server/instrumentation.js:1:154)

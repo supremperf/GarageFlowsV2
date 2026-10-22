@@ -1,0 +1,195 @@
+date_utc=2026-10-22T18:59:17Z
+
+Commande : npm run test:sbom
+
+> garageflow@1.1.0 test:sbom
+> node --test tests/production-sbom.test.cjs tests/notices-completeness.test.cjs
+
+TAP version 13
+# Subtest: license text is complete past 8000 characters and nested versions keep their own license
+ok 1 - license text is complete past 8000 characters and nested versions keep their own license
+  ---
+  duration_ms: 40.793964
+  type: 'test'
+  ...
+# Subtest: wrong SBOM package version is refused instead of attributing another installed version
+ok 2 - wrong SBOM package version is refused instead of attributing another installed version
+  ---
+  duration_ms: 30.610686
+  type: 'test'
+  ...
+# Subtest: SBOM cannot point license discovery outside node_modules
+ok 3 - SBOM cannot point license discovery outside node_modules
+  ---
+  duration_ms: 31.987469
+  type: 'test'
+  ...
+# Subtest: missing package license uses an identical upstream version with explicit provenance
+ok 4 - missing package license uses an identical upstream version with explicit provenance
+  ---
+  duration_ms: 39.080906
+  type: 'test'
+  ...
+# Subtest: a README Licensing section is retained when no license file is shipped
+ok 5 - a README Licensing section is retained when no license file is shipped
+  ---
+  duration_ms: 29.04304
+  type: 'test'
+  ...
+# Subtest: production SBOM keeps devOptional production packages and prunes development graph
+ok 6 - production SBOM keeps devOptional production packages and prunes development graph
+  ---
+  duration_ms: 5.952007
+  type: 'test'
+  ...
+# Subtest: production SBOM fails closed when npm metadata is incomplete
+ok 7 - production SBOM fails closed when npm metadata is incomplete
+  ---
+  duration_ms: 0.869879
+  type: 'test'
+  ...
+# Subtest: production SBOM rejects ambiguous name@version instead of choosing a license arbitrarily
+ok 8 - production SBOM rejects ambiguous name@version instead of choosing a license arbitrarily
+  ---
+  duration_ms: 0.529238
+  type: 'test'
+  ...
+# Subtest: production SBOM rejects different physical locations for one name@version
+ok 9 - production SBOM rejects different physical locations for one name@version
+  ---
+  duration_ms: 0.500089
+  type: 'test'
+  ...
+# Subtest: production SBOM requires a complete dependency graph
+ok 10 - production SBOM requires a complete dependency graph
+  ---
+  duration_ms: 0.322627
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 282.837596
+test_sbom_exit_code=0
+
+Commande : node scripts/gen-third-party-notices.mjs
+[notices] 133 composants → THIRD_PARTY_NOTICES.md
+notices_generate_exit_code=0
+
+Commande : npm run sbom:verify
+
+> garageflow@1.1.0 sbom:verify
+> node scripts/gen-production-sbom.mjs --check
+
+[sbom] Production closure: npx --yes npm@11.16.0 ls --omit=dev --all --json --long
+[sbom] Reading complete npm metadata, including devOptional packages
+[sbom] PASS: 133 components, installed identities, graph and notices match
+sbom_verify_exit_code=0
+
+=== FINAL RECONCILIATION ===
+{
+  "generatedAt": "2026-10-22T18:59:21.367Z",
+  "components": 133,
+  "old35StillMissing": [],
+  "old35NowPresent": 35,
+  "oldExtras": [
+    {
+      "name": "@emnapi/runtime",
+      "inCurrentProduction": true,
+      "resolution": "CONFIRMED_PRODUCTION_LICENSE_CHECKER_OMISSION"
+    },
+    {
+      "name": "@img/sharp-wasm32",
+      "inCurrentProduction": true,
+      "resolution": "CONFIRMED_PRODUCTION_LICENSE_CHECKER_OMISSION"
+    },
+    {
+      "name": "@next/swc-linux-x64-musl",
+      "inCurrentProduction": true,
+      "resolution": "CONFIRMED_PRODUCTION_LICENSE_CHECKER_OMISSION"
+    }
+  ],
+  "oldVersionMismatches": [
+    {
+      "name": "@next/env",
+      "before": "15.5.27",
+      "current": [
+        "15.5.28"
+      ]
+    },
+    {
+      "name": "@next/swc-linux-x64-gnu",
+      "before": "15.5.27",
+      "current": [
+        "15.5.28"
+      ]
+    },
+    {
+      "name": "next",
+      "before": "15.5.27",
+      "current": [
+        "15.5.28"
+      ]
+    }
+  ],
+  "licenseCheckerEntriesMissingFromCurrent": [],
+  "currentComponentsMissingFromLicenseChecker": [
+    "@emnapi/runtime@1.11.3",
+    "@img/sharp-wasm32@0.35.5"
+  ],
+  "missingLicenseTexts": [
+    "@next/env@15.5.28",
+    "@next/swc-linux-x64-gnu@15.5.28",
+    "@next/swc-linux-x64-musl@15.5.28",
+    "client-only@0.0.1",
+    "next-auth@4.24.15"
+  ],
+  "explicitLocalProvenanceFallbacks": 2,
+  "licenseDistribution": {
+    "MIT": 95,
+    "Apache-2.0": 15,
+    "ISC": 13,
+    "LGPL-3.0-or-later": 2,
+    "Apache-2.0 AND LGPL-3.0-or-later AND MIT": 1,
+    "CC-BY-4.0": 1,
+    "(MPL-2.0 OR Apache-2.0)": 1,
+    "MIT-0": 1,
+    "(MIT AND Zlib)": 1,
+    "Métadonnée absente": 1,
+    "BSD-3-Clause": 1,
+    "0BSD": 1
+  },
+  "copyleftOrAttributionReview": [
+    {
+      "name": "@img/sharp-libvips-linux-x64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "name": "@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.4",
+      "license": "LGPL-3.0-or-later"
+    },
+    {
+      "name": "@img/sharp-wasm32",
+      "version": "0.35.5",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later AND MIT"
+    },
+    {
+      "name": "caniuse-lite",
+      "version": "1.0.30001816",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "name": "dompurify",
+      "version": "3.4.17",
+      "license": "(MPL-2.0 OR Apache-2.0)"
+    }
+  ]
+}
+final_reconciliation_exit_code=1

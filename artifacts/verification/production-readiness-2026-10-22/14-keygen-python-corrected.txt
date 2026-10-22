@@ -1,0 +1,247 @@
+Commande : PATH=/tmp/gf-python-venv/bin:$PATH npm run test:keygen
+
+> garageflow@1.1.0 test:keygen
+> python3 scripts/test_keygen.py && python3 scripts/test_keygen_hwid_binding.py && python3 scripts/test_keygen_v2.py && python3 scripts/test_secret_scan.py
+
+test_count_must_be_int (__main__.KeygenCliValidationTests.test_count_must_be_int) ... ok
+test_count_must_be_positive (__main__.KeygenCliValidationTests.test_count_must_be_positive) ... ok
+test_count_respects_max (__main__.KeygenCliValidationTests.test_count_respects_max) ... ok
+test_parent_cannot_be_mechanic (__main__.KeygenCliValidationTests.test_parent_cannot_be_mechanic) ... ok
+test_parent_must_exist (__main__.KeygenCliValidationTests.test_parent_must_exist) ... ok
+test_too_many_names (__main__.KeygenCliValidationTests.test_too_many_names) ... ok
+test_valid_request (__main__.KeygenCliValidationTests.test_valid_request) ... ok
+test_existing_private_key_is_never_overwritten (__main__.KeygenInitNeverReplacesTests.test_existing_private_key_is_never_overwritten) ... ok
+test_existing_public_key_also_blocks (__main__.KeygenInitNeverReplacesTests.test_existing_public_key_also_blocks) ... ok
+test_first_init_creates_pair (__main__.KeygenInitNeverReplacesTests.test_first_init_creates_pair) ... ok
+test_audit_log_no_full_token (__main__.KeygenMechanicTests.test_audit_log_no_full_token) ... ok
+test_db_stores_parent_and_children (__main__.KeygenMechanicTests.test_db_stores_parent_and_children) ... ok
+test_garage_only (__main__.KeygenMechanicTests.test_garage_only) ... ok
+test_garage_plus_five_unique (__main__.KeygenMechanicTests.test_garage_plus_five_unique) ... ok
+test_garage_plus_one_mechanic (__main__.KeygenMechanicTests.test_garage_plus_one_mechanic) ... ok
+test_individual_revocation (__main__.KeygenMechanicTests.test_individual_revocation) ... ok
+test_is_mechanic_payload (__main__.KeygenMechanicTests.test_is_mechanic_payload) ... ok
+test_make_license_rejects_mechanic_type (__main__.KeygenMechanicTests.test_make_license_rejects_mechanic_type) ... ok
+test_mechanic_requires_parent (__main__.KeygenMechanicTests.test_mechanic_requires_parent) ... ok
+test_suspend_then_reactivate (__main__.KeygenMechanicTests.test_suspend_then_reactivate) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.023s
+
+OK
+
+Refus : une autorite de licence existe deja :
+  - /tmp/tmp4esdc_pr/keys/private.pem
+--init ne remplace JAMAIS une cle (la cle privee peut etre celle de production).
+Verifier la correspondance : python scripts/keygen_trust.py --verify-key-match
+
+Refus : une autorite de licence existe deja :
+  - /tmp/tmpecom397q/keys/public.pem
+--init ne remplace JAMAIS une cle (la cle privee peut etre celle de production).
+Verifier la correspondance : python scripts/keygen_trust.py --verify-key-match
+
+============================================================
+  ECC P-256 key pair generated
+============================================================
+  Private key : /tmp/tmp8hlhfrmu/keys/private.pem
+  Public key  : /tmp/tmp8hlhfrmu/keys/public.pem
+
+  CRITICAL — keep private.pem PRIVATE:
+  • keys/ is git-ignored: never commit private.pem to any repository
+  • Back it up in a secure offline location
+
+  Nouvelle autorite = les licences existantes ne seront plus valides.
+  Apres approbation, propager la cle PUBLIQUE a tous les ancrages :
+    npm run keys:sync
+    npm run keys:check
+  Ne copiez aucun tableau a la main.
+
+============================================================
+
+test_formats_refuses (__main__.HwidFormatTests.test_formats_refuses) ... ok
+test_normalisation (__main__.HwidFormatTests.test_normalisation) ... ok
+test_v0_valide (__main__.HwidFormatTests.test_v0_valide) ... ok
+test_v1_valide (__main__.HwidFormatTests.test_v1_valide) ... ok
+test_champ_vide_ou_none_non_lie (__main__.HwidSigningTests.test_champ_vide_ou_none_non_lie) ... ok
+test_hwid_mal_forme_refuse_avant_signature (__main__.HwidSigningTests.test_hwid_mal_forme_refuse_avant_signature) ... ok
+test_hwid_v0_signe_normalise (__main__.HwidSigningTests.test_hwid_v0_signe_normalise) ... ok
+test_hwid_v1_signe_normalise (__main__.HwidSigningTests.test_hwid_v1_signe_normalise) ... ok
+test_mecanicien_meme_controle (__main__.HwidSigningTests.test_mecanicien_meme_controle) ... ok
+test_le_gui_n_appelle_plus_get_hwid (__main__.KeygenUiGuardTests.test_le_gui_n_appelle_plus_get_hwid) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.010s
+
+OK
+test_appareils (__main__.TestAgregations.test_appareils) ... ok
+test_clients_agreges (__main__.TestAgregations.test_clients_agreges) ... ok
+test_clients_sans_cid_ignores (__main__.TestAgregations.test_clients_sans_cid_ignores) ... ok
+test_journal_absent_ne_leve_pas (__main__.TestAgregations.test_journal_absent_ne_leve_pas) ... ok
+test_journal_audit_ordre_inverse (__main__.TestAgregations.test_journal_audit_ordre_inverse) ... ok
+test_tableau_de_bord (__main__.TestAgregations.test_tableau_de_bord) ... ok
+test_aucun_script_npm_ne_recherche_une_cle (__main__.TestAucuneRecuperationDeCle.test_aucun_script_npm_ne_recherche_une_cle) ... ok
+test_aucune_reference_residuelle (__main__.TestAucuneRecuperationDeCle.test_aucune_reference_residuelle) ... ok
+test_fichiers_supprimes (__main__.TestAucuneRecuperationDeCle.test_fichiers_supprimes) ... ok
+test_fonctions_python_supprimees (__main__.TestAucuneRecuperationDeCle.test_fonctions_python_supprimees) ... ok
+test_la_generation_de_cle_legitime_est_conservee (__main__.TestAucuneRecuperationDeCle.test_la_generation_de_cle_legitime_est_conservee)
+La suppression ne doit pas avoir cassé la génération ni la vérification. ... ok
+test_le_message_de_divergence_ne_propose_pas_de_recherche (__main__.TestAucuneRecuperationDeCle.test_le_message_de_divergence_ne_propose_pas_de_recherche) ... ok
+test_ancienne_fiche_est_completee_sans_perte (__main__.TestBase.test_ancienne_fiche_est_completee_sans_perte) ... ok
+test_fiche_client_complete_est_conservee (__main__.TestBase.test_fiche_client_complete_est_conservee) ... ok
+test_filtres_type_et_statut (__main__.TestBase.test_filtres_type_et_statut) ... ok
+test_recherche_par_champs_client (__main__.TestBase.test_recherche_par_champs_client) ... ok
+test_recherche_par_identifiants (__main__.TestBase.test_recherche_par_identifiants) ... ok
+test_statut_effectif_expire (__main__.TestBase.test_statut_effectif_expire) ... ok
+test_tri_par_creation_et_expiration (__main__.TestBase.test_tri_par_creation_et_expiration) ... ok
+test_aucune_carte_dans_un_cadre_jamais_place (__main__.TestCartesPlacees.test_aucune_carte_dans_un_cadre_jamais_place) ... ok
+test_200_non_json_est_signale_comme_illisible (__main__.TestClassementReponsesHttp.test_200_non_json_est_signale_comme_illisible)
+Une page d'accueil HTML en 200 n'est pas une liste de licences. ... ok
+test_201_enregistre (__main__.TestClassementReponsesHttp.test_201_enregistre) ... ok
+test_400_remonte_le_motif_du_serveur (__main__.TestClassementReponsesHttp.test_400_remonte_le_motif_du_serveur)
+Le motif est la seule information utile : clé non déployée, jeton altéré… ... ok
+test_403_designe_la_cle_api (__main__.TestClassementReponsesHttp.test_403_designe_la_cle_api) ... ok
+test_404_avec_corps_json_designe_la_licence_pas_la_route (__main__.TestClassementReponsesHttp.test_404_avec_corps_json_designe_la_licence_pas_la_route) ... ok
+test_404_sans_corps_json_designe_bien_la_route (__main__.TestClassementReponsesHttp.test_404_sans_corps_json_designe_bien_la_route)
+Page d'erreur HTML : là, l'instance ne connaît vraiment pas la route. ... ok
+test_404_sur_reinitialisation_materielle_reste_explicite (__main__.TestClassementReponsesHttp.test_404_sur_reinitialisation_materielle_reste_explicite) ... ok
+test_405_designe_un_ecart_de_version (__main__.TestClassementReponsesHttp.test_405_designe_un_ecart_de_version) ... ok
+test_409_est_un_succes_idempotent (__main__.TestClassementReponsesHttp.test_409_est_un_succes_idempotent) ... ok
+test_409_sur_transition_refusee_remonte_la_machine_a_etats (__main__.TestClassementReponsesHttp.test_409_sur_transition_refusee_remonte_la_machine_a_etats) ... ok
+test_422_est_distingue (__main__.TestClassementReponsesHttp.test_422_est_distingue) ... ok
+test_429_indique_le_delai_annonce (__main__.TestClassementReponsesHttp.test_429_indique_le_delai_annonce) ... ok
+test_500_remonte_le_motif_quand_il_existe (__main__.TestClassementReponsesHttp.test_500_remonte_le_motif_quand_il_existe) ... ok
+test_503_est_une_indisponibilite (__main__.TestClassementReponsesHttp.test_503_est_une_indisponibilite) ... ok
+test_aucun_message_ne_contient_la_cle_api_ni_le_jeton (__main__.TestClassementReponsesHttp.test_aucun_message_ne_contient_la_cle_api_ni_le_jeton) ... ok
+test_connexion_impossible_reste_une_erreur_de_transport (__main__.TestClassementReponsesHttp.test_connexion_impossible_reste_une_erreur_de_transport) ... ok
+test_delai_depasse_est_nomme (__main__.TestClassementReponsesHttp.test_delai_depasse_est_nomme) ... ok
+test_cli_duration_days_est_canonicalise (__main__.TestCliDurees.test_cli_duration_days_est_canonicalise) ... ok
+test_cli_duration_en_annees (__main__.TestCliDurees.test_cli_duration_en_annees) ... ok
+test_cli_duration_en_mois (__main__.TestCliDurees.test_cli_duration_en_mois) ... ok
+test_cli_duration_illisible_est_refusee (__main__.TestCliDurees.test_cli_duration_illisible_est_refusee) ... ok
+test_cli_duration_negative_est_refusee (__main__.TestCliDurees.test_cli_duration_negative_est_refusee) ... ok
+test_le_cli_refuse_un_hwid_invalide (__main__.TestCliDurees.test_le_cli_refuse_un_hwid_invalide) ... ok
+test_le_cli_signe_un_jeton_identique_au_gui (__main__.TestCliDurees.test_le_cli_signe_un_jeton_identique_au_gui)
+Même durée saisie des deux côtés → même écart signé exp-iss. ... ok
+test_champs_payload_attendus (__main__.TestContratJeton.test_champs_payload_attendus) ... ok
+test_cles_mecanicien_toujours_rattachees (__main__.TestContratJeton.test_cles_mecanicien_toujours_rattachees) ... ok
+test_structure_du_jeton_inchangee (__main__.TestContratJeton.test_structure_du_jeton_inchangee) ... ok
+test_conversion_unites (__main__.TestDurees.test_conversion_unites) ... ok
+test_libelle_lisible (__main__.TestDurees.test_libelle_lisible) ... ok
+test_refus_valeurs_invalides (__main__.TestDurees.test_refus_valeurs_invalides) ... ok
+test_compatibilite_annees_historique (__main__.TestGenerationDurees.test_compatibilite_annees_historique)
+`years=1` produit toujours 365 jours : aucune licence existante ne bouge. ... ok
+test_date_expiration_coherente_avec_affichage (__main__.TestGenerationDurees.test_date_expiration_coherente_avec_affichage) ... ok
+test_duree_en_mois_et_annees (__main__.TestGenerationDurees.test_duree_en_mois_et_annees) ... ok
+test_entreprise_quatre_vingt_dix_jours (__main__.TestGenerationDurees.test_entreprise_quatre_vingt_dix_jours) ... ok
+test_premium_trente_jours (__main__.TestGenerationDurees.test_premium_trente_jours) ... ok
+test_premium_un_jour (__main__.TestGenerationDurees.test_premium_un_jour) ... ok
+test_aucun_hwid_fabrique_par_le_keygen (__main__.TestIdentifiants.test_aucun_hwid_fabrique_par_le_keygen) ... ok
+test_hwid_invalide_refuse_avant_signature (__main__.TestIdentifiants.test_hwid_invalide_refuse_avant_signature) ... ok
+test_hwid_v1_accepte_et_signe (__main__.TestIdentifiants.test_hwid_v1_accepte_et_signe) ... ok
+test_lid_et_uuid_sont_uniques_et_distincts (__main__.TestIdentifiants.test_lid_et_uuid_sont_uniques_et_distincts) ... ok
+test_uuid_est_dans_le_filigrane_signe (__main__.TestIdentifiants.test_uuid_est_dans_le_filigrane_signe) ... ok
+test_appareils_affiche_hwid_complet (__main__.TestNouvellesPages.test_appareils_affiche_hwid_complet) ... ok
+test_clients_agreges_et_filtre (__main__.TestNouvellesPages.test_clients_agreges_et_filtre) ... ok
+test_diagnostic_sans_secret (__main__.TestNouvellesPages.test_diagnostic_sans_secret) ... ok
+test_journaux_lit_le_fichier_d_audit (__main__.TestNouvellesPages.test_journaux_lit_le_fichier_d_audit) ... ok
+test_navigation_complete (__main__.TestNouvellesPages.test_navigation_complete) ... ok
+test_secrets_ne_contacte_pas_un_service_absent (__main__.TestNouvellesPages.test_secrets_ne_contacte_pas_un_service_absent) ... ok
+test_tableau_de_bord_compte_les_fiches_reelles (__main__.TestNouvellesPages.test_tableau_de_bord_compte_les_fiches_reelles) ... ok
+test_entreprise_n_est_plus_une_offre_mais_reste_decodable (__main__.TestOffres.test_entreprise_n_est_plus_une_offre_mais_reste_decodable)
+Le parc historique doit rester vérifiable sans réintroduire l'offre. ... ok
+test_interface_ne_propose_que_deux_types (__main__.TestOffres.test_interface_ne_propose_que_deux_types) ... ok
+test_les_autres_types_sont_refuses_en_mode_offre (__main__.TestOffres.test_les_autres_types_sont_refuses_en_mode_offre) ... ok
+test_les_deux_offres_sont_acceptees (__main__.TestOffres.test_les_deux_offres_sont_acceptees) ... ok
+test_seules_deux_offres_sont_proposees (__main__.TestOffres.test_seules_deux_offres_sont_proposees) ... ok
+test_un_type_hors_offre_est_refuse_a_la_generation (__main__.TestOffres.test_un_type_hors_offre_est_refuse_a_la_generation)
+Même si la valeur était forcée, la signature refuse tout type hors offre. ... ok
+test_aucune_licence_generee_sans_cle (__main__.TestParcoursInterface.test_aucune_licence_generee_sans_cle) ... ok
+test_caracteres_de_controle_refuses (__main__.TestParcoursInterface.test_caracteres_de_controle_refuses) ... ok
+test_champ_trop_long_refuse (__main__.TestParcoursInterface.test_champ_trop_long_refuse) ... ok
+test_double_clic_ne_genere_qu_une_licence (__main__.TestParcoursInterface.test_double_clic_ne_genere_qu_une_licence) ... ok
+test_duree_invalide_refuse (__main__.TestParcoursInterface.test_duree_invalide_refuse) ... ok
+test_email_invalide_refuse (__main__.TestParcoursInterface.test_email_invalide_refuse) ... ok
+test_generation_avec_hwid_valide_lie_la_licence (__main__.TestParcoursInterface.test_generation_avec_hwid_valide_lie_la_licence) ... ok
+test_generation_complete_depuis_le_formulaire (__main__.TestParcoursInterface.test_generation_complete_depuis_le_formulaire) ... ok
+test_gestion_liste_et_fiche (__main__.TestParcoursInterface.test_gestion_liste_et_fiche) ... ok
+test_hwid_invalide_refuse (__main__.TestParcoursInterface.test_hwid_invalide_refuse) ... ok
+test_recherche_dans_la_table (__main__.TestParcoursInterface.test_recherche_dans_la_table) ... ok
+test_recherche_par_cle_de_licence (__main__.TestRecherche.test_recherche_par_cle_de_licence)
+Un client qui dicte sa clé au téléphone doit être retrouvé. ... ok
+test_recherche_par_email (__main__.TestRecherche.test_recherche_par_email) ... ok
+test_recherche_par_lid_uuid_et_hwid (__main__.TestRecherche.test_recherche_par_lid_uuid_et_hwid) ... ok
+test_recherche_par_nom_prenom_et_entreprise (__main__.TestRecherche.test_recherche_par_nom_prenom_et_entreprise) ... ok
+test_connexion_sans_cle_refusee (__main__.TestServeur.test_connexion_sans_cle_refusee) ... ok
+test_fusion_etat_serveur (__main__.TestServeur.test_fusion_etat_serveur) ... ok
+test_routes_declarées_correspondent_aux_fichiers (__main__.TestServeur.test_routes_declarées_correspondent_aux_fichiers) ... ok
+test_serveur_injoignable_donne_un_message_pas_une_exception (__main__.TestServeur.test_serveur_injoignable_donne_un_message_pas_une_exception) ... ok
+test_url_par_defaut_centralisee (__main__.TestServeur.test_url_par_defaut_centralisee) ... ok
+test_validation_url (__main__.TestServeur.test_validation_url) ... ok
+test_cle_publique_des_postes_est_lisible (__main__.TestSignatureMisesAJour.test_cle_publique_des_postes_est_lisible) ... ok
+test_domaines_autorises_lus_depuis_le_client (__main__.TestSignatureMisesAJour.test_domaines_autorises_lus_depuis_le_client) ... ok
+test_fichier_modifie_apres_signature_est_detecte (__main__.TestSignatureMisesAJour.test_fichier_modifie_apres_signature_est_detecte) ... ok
+test_manifeste_falsifie_est_refuse (__main__.TestSignatureMisesAJour.test_manifeste_falsifie_est_refuse) ... ok
+test_manifeste_refuse_si_la_cle_n_est_pas_celle_des_postes (__main__.TestSignatureMisesAJour.test_manifeste_refuse_si_la_cle_n_est_pas_celle_des_postes)
+Sans ancre injectée : la clé de recette est inconnue du client → refus. ... ok
+test_sha256_et_infos_fichier (__main__.TestSignatureMisesAJour.test_sha256_et_infos_fichier) ... ok
+test_signature_disponible_uniquement_via_environnement (__main__.TestSignatureMisesAJour.test_signature_disponible_uniquement_via_environnement) ... ok
+test_signature_puis_verification_par_le_module_du_client (__main__.TestSignatureMisesAJour.test_signature_puis_verification_par_le_module_du_client) ... ok
+test_signature_sans_cle_refusee (__main__.TestSignatureMisesAJour.test_signature_sans_cle_refusee) ... ok
+test_url_non_https_refusee (__main__.TestSignatureMisesAJour.test_url_non_https_refusee) ... ok
+test_version_non_semver_refusee (__main__.TestSignatureMisesAJour.test_version_non_semver_refusee) ... ok
+test_generation_sans_hwid_ni_identifiant (__main__.TestTexteIndicatif.test_generation_sans_hwid_ni_identifiant) ... ok
+test_licence_existante_listee (__main__.TestTexteIndicatif.test_licence_existante_listee) ... ok
+test_mise_a_jour_sans_valeur_d_exemple (__main__.TestTexteIndicatif.test_mise_a_jour_sans_valeur_d_exemple) ... ok
+test_recherches_vides (__main__.TestTexteIndicatif.test_recherches_vides) ... ok
+
+----------------------------------------------------------------------
+Ran 110 tests in 0.620s
+
+OK
+test_aucun_secret (__main__.TestDetection.test_aucun_secret) ... ok
+test_bloc_de_cle_privee (__main__.TestDetection.test_bloc_de_cle_privee) ... ok
+test_chevauchement_resolu_par_score (__main__.TestDetection.test_chevauchement_resolu_par_score)
+Une clé OpenAI ne doit pas être re-masquée par la règle générique. ... ok
+test_familles_principales (__main__.TestDetection.test_familles_principales) ... ok
+test_jeton_nu_non_signale (__main__.TestDetection.test_jeton_nu_non_signale)
+20 caractères isolés ne constituent pas un secret sans contexte. ... ok
+test_masquage_ne_restitue_jamais_la_valeur (__main__.TestDetection.test_masquage_ne_restitue_jamais_la_valeur) ... ok
+test_mot_de_passe_smtp_en_contexte (__main__.TestDetection.test_mot_de_passe_smtp_en_contexte) ... ok
+test_plusieurs_secrets (__main__.TestDetection.test_plusieurs_secrets) ... ok
+test_positions_exactes (__main__.TestDetection.test_positions_exactes) ... ok
+test_redaction (__main__.TestDetection.test_redaction) ... ok
+test_url_base_de_donnees (__main__.TestDetection.test_url_base_de_donnees) ... ok
+test_chargement (__main__.TestPatterns.test_chargement) ... ok
+test_fichier_absent (__main__.TestPatterns.test_fichier_absent) ... ok
+test_regex_invalide_refusee (__main__.TestPatterns.test_regex_invalide_refusee) ... ok
+test_ocr_compactage_ne_dedouble_pas (__main__.TestScanImage.test_ocr_compactage_ne_dedouble_pas) ... ok
+test_ocr_compactage_sans_faux_positif_generique (__main__.TestScanImage.test_ocr_compactage_sans_faux_positif_generique) ... ok
+test_ocr_imprecis_espace_parasite_dans_le_jeton (__main__.TestScanImage.test_ocr_imprecis_espace_parasite_dans_le_jeton) ... ok
+test_ocr_indisponible (__main__.TestScanImage.test_ocr_indisponible) ... ok
+test_ocr_injecte_et_aucun_texte_brut (__main__.TestScanImage.test_ocr_injecte_et_aucun_texte_brut) ... ok
+test_ocr_reel_tesseract (__main__.TestScanImage.test_ocr_reel_tesseract) ... skipped 'Tesseract absent : OCR réel non exécutable'
+test_aucune_image_ecrite (__main__.TestServeur.test_aucune_image_ecrite)
+Le service ne crée aucun fichier : le dossier courant n'est pas modifié. ... ok
+test_bind_non_local_refuse (__main__.TestServeur.test_bind_non_local_refuse) ... ok
+test_format_refuse (__main__.TestServeur.test_format_refuse) ... ok
+test_health (__main__.TestServeur.test_health) ... ok
+test_origine_distante_refusee (__main__.TestServeur.test_origine_distante_refusee) ... ok
+test_origine_locale_acceptee (__main__.TestServeur.test_origine_locale_acceptee) ... ok
+test_persistance_refusee (__main__.TestServeur.test_persistance_refusee) ... ok
+test_route_inconnue (__main__.TestServeur.test_route_inconnue) ... ok
+test_scan_desactive_fail_closed (__main__.TestServeur.test_scan_desactive_fail_closed) ... ok
+test_scan_image (__main__.TestServeur.test_scan_image) ... ok
+test_taille_refusee (__main__.TestServeur.test_taille_refusee) ... ok
+test_bombe_de_pixels_refusee_sans_pillow (__main__.TestValidationImage.test_bombe_de_pixels_refusee_sans_pillow) ... ok
+test_entetes_falsifies_refuses (__main__.TestValidationImage.test_entetes_falsifies_refuses) ... ok
+test_format_invalide (__main__.TestValidationImage.test_format_invalide) ... ok
+test_formats_reels_acceptes (__main__.TestValidationImage.test_formats_reels_acceptes) ... ok
+test_image_corrompue (__main__.TestValidationImage.test_image_corrompue) ... ok
+test_image_trop_volumineuse (__main__.TestValidationImage.test_image_trop_volumineuse) ... ok
+test_image_vide (__main__.TestValidationImage.test_image_vide) ... ok
+test_png_valide (__main__.TestValidationImage.test_png_valide) ... ok
+
+----------------------------------------------------------------------
+Ran 39 tests in 0.517s
+
+OK (skipped=1)
+exit_code=0

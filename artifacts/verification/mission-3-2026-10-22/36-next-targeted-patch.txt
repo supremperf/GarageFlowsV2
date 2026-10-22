@@ -1,0 +1,18 @@
+Commande ciblée : npm install --save-exact next@15.5.28 (sans force ni audit fix)
+
+added 2 packages, changed 4 packages, and audited 762 packages in 10s
+
+211 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm_install_exit_code=0
+installed_next=15.5.28
+package_spec=15.5.28
+lock_next=15.5.28
+garageflow@1.1.0 /home/user/GarageFlowsV2
+`-- next@15.5.28
+
+npm_ls_next_exit_code=0
+env_unchanged=true
+dev_db_unchanged=true

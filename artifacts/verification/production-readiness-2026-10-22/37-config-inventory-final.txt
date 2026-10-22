@@ -1,0 +1,7 @@
+Commande : npm run config:audit
+
+> garageflow@1.1.0 config:audit
+> node scripts/config-audit.cjs
+
+Inventaire : 2907 fichiers ; 146 variables avec décision explicite. Rapport : docs/CONFIG_REPOSITORY_AUDIT.md
+exit_code=0

@@ -1,0 +1,161 @@
+Commande 1 : npx playwright test --list
+Listing tests:
+  [mobile-portrait-small] › inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut
+  [mobile-portrait-small] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-portrait-small] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-portrait-small] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-portrait-small] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-portrait-small] › inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles
+  [mobile-portrait-small] › inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre)
+  [mobile-portrait-small] › planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning
+  [mobile-portrait-small] › planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  [mobile-portrait-small] › planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  [mobile-portrait-small] › planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  [mobile-portrait-small] › planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  [mobile-portrait-small] › planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  [mobile-portrait-small] › planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  [mobile-portrait-small] › planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  [mobile-portrait-small] › planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  [mobile-portrait-small] › responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal
+  [mobile-portrait-small] › responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé
+  [mobile-portrait-small] › responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning)
+  [mobile-portrait-small] › responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md
+  [mobile-portrait-small] › responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile)
+  [mobile-portrait-small] › responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait
+  [mobile-portrait-small] › responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules
+  [mobile-portrait-small] › responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation
+  [mobile-portrait] › inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut
+  [mobile-portrait] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-portrait] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-portrait] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-portrait] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-portrait] › inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles
+  [mobile-portrait] › inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre)
+  [mobile-portrait] › planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning
+  [mobile-portrait] › planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  [mobile-portrait] › planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  [mobile-portrait] › planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  [mobile-portrait] › planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  [mobile-portrait] › planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  [mobile-portrait] › planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  [mobile-portrait] › planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  [mobile-portrait] › planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  [mobile-portrait] › responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal
+  [mobile-portrait] › responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé
+  [mobile-portrait] › responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning)
+  [mobile-portrait] › responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md
+  [mobile-portrait] › responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile)
+  [mobile-portrait] › responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait
+  [mobile-portrait] › responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules
+  [mobile-portrait] › responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation
+  [mobile-landscape] › inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut
+  [mobile-landscape] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-landscape] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-landscape] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-landscape] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche
+  [mobile-landscape] › inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles
+  [mobile-landscape] › inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre)
+  [mobile-landscape] › planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning
+  [mobile-landscape] › planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  [mobile-landscape] › planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  [mobile-landscape] › planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  [mobile-landscape] › planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  [mobile-landscape] › planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  [mobile-landscape] › planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  [mobile-landscape] › planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  [mobile-landscape] › planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  [mobile-landscape] › responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal
+  [mobile-landscape] › responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé
+  [mobile-landscape] › responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning)
+  [mobile-landscape] › responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md
+  [mobile-landscape] › responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile)
+  [mobile-landscape] › responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait
+  [mobile-landscape] › responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules
+  [mobile-landscape] › responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation
+  [tablet-portrait] › inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut
+  [tablet-portrait] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche
+  [tablet-portrait] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche
+  [tablet-portrait] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche
+  [tablet-portrait] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche
+  [tablet-portrait] › inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles
+  [tablet-portrait] › inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre)
+  [tablet-portrait] › planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning
+  [tablet-portrait] › planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  [tablet-portrait] › planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  [tablet-portrait] › planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  [tablet-portrait] › planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  [tablet-portrait] › planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  [tablet-portrait] › planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  [tablet-portrait] › planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  [tablet-portrait] › planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  [tablet-portrait] › responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal
+  [tablet-portrait] › responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé
+  [tablet-portrait] › responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning)
+  [tablet-portrait] › responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md
+  [tablet-portrait] › responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile)
+  [tablet-portrait] › responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait
+  [tablet-portrait] › responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules
+  [tablet-portrait] › responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation
+  [tablet-landscape] › inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut
+  [tablet-landscape] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche
+  [tablet-landscape] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche
+  [tablet-landscape] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche
+  [tablet-landscape] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche
+  [tablet-landscape] › inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles
+  [tablet-landscape] › inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre)
+  [tablet-landscape] › planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning
+  [tablet-landscape] › planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  [tablet-landscape] › planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  [tablet-landscape] › planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  [tablet-landscape] › planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  [tablet-landscape] › planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  [tablet-landscape] › planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  [tablet-landscape] › planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  [tablet-landscape] › planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  [tablet-landscape] › responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal
+  [tablet-landscape] › responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé
+  [tablet-landscape] › responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning)
+  [tablet-landscape] › responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md
+  [tablet-landscape] › responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile)
+  [tablet-landscape] › responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait
+  [tablet-landscape] › responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules
+  [tablet-landscape] › responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation
+  [desktop] › inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut
+  [desktop] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche
+  [desktop] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche
+  [desktop] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche
+  [desktop] › inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche
+  [desktop] › inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles
+  [desktop] › inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre)
+  [desktop] › planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning
+  [desktop] › planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  [desktop] › planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  [desktop] › planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  [desktop] › planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  [desktop] › planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  [desktop] › planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  [desktop] › planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  [desktop] › planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  [desktop] › responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal
+  [desktop] › responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé
+  [desktop] › responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning)
+  [desktop] › responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md
+  [desktop] › responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile)
+  [desktop] › responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait
+  [desktop] › responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules
+  [desktop] › responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation
+Total: 144 tests in 3 files
+list_exit_code=0
+
+Commande 2 : sonde de lancement Chromium sans navigation ni scénario
+browser_launch=failed
+browserType.launch: Executable doesn't exist at /home/user/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     npx playwright install                                 ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝
+browser_launch_exit_code=1

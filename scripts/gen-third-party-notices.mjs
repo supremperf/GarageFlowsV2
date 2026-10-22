@@ -31,8 +31,7 @@ function licenseOf(c) {
   return names.length ? Array.from(new Set(names)).join(' / ') : 'Voir le paquet'
 }
 
-/** Cherche le texte de licence d'un paquet dans node_modules. */
-function licenseText(component) {
+function packageDirectory(component) {
   const { name, version } = component
   const declared = component.properties?.find(p => p.name === 'cdx:npm:package:path')?.value
   const dir = path.resolve(ROOT, declared || path.join('node_modules', name))
@@ -42,10 +41,60 @@ function licenseText(component) {
   if (!fs.realpathSync(dir).startsWith(base)) throw new Error('Invalid SBOM package location')
   const installed = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'))
   if (installed.name !== name || installed.version !== version) throw new Error('SBOM package identity/version mismatch')
-  for (const f of fs.readdirSync(dir)) {
-    if (/^licen[cs]e/i.test(f) && fs.statSync(path.join(dir, f)).isFile()) {
-      try { return fs.readFileSync(path.join(dir, f), 'utf8').trim() } catch { return null }
+  return dir
+}
+
+function ownLicense(dir) {
+  if (!dir) return null
+  for (const file of fs.readdirSync(dir)) {
+    if (/^licen[cs]e/i.test(file) && fs.statSync(path.join(dir, file)).isFile()) {
+      try { return { file, text: fs.readFileSync(path.join(dir, file), 'utf8').trim() } } catch { return null }
     }
+  }
+  return null
+}
+
+function repositoryOf(component) {
+  let url = component.externalReferences?.find(reference => reference.type === 'vcs')?.url
+  if (!url) {
+    const dir = packageDirectory(component)
+    if (dir) {
+      const installed = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'))
+      url = typeof installed.repository === 'string' ? installed.repository : installed.repository?.url
+    }
+  }
+  if (/^[\w.-]+\/[\w.-]+$/.test(url || '')) url = `https://github.com/${url}`
+  return url?.replace(/^git\+/, '').replace(/\/$/, '').replace(/\.git$/, '')
+}
+
+/** Cherche un texte local, puis une notice amont de même dépôt/version/licence. */
+function licenseText(component, components) {
+  const dir = packageDirectory(component)
+  const own = ownLicense(dir)
+  if (own) return own.text
+
+  const readme = dir && ['README.md', 'README.markdown', 'README']
+    .find(file => fs.existsSync(path.join(dir, file)) && fs.statSync(path.join(dir, file)).isFile())
+  if (readme) {
+    const text = fs.readFileSync(path.join(dir, readme), 'utf8').trim()
+    if (/^##\s+Licensing\s*$/mi.test(text)) {
+      return `Source : ${component.name}@${component.version}/${readme}, section Licensing.\n\n${text}`
+    }
+  }
+
+  const repository = repositoryOf(component)
+  if (!repository || !dir) return null
+  const fallbacks = []
+  for (const candidate of components) {
+    if (candidate.name === component.name || candidate.version !== component.version) continue
+    if (repositoryOf(candidate) !== repository || licenseOf(candidate) !== licenseOf(component)) continue
+    const source = ownLicense(packageDirectory(candidate))
+    if (source) fallbacks.push({ candidate, source })
+  }
+  const distinctTexts = new Set(fallbacks.map(fallback => fallback.source.text))
+  if (fallbacks.length && distinctTexts.size === 1) {
+    const { candidate, source } = fallbacks[0]
+    return `Source : ${candidate.name}@${candidate.version}/${source.file}, même dépôt amont, version et licence ; le paquet ne contient pas son propre fichier de licence.\n\n${source.text}`
   }
   return null
 }
@@ -83,12 +132,12 @@ lines.push('')
 lines.push('## Textes de licence')
 lines.push('')
 for (const c of comps) {
-  const text = licenseText(c)
+  const text = licenseText(c, comps)
   lines.push(`### ${c.name}@${c.version || ''} — ${licenseOf(c)}`)
   lines.push('')
   if (text) {
     lines.push('```')
-    lines.push(text)
+    lines.push(text.replace(/\r\n?/g, '\n').split('\n').map(line => line.replace(/[ \t]+$/g, '')).join('\n'))
     lines.push('```')
   } else {
     lines.push('_(Texte de licence non trouvé sur disque — se référer au dépôt amont du paquet.)_')

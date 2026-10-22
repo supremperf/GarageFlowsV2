@@ -1,0 +1,103 @@
+date_utc=2026-10-22T18:50:00Z
+date_paris=2026-10-22T20:50:00+0200
+
+=== ARCHITECTURE ET VERSIONS ===
+name garageflow productName GarageFlows version 1.1.0 description Logiciel de gestion et planning d'atelier automobile — version desktop
+main electron/main.js packageManager npm@11.16.0 node >=22.12.0 <23
+build prisma generate && prisma generate --schema prisma/server/schema.prisma && node scripts/next-build.cjs
+dist npm run preflight:release && cross-env GF_PACKAGE_DESKTOP=1 npm run build && npm run verify:standalone && electron-builder --win --x64 --publish never && npm run check:artifact-secrets && npm run check:artifact-fuses && npm run verify:installer
+next 15.5.28 eslint-config-next 15.5.27
+electron 44.9.3 builder 26.15.3
+prisma_spec ^5.16.1 client_spec ^5.16.1
+win_target [{"target":"nsis","arch":["x64"]}] artifact GarageFlows-Setup.exe deleteAppDataOnUninstall false
+
+=== DATABASE ARCHITECTURE ===
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Garage ───────────────────────────────────────────────────────────────────
+model Garage {
+  id                String @id @default(cuid())
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../src/generated/server-client"
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  // URL poolée (runtime applicatif — ex. Neon/Supabase -pooler).
+  url       = env("DATABASE_URL")
+  // URL directe (non poolée) utilisée par prisma migrate / db push.
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Garage ───────────────────────────────────────────────────────────────────
+model Garage {
+  id                String @id @default(cuid())
+desktop_models=43
+server_models=47
+subscription_models=0
+payment_models=0
+
+=== EXISTING MASTER3 TEST RESULT ===
+{
+  "files": 365,
+  "passedFiles": 281,
+  "failedFiles": 84,
+  "passed": 3517,
+  "failed": 3,
+  "pending": 869,
+  "total": 4389
+}
+
+=== CURRENT PREREQUISITES ===
+prisma_native_files=0
+server_client_present=false
+chromium_expected=/home/user/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome
+chromium_present=false
+next_BUILD_ID_present=false
+standalone_server_present=false
+setup_exe_count=0
+gitleaks=absent
+windows_wine=absent
+
+=== EXTERNAL ACCESS PRESENCE (NO VALUES) ===
+TEST_POSTGRES_URL unset_or_empty
+TEST_REDIS_URL unset_or_empty
+UPSTASH_REDIS_REST_URL unset_or_empty
+UPSTASH_REDIS_REST_TOKEN unset_or_empty
+SMTP_HOST unset_or_empty
+SMTP_USER unset_or_empty
+SMTP_PASS unset_or_empty
+STAGING_URL unset_or_empty
+BASE_URL unset_or_empty
+E2E_EMAIL unset_or_empty
+E2E_PASSWORD unset_or_empty
+E2E_LICENSE unset_or_empty
+
+=== DESTRUCTIVE GATE RISK ===
+20:const SCRATCH_DB = 'gf_gate_check'
+30:  u.pathname = `/${SCRATCH_DB}`
+59:  '-c', `DROP DATABASE IF EXISTS ${SCRATCH_DB}`,
+60:  '-c', `CREATE DATABASE ${SCRATCH_DB}`,
+68:console.log(`✅ migrations serveur rejouées sur une base vierge (${SCRATCH_DB}) + smoke test OK`)
+
+=== CONFIG HASHES ===
+e19512f4512cb62ffc082acafbe08421efccbb2d34f5f60c9c9b6bb4116540bf  package.json
+ff565913196ffb354593c4ab3681588058f868b0ca76c65e31e62abe8cb02790  package-lock.json
+dfa1e567d616e8b061e9172e110a3f94bc38e77efc01ee55660886e18f16fd27  next.config.mjs
+6d5a0e35ad6d5a207ec0d528c89757f70717fa75f6a65f60ebc46ea3fce27214  tsconfig.json
+bdef8859b7c7ae28d462e96a57feba93c93b7c3d5ff0c3e110e28a719f6b9653  vitest.config.mts
+3dc8918e9d8f4f0e46c0660510a3599187a2a95690925896029af7cfdb1e852a  playwright.config.ts
+dde9715787f2e299e6781cac0b2d6641be449d097559ad90aa8f204c6ea7f620  prisma/schema.prisma
+011a45fa3980477fefb43c52adb460fae57a9d298603e52ab0ef92343cee60ee  prisma/server/schema.prisma
+79be4173970f32e85c203befbe4b115af4346f02756c23d1ac32bfb19d3901ba  scripts/gen-third-party-notices.mjs
+f3297ea5fcf0127243b4483870c93e0a6c81a2889d9871c0480740c0cfc9c658  scripts/final-release-gate.mjs

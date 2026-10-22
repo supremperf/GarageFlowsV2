@@ -1,0 +1,39 @@
+Exécution Vitest sans client généré, pour établir le diagnostic initial de cette session.
+Commande : npm test -- --reporter=json --outputFile=artifacts/verification/mission-3-2026-10-22/vitest-baseline-results.json
+
+> garageflow@1.1.0 test
+> vitest run --reporter=json --outputFile=artifacts/verification/mission-3-2026-10-22/vitest-baseline-results.json
+
+
+  ✗ Domaine « cdn.exemple.test » absent de la liste blanche des postes.
+    Autorisés : api.garageflows.fr, garageflows.fr, app.garageflows.fr
+    (voir ALLOWED_DOWNLOAD_HOSTS dans electron/update-verify.js)
+
+
+  ✗ --download-url doit être en HTTPS.
+
+
+  ✗ Version non SemVer : derniere
+
+
+  ✗ Clé privée de signature absente.
+    Renseignez GF_UPDATE_SIGNING_KEY (PEM PKCS#8) ou GF_UPDATE_SIGNING_KEY_FILE.
+    Pour créer une paire : node scripts/sign-release-manifest.mjs --gen-key --key-id <id>
+
+(node:3201) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3969) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4215) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4487) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'cryptography'
+(node:5684) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6166) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+JSON report written to /home/user/GarageFlowsV2/artifacts/verification/mission-3-2026-10-22/vitest-baseline-results.json
+vitest_exit_code=1

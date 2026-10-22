@@ -1,0 +1,5 @@
+date_utc=2026-10-22T18:51:32Z
+Commande : PATH=/tmp/gf-python-venv/bin:$PATH npx vitest run src/test-utils/__tests__/prepare-test-db.test.ts --reporter=json --outputFile=MASTER4_EVIDENCE/vitest-three-failures.json
+JSON report written to /home/user/GarageFlowsV2/MASTER4_EVIDENCE/vitest-three-failures.json
+vitest_exit_code=1
+dev_db_unchanged=true

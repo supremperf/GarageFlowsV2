@@ -1,0 +1,10 @@
+Annotations publiques du job CI Native base, exécuté après npm ci avec moteurs CI.
+job_api_exit_code=0
+check_run_url_present=true
+annotations_api_exit_code=0
+annotations_count 5
+{"path":".github","line":2,"level":"warning","title":"","message":"Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11d5960a326750d5838078e36cf38b85af677262, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"}
+{"path":".github","line":17,"level":"failure","title":"","message":"Process completed with exit code 2."}
+{"path":".github","line":16,"level":"failure","title":"","message":"src/app/api/purchase-orders/__tests__/receive-guards.test.ts(27,38): error TS2502: 'tx' is referenced directly or indirectly in its own type annotation."}
+{"path":"src/app/api/purchase-orders/__tests__/receive-guards.test.ts","line":27,"level":"failure","title":"","message":"'tx' is referenced directly or indirectly in its own type annotation."}
+{"path":".github","line":1,"level":"notice","title":"","message":"\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\""}

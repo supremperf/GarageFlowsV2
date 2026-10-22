@@ -1,0 +1,17 @@
+Commande : /tmp/gf-python-venv/bin/python -m pip install --require-hashes -r tests/requirements-keygen.txt
+Collecting cffi==2.1.1
+  Downloading cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (217 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 217.8/217.8 kB 13.0 MB/s eta 0:00:00
+Collecting cryptography==50.0.2
+  Downloading cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl (4.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 78.2 MB/s eta 0:00:00
+Collecting pycparser==3.11
+  Downloading pycparser-3.11-py3-none-any.whl (51 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 51.2/51.2 kB 23.0 MB/s eta 0:00:00
+Installing collected packages: pycparser, cffi, cryptography
+Successfully installed cffi-2.1.1 cryptography-50.0.2 pycparser-3.11
+pip_install_exit_code=0
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ModuleNotFoundError: No module named 'PIL'
+version_probe_exit_code=1

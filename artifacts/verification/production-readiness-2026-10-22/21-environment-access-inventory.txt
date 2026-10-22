@@ -1,0 +1,21 @@
+Inventaire de présence uniquement ; aucune valeur lue ni affichée.
+TEST_POSTGRES_URL unset
+TEST_REDIS_URL unset
+E2E_STAGING_URL unset
+E2E_NON_PRODUCTION unset
+E2E_EMAIL unset
+E2E_PASSWORD unset
+E2E_LICENSE unset
+BASE_URL unset
+GF_E2E_URL unset
+GF_E2E_KEY unset
+GF_E2E_ALLOW_REMOTE unset
+UPSTASH_REDIS_REST_URL unset
+UPSTASH_REDIS_REST_TOKEN unset
+SMTP_URL unset
+VERCEL unset
+VERCEL_TOKEN unset
+staging_access_decision BLOQUE_ACCES_MANQUANT
+
+Outils Windows : Linux/x86_64 ; Wine absent déjà mesuré dans 10-playwright-browser-channels.txt.
+Installateur courant : absent

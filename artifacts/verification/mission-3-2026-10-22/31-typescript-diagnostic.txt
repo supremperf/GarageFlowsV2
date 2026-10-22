@@ -1,0 +1,70 @@
+Commande : npx tsc --noEmit (diagnostic des types sans clients générés)
+tsc_exit_code=1
+error_lines 267
+TS7006 186
+  scripts/migrate-money-json.ts(67,14): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+  src/app/api/admin/licenses/[id]/route.ts(137,54): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+  src/app/api/admin/licenses/generate/route.ts(229,15): error TS7006: Parameter 'e' implicitly has an 'any' type.
+  src/app/api/dashboard/route.ts(96,29): error TS7006: Parameter 'i' implicitly has an 'any' type.
+  src/app/api/dashboard/route.ts(97,29): error TS7006: Parameter 'jp' implicitly has an 'any' type.
+  src/app/api/dashboard/route.ts(113,34): error TS7006: Parameter 'p' implicitly has an 'any' type.
+  src/app/api/einvoicing/invoices/[id]/submit/route.ts(194,39): error TS7006: Parameter 't' implicitly has an 'any' type.
+  src/app/api/estimate/route.ts(138,35): error TS7006: Parameter 'm' implicitly has an 'any' type.
+other 20
+    Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+    Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+    Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+    Type 'LineWithEuros<ScaledLine>' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type 'LineWithEuros<ScaledLine>'.
+TS2694 17
+  src/lib/backup/snapshot.ts(33,71): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'ClientCreateManyInput'.
+  src/lib/backup/snapshot.ts(39,73): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'MechanicCreateManyInput'.
+  src/lib/backup/snapshot.ts(45,69): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'PartCreateManyInput'.
+  src/lib/backup/snapshot.ts(51,79): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'LaborOperationCreateManyInput'.
+  src/lib/backup/snapshot.ts(57,72): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'VehicleCreateManyInput'.
+  src/lib/backup/snapshot.ts(63,68): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'JobCreateManyInput'.
+  src/lib/backup/snapshot.ts(69,72): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'JobPartCreateManyInput'.
+  src/lib/backup/snapshot.ts(75,70): error TS2694: Namespace '"/home/user/GarageFlowsV2/node_modules/.prisma/client/default".Prisma' has no exported member 'QuoteCreateManyInput'.
+TS2345 16
+  src/app/api/internal/migrate/route.ts(231,38): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+  src/app/api/internal/migrate/route.ts(234,67): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+  src/app/api/internal/migrate/route.ts(235,67): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+  src/app/api/internal/migrate/route.ts(248,70): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+  src/app/api/internal/migrate/route.ts(250,77): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+  src/app/api/invoices/[id]/route.ts(27,53): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  src/app/api/invoices/[id]/route.ts(208,76): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+  src/app/api/invoices/route.ts(47,56): error TS2345: Argument of type 'LineWithEuros<ScaledLine>[]' is not assignable to parameter of type 'Record<string, unknown>[]'.
+TS2339 12
+  src/app/api/einvoicing/invoices/[id]/submit/route.ts(146,22): error TS2339: Property 'description' does not exist on type 'LineWithEuros<ScaledLine>'.
+  src/app/api/internal/migrate/route.ts(69,25): error TS2339: Property '$queryRawUnsafe' does not exist on type 'never'.
+  src/app/api/internal/migrate/route.ts(92,24): error TS2339: Property 'workOrder' does not exist on type 'never'.
+  src/app/api/internal/migrate/route.ts(114,14): error TS2339: Property 'workOrder' does not exist on type 'never'.
+  src/app/api/internal/migrate/route.ts(117,24): error TS2339: Property 'purchaseOrder' does not exist on type 'never'.
+  src/app/api/internal/migrate/route.ts(128,14): error TS2339: Property 'purchaseOrder' does not exist on type 'never'.
+  src/app/api/parts/search/route.ts(71,31): error TS2339: Property 'unitPriceTenThousandths' does not exist on type 'SearchablePart'.
+  src/app/api/parts/search/route.ts(72,30): error TS2339: Property 'unitCostTenThousandths' does not exist on type 'SearchablePart'.
+TS2347 8
+  src/app/api/health/route.ts(69,24): error TS2347: Untyped function calls may not accept type arguments.
+  src/app/api/internal/migrate/route.ts(75,23): error TS2347: Untyped function calls may not accept type arguments.
+  src/app/api/internal/migrate/route.ts(77,20): error TS2347: Untyped function calls may not accept type arguments.
+  src/app/api/internal/migrate/route.ts(140,22): error TS2347: Untyped function calls may not accept type arguments.
+  src/app/api/internal/migrate/route.ts(171,28): error TS2347: Untyped function calls may not accept type arguments.
+  src/app/api/internal/migrate/route.ts(202,29): error TS2347: Untyped function calls may not accept type arguments.
+  src/app/api/internal/migrate/route.ts(237,36): error TS2347: Untyped function calls may not accept type arguments.
+  src/lib/sync/invoice-sync.ts(111,21): error TS2347: Untyped function calls may not accept type arguments.
+TS2307 3
+  scripts/migrate-money-json.ts(35,30): error TS2307: Cannot find module '../src/generated/server-client' or its corresponding type declarations.
+  src/lib/__tests__/license-devices.postgres.int.test.ts(261,43): error TS2307: Cannot find module '@/generated/server-client' or its corresponding type declarations.
+  src/lib/db.ts(18,52): error TS2307: Cannot find module '@/generated/server-client' or its corresponding type declarations.
+TS2305 3
+  src/lib/backup/service.ts(13,15): error TS2305: Module '"@prisma/client"' has no exported member 'BackupRecord'.
+  src/lib/portal/auth-helpers.ts(10,15): error TS2305: Module '"@prisma/client"' has no exported member 'PortalUser'.
+  src/lib/portal/auth-helpers.ts(10,27): error TS2305: Module '"@prisma/client"' has no exported member 'PortalDevice'.
+TS2344 1
+  src/app/api/internal/migrate/route.ts(53,22): error TS2344: Type 'unknown' does not satisfy the constraint '(...args: any) => any'.
+TS2635 1
+  src/app/api/stats/route.ts(54,71): error TS2635: Type 'any' has no signatures for which the type argument list is applicable.
+tsc_parse_exit_code=0

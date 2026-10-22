@@ -1,0 +1,19 @@
+Vérification du canal NPM gitleaks, sans installer de binaire non vérifié.
+{
+  "name": "gitleaks",
+  "version": "1.0.0",
+  "description": "> custom rules",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ycjcl868/gitleaks.git"
+  },
+  "dist.tarball": "https://registry.npmjs.org/gitleaks/-/gitleaks-1.0.0.tgz",
+  "dist.integrity": "sha512-mTtKkWCAeHnTiBmRzjKnot8D8zX/JVDuRffuvSCr+z93vuBXygeifGZ7lXOB8Hjxto+DikSoF0XXfxntd1BZSQ=="
+}
+npm_view_exit_code=0
+npm_pack_exit_code=0
+pack gitleaks-1.0.0.tgz sha512-mTtKkWCAeHnTiBmRzjKnot8D8zX/JVDuRffuvSCr+z93vuBXygeifGZ7lXOB8Hjxto+DikSoF0XXfxntd1BZSQ==
+file .github/workflows/gitleaks.yml 400
+file .gitleaks.toml 4117
+file README.md 1084
+file package.json 453

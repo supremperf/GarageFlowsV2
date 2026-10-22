@@ -3,7 +3,7 @@
  *
  * POURQUOI CE TEST EXISTE
  * La PWA de production tournait sur Node 24.x alors que la CI, la baseline de
- * vérification et la documentation verrouillent Node 22 — et que Next.js 14.2,
+ * vérification et la documentation verrouillent Node 22 — et que Next.js 15.5,
  * la version embarquée, est antérieure à ce majeur. Autrement dit : le seul
  * environnement qui sert de vrais clients était le seul que rien ne testait.
  * C'est la définition même du « ça marche chez moi », déplacée d'un cran.

@@ -110,8 +110,17 @@ try {
     const { content, changed } = ensureEnvSecret(before, 'NEXTAUTH_SECRET')
     if (changed) {
       fs.writeFileSync(envDst, content, 'utf8')
-      try { fs.chmodSync(envDst, 0o600) } catch (_) { /* permissions best-effort */ }
       console.log('🔐  NEXTAUTH_SECRET généré (aléatoire, unique à cette installation).')
+    }
+    // Le secret fort peut déjà exister alors que le fichier est encore lisible
+    // par les autres utilisateurs (copie, restauration, ancienne installation).
+    // Réappliquer la restriction à CHAQUE bootstrap, pas seulement lors d'une
+    // régénération. Sur Windows, chmod ne remplace pas les ACL NTFS : un échec
+    // reste visible au lieu d'être masqué et l'opérateur doit vérifier ces ACL.
+    try {
+      fs.chmodSync(envDst, 0o600)
+    } catch (err) {
+      console.warn('⚠️  Permissions restrictives du .env non appliquées ; vérifiez les ACL du fichier.')
     }
   } catch (err) {
     console.error('⚠️  Génération du secret impossible :', err.message)

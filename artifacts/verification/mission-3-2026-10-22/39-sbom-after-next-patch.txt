@@ -1,0 +1,21 @@
+license_checker_exit_code=0
+npm_sbom_exit_code=0
+license_entries_root_included 131
+third_party_unique_names 130
+notice_inventory_names 98
+cyclonedx_components_current 97
+notice_missing_exact_count 35
+notice_extra_exact_count 3
+notice_version_mismatch_count 3
+version_mismatch @next/env notice 15.5.27 installed 15.5.28
+version_mismatch @next/swc-linux-x64-gnu notice 15.5.27 installed 15.5.28
+version_mismatch next notice 15.5.27 installed 15.5.28
+next_installed 15.5.28
+windows_package_available=false
+reconciliation_verdict=BLOQUE
+reconciliation_exit_code=0
+
+=== DISPONIBILITÉ DES TEXTES POUR LES 35 ABSENTS (ARBRE FINAL) ===
+missing_notice_with_license_file 35
+missing_notice_without_license_file none
+license_file_probe_exit_code=0

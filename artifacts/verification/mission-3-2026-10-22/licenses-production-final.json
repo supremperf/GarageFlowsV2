@@ -1,0 +1,994 @@
+{
+  "@anthropic-ai/sdk@0.91.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/anthropics/anthropic-sdk-typescript",
+    "publisher": "Anthropic",
+    "email": "support@anthropic.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/@anthropic-ai/sdk",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@anthropic-ai/sdk/LICENSE"
+  },
+  "@babel/runtime@7.29.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/babel/babel",
+    "publisher": "The Babel Team",
+    "url": "https://babel.dev/team",
+    "path": "/home/user/GarageFlowsV2/node_modules/@babel/runtime",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@babel/runtime/LICENSE"
+  },
+  "@dnd-kit/accessibility@3.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/clauderic/dnd-kit",
+    "publisher": "Claudéric Demers",
+    "path": "/home/user/GarageFlowsV2/node_modules/@dnd-kit/accessibility",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@dnd-kit/accessibility/LICENSE"
+  },
+  "@dnd-kit/core@6.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/clauderic/dnd-kit",
+    "publisher": "Claudéric Demers",
+    "path": "/home/user/GarageFlowsV2/node_modules/@dnd-kit/core",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@dnd-kit/core/LICENSE"
+  },
+  "@dnd-kit/sortable@8.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/clauderic/dnd-kit",
+    "publisher": "Claudéric Demers",
+    "path": "/home/user/GarageFlowsV2/node_modules/@dnd-kit/sortable",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@dnd-kit/sortable/LICENSE"
+  },
+  "@dnd-kit/utilities@3.2.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/clauderic/dnd-kit",
+    "publisher": "Claudéric Demers",
+    "path": "/home/user/GarageFlowsV2/node_modules/@dnd-kit/utilities",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@dnd-kit/utilities/LICENSE"
+  },
+  "@img/colour@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lovell/colour",
+    "path": "/home/user/GarageFlowsV2/node_modules/@img/colour",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@img/colour/LICENSE.md"
+  },
+  "@img/sharp-libvips-linux-x64@1.3.4": {
+    "licenses": "LGPL-3.0-or-later",
+    "repository": "https://github.com/lovell/sharp-libvips",
+    "publisher": "Lovell Fuller",
+    "email": "npm@lovell.info",
+    "path": "/home/user/GarageFlowsV2/node_modules/@img/sharp-libvips-linux-x64",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@img/sharp-libvips-linux-x64/README.md"
+  },
+  "@img/sharp-libvips-linuxmusl-x64@1.3.4": {
+    "licenses": "LGPL-3.0-or-later",
+    "repository": "https://github.com/lovell/sharp-libvips",
+    "publisher": "Lovell Fuller",
+    "email": "npm@lovell.info",
+    "path": "/home/user/GarageFlowsV2/node_modules/@img/sharp-libvips-linuxmusl-x64",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@img/sharp-libvips-linuxmusl-x64/README.md"
+  },
+  "@img/sharp-linux-x64@0.35.5": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/lovell/sharp",
+    "publisher": "Lovell Fuller",
+    "email": "npm@lovell.info",
+    "path": "/home/user/GarageFlowsV2/node_modules/@img/sharp-linux-x64",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@img/sharp-linux-x64/LICENSE"
+  },
+  "@img/sharp-linuxmusl-x64@0.35.5": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/lovell/sharp",
+    "publisher": "Lovell Fuller",
+    "email": "npm@lovell.info",
+    "path": "/home/user/GarageFlowsV2/node_modules/@img/sharp-linuxmusl-x64",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@img/sharp-linuxmusl-x64/LICENSE"
+  },
+  "@next/env@15.5.28": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vercel/next.js",
+    "publisher": "Next.js Team",
+    "email": "support@vercel.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/@next/env",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@next/env/README.md"
+  },
+  "@next/swc-linux-x64-gnu@15.5.28": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vercel/next.js",
+    "path": "/home/user/GarageFlowsV2/node_modules/@next/swc-linux-x64-gnu",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@next/swc-linux-x64-gnu/README.md"
+  },
+  "@panva/hkdf@1.2.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/panva/hkdf",
+    "publisher": "Filip Skokan",
+    "email": "panva.ip@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/@panva/hkdf",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@panva/hkdf/LICENSE.md"
+  },
+  "@playwright/test@1.62.1": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/microsoft/playwright",
+    "publisher": "Microsoft Corporation",
+    "path": "/home/user/GarageFlowsV2/node_modules/@playwright/test",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@playwright/test/LICENSE",
+    "noticeFile": "/home/user/GarageFlowsV2/node_modules/@playwright/test/NOTICE"
+  },
+  "@prisma/client@5.22.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/home/user/GarageFlowsV2/node_modules/@prisma/client",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@prisma/client/LICENSE"
+  },
+  "@prisma/debug@5.22.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/home/user/GarageFlowsV2/node_modules/@prisma/debug",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@prisma/debug/LICENSE"
+  },
+  "@prisma/engines-version@5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/engines-wrapper",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/home/user/GarageFlowsV2/node_modules/@prisma/engines-version",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@prisma/engines-version/LICENSE"
+  },
+  "@prisma/engines@5.22.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/home/user/GarageFlowsV2/node_modules/@prisma/engines",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@prisma/engines/LICENSE"
+  },
+  "@prisma/fetch-engine@5.22.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/home/user/GarageFlowsV2/node_modules/@prisma/fetch-engine",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@prisma/fetch-engine/LICENSE"
+  },
+  "@prisma/get-platform@5.22.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/home/user/GarageFlowsV2/node_modules/@prisma/get-platform",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@prisma/get-platform/LICENSE"
+  },
+  "@swc/helpers@0.5.15": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/swc-project/swc",
+    "publisher": "강동윤",
+    "email": "kdy1997.dev@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/@swc/helpers",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@swc/helpers/LICENSE"
+  },
+  "@types/node@22.20.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/user/GarageFlowsV2/node_modules/@types/node",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@types/node/LICENSE"
+  },
+  "@types/nodemailer@7.0.11": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/user/GarageFlowsV2/node_modules/@types/nodemailer",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@types/nodemailer/LICENSE"
+  },
+  "@types/pako@2.0.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/user/GarageFlowsV2/node_modules/@types/pako",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@types/pako/LICENSE"
+  },
+  "@types/prop-types@15.7.15": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/user/GarageFlowsV2/node_modules/@types/prop-types",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@types/prop-types/LICENSE"
+  },
+  "@types/qrcode@1.5.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/user/GarageFlowsV2/node_modules/@types/qrcode",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@types/qrcode/LICENSE"
+  },
+  "@types/raf@3.4.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/user/GarageFlowsV2/node_modules/@types/raf",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@types/raf/LICENSE"
+  },
+  "@types/react@18.3.28": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/user/GarageFlowsV2/node_modules/@types/react",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@types/react/LICENSE"
+  },
+  "@types/trusted-types@2.0.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/home/user/GarageFlowsV2/node_modules/@types/trusted-types",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/@types/trusted-types/LICENSE"
+  },
+  "ansi-regex@5.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/ansi-regex",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/ansi-regex",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/ansi-regex/license"
+  },
+  "ansi-styles@4.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/ansi-styles",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/ansi-styles",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/ansi-styles/license"
+  },
+  "base64-arraybuffer@1.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/niklasvh/base64-arraybuffer",
+    "publisher": "Niklas von Hertzen",
+    "email": "niklasvh@gmail.com",
+    "url": "https://hertzen.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/base64-arraybuffer",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/base64-arraybuffer/LICENSE"
+  },
+  "bcryptjs@2.4.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/dcodeIO/bcrypt.js",
+    "publisher": "Daniel Wirtz",
+    "email": "dcode@dcode.io",
+    "path": "/home/user/GarageFlowsV2/node_modules/bcryptjs",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/bcryptjs/LICENSE"
+  },
+  "camelcase@5.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/camelcase",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/camelcase",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/camelcase/license"
+  },
+  "caniuse-lite@1.0.30001816": {
+    "licenses": "CC-BY-4.0",
+    "repository": "https://github.com/browserslist/caniuse-lite",
+    "publisher": "Ben Briggs",
+    "email": "beneb.info@gmail.com",
+    "url": "http://beneb.info",
+    "path": "/home/user/GarageFlowsV2/node_modules/caniuse-lite",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/caniuse-lite/LICENSE"
+  },
+  "canvg@3.0.11": {
+    "licenses": "MIT",
+    "repository": "https://github.com/canvg/canvg",
+    "path": "/home/user/GarageFlowsV2/node_modules/canvg",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/canvg/LICENSE"
+  },
+  "client-only@0.0.1": {
+    "licenses": "MIT",
+    "path": "/home/user/GarageFlowsV2/node_modules/client-only"
+  },
+  "cliui@6.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/cliui",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/cliui",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/cliui/LICENSE.txt"
+  },
+  "clsx@2.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lukeed/clsx",
+    "publisher": "Luke Edwards",
+    "email": "luke.edwards05@gmail.com",
+    "url": "https://lukeed.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/clsx",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/clsx/license"
+  },
+  "color-convert@2.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Qix-/color-convert",
+    "publisher": "Heather Arthur",
+    "email": "fayearthur@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/color-convert",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/color-convert/LICENSE"
+  },
+  "color-name@1.1.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/colorjs/color-name",
+    "publisher": "DY",
+    "email": "dfcreative@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/color-name",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/color-name/LICENSE"
+  },
+  "cookie@0.7.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/cookie",
+    "publisher": "Roman Shtylman",
+    "email": "shtylman@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/cookie",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/cookie/LICENSE"
+  },
+  "core-js@3.49.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/zloirock/core-js",
+    "publisher": "Denis Pushkarev",
+    "email": "zloirock@zloirock.ru",
+    "url": "http://zloirock.ru",
+    "path": "/home/user/GarageFlowsV2/node_modules/core-js",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/core-js/LICENSE"
+  },
+  "css-line-break@2.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/niklasvh/css-line-break",
+    "publisher": "Niklas von Hertzen",
+    "email": "niklasvh@gmail.com",
+    "url": "https://hertzen.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/css-line-break",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/css-line-break/LICENSE"
+  },
+  "csstype@3.2.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/frenic/csstype",
+    "publisher": "Fredrik Nicol",
+    "email": "fredrik.nicol@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/csstype",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/csstype/LICENSE"
+  },
+  "date-fns@3.6.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/date-fns/date-fns",
+    "path": "/home/user/GarageFlowsV2/node_modules/date-fns",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/date-fns/LICENSE.md"
+  },
+  "decamelize@1.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/decamelize",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/decamelize",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/decamelize/license"
+  },
+  "detect-libc@2.1.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/lovell/detect-libc",
+    "publisher": "Lovell Fuller",
+    "email": "npm@lovell.info",
+    "path": "/home/user/GarageFlowsV2/node_modules/detect-libc",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/detect-libc/LICENSE"
+  },
+  "dijkstrajs@1.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tcort/dijkstrajs",
+    "path": "/home/user/GarageFlowsV2/node_modules/dijkstrajs",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/dijkstrajs/LICENSE.md"
+  },
+  "dompurify@3.4.17": {
+    "licenses": "(MPL-2.0 OR Apache-2.0)",
+    "repository": "https://github.com/cure53/DOMPurify",
+    "publisher": "Dr.-Ing. Mario Heiderich, Cure53",
+    "email": "mario@cure53.de",
+    "url": "https://cure53.de/",
+    "path": "/home/user/GarageFlowsV2/node_modules/dompurify",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/dompurify/LICENSE"
+  },
+  "emoji-regex@8.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mathiasbynens/emoji-regex",
+    "publisher": "Mathias Bynens",
+    "url": "https://mathiasbynens.be/",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/emoji-regex",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/emoji-regex/LICENSE-MIT.txt"
+  },
+  "fast-png@6.4.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/image-js/fast-png",
+    "publisher": "Michaël Zasso",
+    "path": "/home/user/GarageFlowsV2/node_modules/fast-png",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/fast-png/LICENSE"
+  },
+  "fflate@0.8.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/101arrowz/fflate",
+    "publisher": "Arjun Barrett",
+    "email": "arjunbarrett@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/fflate",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/fflate/LICENSE"
+  },
+  "find-up@4.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/find-up",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/find-up",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/find-up/license"
+  },
+  "framer-motion@11.18.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/motiondivision/motion",
+    "publisher": "Matt Perry",
+    "path": "/home/user/GarageFlowsV2/node_modules/framer-motion",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/framer-motion/LICENSE.md"
+  },
+  "garageflow@1.1.0": {
+    "licenses": "UNLICENSED",
+    "private": true,
+    "publisher": "GarageFlows",
+    "path": "/home/user/GarageFlowsV2",
+    "licenseFile": "/home/user/GarageFlowsV2/LICENSE"
+  },
+  "get-caller-file@2.0.5": {
+    "licenses": "ISC",
+    "repository": "https://github.com/stefanpenner/get-caller-file",
+    "publisher": "Stefan Penner",
+    "path": "/home/user/GarageFlowsV2/node_modules/get-caller-file",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/get-caller-file/LICENSE.md"
+  },
+  "goober@2.1.18": {
+    "licenses": "MIT",
+    "repository": "https://github.com/cristianbote/goober",
+    "publisher": "Cristian",
+    "email": "botecristian@yahoo.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/goober",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/goober/LICENSE"
+  },
+  "html2canvas@1.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/niklasvh/html2canvas",
+    "publisher": "Niklas von Hertzen",
+    "email": "niklasvh@gmail.com",
+    "url": "https://hertzen.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/html2canvas",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/html2canvas/LICENSE"
+  },
+  "immer@10.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/immerjs/immer",
+    "publisher": "Michel Weststrate",
+    "email": "info@michel.codes",
+    "path": "/home/user/GarageFlowsV2/node_modules/immer",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/immer/LICENSE"
+  },
+  "iobuffer@5.4.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/image-js/iobuffer",
+    "publisher": "Michaël Zasso",
+    "path": "/home/user/GarageFlowsV2/node_modules/iobuffer",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/iobuffer/LICENSE"
+  },
+  "is-fullwidth-code-point@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/is-fullwidth-code-point",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/is-fullwidth-code-point",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/is-fullwidth-code-point/license"
+  },
+  "jose@4.15.9": {
+    "licenses": "MIT",
+    "repository": "https://github.com/panva/jose",
+    "publisher": "Filip Skokan",
+    "email": "panva.ip@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/jose",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/jose/LICENSE.md"
+  },
+  "js-tokens@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lydell/js-tokens",
+    "publisher": "Simon Lydell",
+    "path": "/home/user/GarageFlowsV2/node_modules/js-tokens",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/js-tokens/LICENSE"
+  },
+  "json-schema-to-ts@3.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ThomasAribart/json-schema-to-ts",
+    "publisher": "Thomas Aribart",
+    "path": "/home/user/GarageFlowsV2/node_modules/json-schema-to-ts",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/json-schema-to-ts/LICENSE"
+  },
+  "jspdf@4.2.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/parallax/jsPDF",
+    "path": "/home/user/GarageFlowsV2/node_modules/jspdf",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/jspdf/LICENSE"
+  },
+  "locate-path@5.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/locate-path",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/locate-path",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/locate-path/license"
+  },
+  "loose-envify@1.4.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/zertosh/loose-envify",
+    "publisher": "Andres Suarez",
+    "email": "zertosh@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/loose-envify",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/loose-envify/LICENSE"
+  },
+  "lru-cache@6.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/node-lru-cache",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "path": "/home/user/GarageFlowsV2/node_modules/lru-cache",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/lru-cache/LICENSE"
+  },
+  "lucide-react@0.400.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/lucide-icons/lucide",
+    "publisher": "Eric Fennis",
+    "path": "/home/user/GarageFlowsV2/node_modules/lucide-react",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/lucide-react/LICENSE"
+  },
+  "motion-dom@11.18.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/motiondivision/motion",
+    "publisher": "Matt Perry",
+    "path": "/home/user/GarageFlowsV2/node_modules/motion-dom",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/motion-dom/LICENSE.md"
+  },
+  "motion-utils@11.18.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/motiondivision/motion",
+    "publisher": "Matt Perry",
+    "path": "/home/user/GarageFlowsV2/node_modules/motion-utils",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/motion-utils/LICENSE.md"
+  },
+  "nanoid@3.3.20": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ai/nanoid",
+    "publisher": "Andrey Sitnik",
+    "email": "andrey@sitnik.ru",
+    "path": "/home/user/GarageFlowsV2/node_modules/nanoid",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/nanoid/LICENSE"
+  },
+  "next-auth@4.24.15": {
+    "licenses": "ISC",
+    "repository": "https://github.com/nextauthjs/next-auth",
+    "publisher": "Iain Collins",
+    "email": "me@iaincollins.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/next-auth",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/next-auth/README.md"
+  },
+  "next@15.5.28": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vercel/next.js",
+    "path": "/home/user/GarageFlowsV2/node_modules/next",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/next/license.md"
+  },
+  "nodemailer@10.1.1": {
+    "licenses": "MIT-0",
+    "repository": "https://github.com/nodemailer/nodemailer",
+    "publisher": "Andris Reinman",
+    "path": "/home/user/GarageFlowsV2/node_modules/nodemailer",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/nodemailer/LICENSE"
+  },
+  "oauth@0.9.15": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ciaranj/node-oauth",
+    "publisher": "Ciaran Jessup",
+    "email": "ciaranj@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/oauth",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/oauth/LICENSE"
+  },
+  "object-hash@2.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/puleos/object-hash",
+    "publisher": "Scott Puleo",
+    "email": "puleos@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/openid-client/node_modules/object-hash",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/openid-client/node_modules/object-hash/LICENSE"
+  },
+  "oidc-token-hash@5.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/panva/oidc-token-hash",
+    "publisher": "Filip Skokan",
+    "path": "/home/user/GarageFlowsV2/node_modules/oidc-token-hash",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/oidc-token-hash/LICENSE.md"
+  },
+  "openid-client@5.7.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/panva/openid-client",
+    "publisher": "Filip Skokan",
+    "email": "panva.ip@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/openid-client",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/openid-client/LICENSE.md"
+  },
+  "p-limit@2.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-limit",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/p-limit",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/p-limit/license"
+  },
+  "p-locate@4.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-locate",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/p-locate",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/p-locate/license"
+  },
+  "p-try@2.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-try",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/p-try",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/p-try/license"
+  },
+  "pako@2.1.0": {
+    "licenses": "(MIT AND Zlib)",
+    "repository": "https://github.com/nodeca/pako",
+    "path": "/home/user/GarageFlowsV2/node_modules/pako",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/pako/LICENSE"
+  },
+  "path-exists@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/path-exists",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/path-exists",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/path-exists/license"
+  },
+  "performance-now@2.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/braveg1rl/performance-now",
+    "publisher": "Braveg1rl",
+    "email": "braveg1rl@outlook.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/performance-now",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/performance-now/license.txt"
+  },
+  "picocolors@1.1.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/alexeyraspopov/picocolors",
+    "publisher": "Alexey Raspopov",
+    "path": "/home/user/GarageFlowsV2/node_modules/picocolors",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/picocolors/LICENSE"
+  },
+  "playwright-core@1.62.1": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/microsoft/playwright",
+    "publisher": "Microsoft Corporation",
+    "path": "/home/user/GarageFlowsV2/node_modules/playwright-core",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/playwright-core/LICENSE",
+    "noticeFile": "/home/user/GarageFlowsV2/node_modules/playwright-core/NOTICE"
+  },
+  "playwright@1.62.1": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/microsoft/playwright",
+    "publisher": "Microsoft Corporation",
+    "path": "/home/user/GarageFlowsV2/node_modules/playwright",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/playwright/LICENSE",
+    "noticeFile": "/home/user/GarageFlowsV2/node_modules/playwright/NOTICE"
+  },
+  "pngjs@5.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lukeapage/pngjs",
+    "path": "/home/user/GarageFlowsV2/node_modules/pngjs",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/pngjs/LICENSE"
+  },
+  "postcss@8.5.30": {
+    "licenses": "MIT",
+    "repository": "https://github.com/postcss/postcss",
+    "publisher": "Andrey Sitnik",
+    "email": "andrey@sitnik.es",
+    "path": "/home/user/GarageFlowsV2/node_modules/postcss",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/postcss/LICENSE"
+  },
+  "preact-render-to-string@5.2.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/developit/preact-render-to-string",
+    "publisher": "Jason Miller",
+    "email": "jason@developit.ca",
+    "path": "/home/user/GarageFlowsV2/node_modules/preact-render-to-string",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/preact-render-to-string/LICENSE"
+  },
+  "preact@10.29.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/preactjs/preact",
+    "path": "/home/user/GarageFlowsV2/node_modules/preact",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/preact/LICENSE"
+  },
+  "pretty-format@3.8.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/thejameskyle/pretty-format",
+    "publisher": "James Kyle",
+    "email": "me@thejameskyle.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/pretty-format",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/pretty-format/LICENSE.md"
+  },
+  "prisma@5.22.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/home/user/GarageFlowsV2/node_modules/prisma",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/prisma/LICENSE"
+  },
+  "qrcode@1.5.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/soldair/node-qrcode",
+    "publisher": "Ryan Day",
+    "email": "soldair@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/license"
+  },
+  "raf@3.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chrisdickinson/raf",
+    "publisher": "Chris Dickinson",
+    "email": "chris@neversaw.us",
+    "path": "/home/user/GarageFlowsV2/node_modules/raf",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/raf/LICENSE"
+  },
+  "react-dom@18.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/facebook/react",
+    "path": "/home/user/GarageFlowsV2/node_modules/react-dom",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/react-dom/LICENSE"
+  },
+  "react-hot-toast@2.6.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/timolins/react-hot-toast",
+    "publisher": "Timo Lins",
+    "path": "/home/user/GarageFlowsV2/node_modules/react-hot-toast",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/react-hot-toast/LICENSE"
+  },
+  "react@18.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/facebook/react",
+    "path": "/home/user/GarageFlowsV2/node_modules/react",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/react/LICENSE"
+  },
+  "regenerator-runtime@0.13.11": {
+    "licenses": "MIT",
+    "repository": "https://github.com/facebook/regenerator/tree/main/packages/runtime",
+    "publisher": "Ben Newman",
+    "email": "bn@cs.stanford.edu",
+    "path": "/home/user/GarageFlowsV2/node_modules/regenerator-runtime",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/regenerator-runtime/LICENSE"
+  },
+  "require-directory@2.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/troygoode/node-require-directory",
+    "publisher": "Troy Goode",
+    "email": "troygoode@gmail.com",
+    "url": "http://github.com/troygoode/",
+    "path": "/home/user/GarageFlowsV2/node_modules/require-directory",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/require-directory/LICENSE"
+  },
+  "require-main-filename@2.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/require-main-filename",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/require-main-filename",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/require-main-filename/LICENSE.txt"
+  },
+  "rgbcolor@1.0.1": {
+    "licenses": "MIT*",
+    "repository": "https://github.com/yetzt/node-rgbcolor",
+    "publisher": "Sebastian Vollnhals",
+    "email": "sebastian@vollnhals.info",
+    "path": "/home/user/GarageFlowsV2/node_modules/rgbcolor",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/rgbcolor/LICENSE.md"
+  },
+  "scheduler@0.23.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/facebook/react",
+    "path": "/home/user/GarageFlowsV2/node_modules/scheduler",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/scheduler/LICENSE"
+  },
+  "semver@7.8.5": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/node-semver",
+    "publisher": "GitHub Inc.",
+    "path": "/home/user/GarageFlowsV2/node_modules/sharp/node_modules/semver",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/sharp/node_modules/semver/LICENSE"
+  },
+  "set-blocking@2.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/set-blocking",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/set-blocking",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/set-blocking/LICENSE.txt"
+  },
+  "sharp@0.35.5": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/lovell/sharp",
+    "publisher": "Lovell Fuller",
+    "email": "npm@lovell.info",
+    "path": "/home/user/GarageFlowsV2/node_modules/sharp",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/sharp/LICENSE"
+  },
+  "source-map-js@1.2.2": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/7rulnik/source-map-js",
+    "publisher": "Valentin 7rulnik Semirulnik",
+    "email": "v7rulnik@gmail.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/source-map-js",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/source-map-js/LICENSE"
+  },
+  "stackblur-canvas@2.7.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/flozz/StackBlur",
+    "publisher": "Mario Klingemann",
+    "path": "/home/user/GarageFlowsV2/node_modules/stackblur-canvas",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/stackblur-canvas/LICENSE-MIT.txt"
+  },
+  "string-width@4.2.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/string-width",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/string-width",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/string-width/license"
+  },
+  "strip-ansi@6.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/strip-ansi",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/strip-ansi",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/strip-ansi/license"
+  },
+  "styled-jsx@5.1.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vercel/styled-jsx",
+    "path": "/home/user/GarageFlowsV2/node_modules/styled-jsx",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/styled-jsx/license.md"
+  },
+  "svg-pathdata@6.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nfroidure/svg-pathdata",
+    "publisher": "Nicolas Froidure",
+    "path": "/home/user/GarageFlowsV2/node_modules/svg-pathdata",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/svg-pathdata/LICENSE"
+  },
+  "tailwind-merge@2.6.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/dcastil/tailwind-merge",
+    "publisher": "Dany Castillo",
+    "path": "/home/user/GarageFlowsV2/node_modules/tailwind-merge",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/tailwind-merge/LICENSE.md"
+  },
+  "text-segmentation@1.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/niklasvh/text-segmentation",
+    "publisher": "Niklas von Hertzen",
+    "email": "niklasvh@gmail.com",
+    "url": "https://hertzen.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/text-segmentation",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/text-segmentation/LICENSE"
+  },
+  "ts-algebra@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ThomasAribart/ts-algebra",
+    "publisher": "Thomas Aribart",
+    "path": "/home/user/GarageFlowsV2/node_modules/ts-algebra",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/ts-algebra/LICENSE"
+  },
+  "tslib@2.8.1": {
+    "licenses": "0BSD",
+    "repository": "https://github.com/Microsoft/tslib",
+    "publisher": "Microsoft Corp.",
+    "path": "/home/user/GarageFlowsV2/node_modules/tslib",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/tslib/LICENSE.txt"
+  },
+  "undici-types@6.21.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nodejs/undici",
+    "path": "/home/user/GarageFlowsV2/node_modules/undici-types",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/undici-types/LICENSE"
+  },
+  "use-sync-external-store@1.6.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/facebook/react",
+    "path": "/home/user/GarageFlowsV2/node_modules/use-sync-external-store",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/use-sync-external-store/LICENSE"
+  },
+  "utrie@1.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/niklasvh/utrie",
+    "publisher": "Niklas von Hertzen",
+    "email": "niklasvh@gmail.com",
+    "url": "https://hertzen.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/utrie",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/utrie/LICENSE"
+  },
+  "uuid@11.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/uuidjs/uuid",
+    "path": "/home/user/GarageFlowsV2/node_modules/next-auth/node_modules/uuid",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/next-auth/node_modules/uuid/LICENSE.md"
+  },
+  "which-module@2.0.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/nexdrew/which-module",
+    "publisher": "nexdrew",
+    "path": "/home/user/GarageFlowsV2/node_modules/which-module",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/which-module/LICENSE"
+  },
+  "wrap-ansi@6.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/wrap-ansi",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/wrap-ansi",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/wrap-ansi/license"
+  },
+  "y18n@4.0.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/y18n",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/y18n",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/y18n/LICENSE"
+  },
+  "yallist@4.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/yallist",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/home/user/GarageFlowsV2/node_modules/yallist",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/yallist/LICENSE"
+  },
+  "yargs-parser@18.1.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/yargs-parser",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/yargs-parser",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/yargs-parser/LICENSE.txt"
+  },
+  "yargs@15.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/yargs/yargs",
+    "path": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/yargs",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/qrcode/node_modules/yargs/LICENSE"
+  },
+  "zod@4.3.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/colinhacks/zod",
+    "publisher": "Colin McDonnell",
+    "email": "zod@colinhacks.com",
+    "path": "/home/user/GarageFlowsV2/node_modules/zod",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/zod/LICENSE"
+  },
+  "zustand@4.5.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/pmndrs/zustand",
+    "publisher": "Paul Henschel",
+    "path": "/home/user/GarageFlowsV2/node_modules/zustand",
+    "licenseFile": "/home/user/GarageFlowsV2/node_modules/zustand/LICENSE"
+  }
+}
+

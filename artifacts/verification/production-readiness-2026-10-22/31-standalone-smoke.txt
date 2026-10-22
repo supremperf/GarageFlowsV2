@@ -1,0 +1,20 @@
+Smoke HTTP local ; configuration existante non affichée ; aucune écriture DB volontaire.
+/login expected=200 actual=200
+/offline.html expected=200 actual=200
+/manifest.webmanifest expected=200 actual=200
+/api/ping expected=200 actual=200
+/api/version expected=200 actual=200
+/api/clients expected=401 actual=401
+/api/admin/licenses expected=403 actual=403
+/api/health expected=503 actual=503
+/_next/static/chunks/1255-8dc91b756d944555.js expected=200 actual=200
+
+=== EN-TÊTES /login ===
+HTTP/1.1 200 OK
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self' data:; media-src 'self' blob:; object-src 'none'; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Strict-Transport-Security: max-age=63072000; includeSubDomains
+smoke_assertions_exit_code=0

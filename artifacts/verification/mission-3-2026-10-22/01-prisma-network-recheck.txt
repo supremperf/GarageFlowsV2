@@ -1,0 +1,21 @@
+date_utc=2026-10-22T18:05:16Z
+platform=Linux release=6.1.158+ arch=x86_64
+node=v22.22.3 npm=10.9.8
+Commande : node scripts/diagnose-prisma-runtime.cjs
+MODULE_NOT_FOUND
+diagnostic_exit_code=1
+
+=== CONFIGURATION NON SECRÈTE ===
+env HTTP_PROXY unset
+env HTTPS_PROXY unset
+env ALL_PROXY unset
+env NO_PROXY unset
+env NODE_EXTRA_CA_CERTS unset
+env SSL_CERT_FILE unset
+env SSL_CERT_DIR unset
+env PRISMA_ENGINES_MIRROR unset
+npm strict-ssl true
+npm registry https://registry.npmjs.org/
+npm proxy unset
+npm https-proxy unset
+node_tls_root_certificates 145

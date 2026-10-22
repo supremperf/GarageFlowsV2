@@ -1,0 +1,25 @@
+Aucune valeur de configuration ou DSN n est affichée.
+DATABASE_URL set_nonempty scheme=file
+DIRECT_URL unset_or_empty
+POSTGRES_URL unset_or_empty
+TEST_DATABASE_URL unset_or_empty
+GF_TEST_DATABASE_URL unset_or_empty
+REDIS_URL unset_or_empty
+UPSTASH_REDIS_REST_URL unset_or_empty
+UPSTASH_REDIS_REST_TOKEN unset_or_empty
+STAGING_URL unset_or_empty
+E2E_EMAIL unset_or_empty
+E2E_PASSWORD unset_or_empty
+SMTP_HOST unset_or_empty
+VERCEL_TOKEN unset_or_empty
+
+=== CLIENT NATIF DESKTOP ===
+desktop_client_instantiation=failed
+error_name Error
+error_message @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+server_client_module=absent
+
+=== LIMITES ===
+sqlite_native_prisma=NOT_EXECUTED — client non initialisé
+postgresql_native_prisma=BLOQUE — moteur absent et accès PostgreSQL de test non fourni
+Aucune migration destructive ni base de production utilisée.

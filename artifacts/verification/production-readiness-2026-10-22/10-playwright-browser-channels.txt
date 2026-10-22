@@ -1,0 +1,92 @@
+Versions et canaux navigateur Playwright, inspection seule.
+playwright 1.62.1
+playwright-core 1.62.1
+
+=== EXÉCUTABLES SYSTÈME ===
+chromium=absent
+chromium-browser=absent
+google-chrome=absent
+google-chrome-stable=absent
+firefox=absent
+webkit2png=absent
+Xvfb=absent
+xvfb-run=absent
+wine=absent
+wine64=absent
+
+=== CACHE PLAYWRIGHT ===
+
+=== PAQUETS NPM PLAYWRIGHT ===
+
+candidate=@playwright/browser-chromium
+{
+  "version": "1.64.1",
+  "dist": {
+    "shasum": "cc1fdf447bbf79a0c5c23308f4d86a6c625f375c",
+    "tarball": "https://registry.npmjs.org/@playwright/browser-chromium/-/browser-chromium-1.64.1.tgz",
+    "fileCount": 8,
+    "integrity": "sha512-0Bq4UoZb6AC637FmXYavKkF9qVB80OMM8MSKl9FZQ/7eheoE4NcXJSDU/U9vGg+woCZccpcDw7rM7dh7y6HBBg==",
+    "signatures": [
+      {
+        "sig": "MEYCIQCUXC/liqVMQsXEAd9wLiuWLwb7ow0ex2KN2NzLnsunBwIhAMPVrs0F8fsNnLVwOSsJEW8MSlHUA5OJj5TjDFahDgHE",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      },
+      {
+        "sig": "MEUCIEqm2WbbepifepDXkvEfK3OzK6HZwaW1IF5QFPLnohG/AiEAkg9qGKs4caaqyiecZ9YSodJBMZ2MyNmiVYdlWAMwejo=",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      }
+    ],
+    "attestations": {
+      "url": "https://registry.npmjs.org/-/npm/v1/attestations/@playwright%2fbrowser-chromium@1.64.1",
+      "provenance": {
+        "predicateType": "https://slsa.dev/provenance/v1"
+      }
+    },
+    "unpackedSize": 15615
+  },
+  "scripts": {
+    "install": "node install.js"
+  }
+}
+
+candidate=playwright-chromium
+{
+  "version": "1.64.1",
+  "dist": {
+    "shasum": "81aec8925514050c0ac5bc08fa231ed189ab0e86",
+    "tarball": "https://registry.npmjs.org/playwright-chromium/-/playwright-chromium-1.64.1.tgz",
+    "fileCount": 9,
+    "integrity": "sha512-lvAzvvIRtbHaeLwl7XoUkhSNuWHKshbrYv2sjqYgLQS4SsTTwgSTlg9BwU5LeGxYkHxBXTnKtNDEQdZSOj/01g==",
+    "signatures": [
+      {
+        "sig": "MEYCIQC+mkP8bjeiaOucac+PvHqizKMqfgfiP1hwiEXAEnfaXwIhALUq9ichmqROWVKUBoID2Q7zSiYjEjzFtrtSEkL3HO5x",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      },
+      {
+        "sig": "MEQCIDVOrWHfcKJZCtWTuWwidte/LfQkNbxzLBrHZVaqTjVaAiAzIki1o75zW4tUPjtC3QN3005HovdakWlw8IXdOj/CjQ==",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      }
+    ],
+    "attestations": {
+      "url": "https://registry.npmjs.org/-/npm/v1/attestations/playwright-chromium@1.64.1",
+      "provenance": {
+        "predicateType": "https://slsa.dev/provenance/v1"
+      }
+    },
+    "unpackedSize": 16637
+  },
+  "scripts": {
+    "install": "node install.js"
+  }
+}
+
+=== ELECTRON LOCAL ===
+Downloading Electron binary...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:14976:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async FetchDownloader.download (file:///home/user/GarageFlowsV2/node_modules/@electron/get/dist/FetchDownloader.js:46:30)
+    at async file:///home/user/GarageFlowsV2/node_modules/@electron/get/dist/index.js:158:9
+    at async useAndRemoveDirectory (file:///home/user/GarageFlowsV2/node_modules/@electron/get/dist/utils.js:10:18)
+    at async downloadArtifact (file:///home/user/GarageFlowsV2/node_modules/@electron/get/dist/index.js:154:12)
+electron_error Electron failed to install correctly. Please delete `node_modules/electron` and run "npx install-electron --no" manually.

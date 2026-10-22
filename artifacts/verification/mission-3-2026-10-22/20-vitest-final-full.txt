@@ -1,0 +1,38 @@
+Passe complète après correction du seul problème environnemental indépendant : Python verrouillé.
+Commande : PATH=/tmp/gf-python-venv/bin:$PATH npm test -- --reporter=json --outputFile=.../vitest-final-results.json
+
+> garageflow@1.1.0 test
+> vitest run --reporter=json --outputFile=artifacts/verification/mission-3-2026-10-22/vitest-final-results.json
+
+(node:7071) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✗ Domaine « cdn.exemple.test » absent de la liste blanche des postes.
+    Autorisés : api.garageflows.fr, garageflows.fr, app.garageflows.fr
+    (voir ALLOWED_DOWNLOAD_HOSTS dans electron/update-verify.js)
+
+
+  ✗ --download-url doit être en HTTPS.
+
+
+  ✗ Version non SemVer : derniere
+
+
+  ✗ Clé privée de signature absente.
+    Renseignez GF_UPDATE_SIGNING_KEY (PEM PKCS#8) ou GF_UPDATE_SIGNING_KEY_FILE.
+    Pour créer une paire : node scripts/sign-release-manifest.mjs --gen-key --key-id <id>
+
+(node:9810) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:10523) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:10878) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:10948) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:11040) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+JSON report written to /home/user/GarageFlowsV2/artifacts/verification/mission-3-2026-10-22/vitest-final-results.json
+vitest_exit_code=1
+env_unchanged=true
+dev_db_unchanged=true

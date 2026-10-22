@@ -1,0 +1,28 @@
+Commande : cd artifacts/verification/audit-2026-10-22 && sha256sum -c SHA256SUMS
+./01-official-build-prisma-failure.txt: OK
+./02-next-build-no-engine.txt: OK
+./03-postbuild.txt: OK
+./04-verify-standalone.txt: OK
+./05-standalone-secret-scan.txt: OK
+./06-preflight-release.txt: OK
+./07-standalone-smoke.txt: OK
+./08-standalone-server.txt: OK
+./09-vitest-final.txt: OK
+./10-node-tests.txt: OK
+./11-keygen-python.txt: OK
+./12-python-vitest.txt: OK
+./13-release-safety.txt: OK
+./14-config-auto-tests.txt: OK
+./15-audit-strict.txt: OK
+./16-desktop-audit.txt: OK
+./17-perf-budget.txt: OK
+./18-secrets-regression-before.txt: OK
+./19-setup-regression-before.txt: OK
+./20-setup-after-fix.txt: OK
+./21-license-inventory.txt: OK
+./22-keygen-e2e-no-target.txt: OK
+./23-evidence-secret-scan.txt: OK
+./24-source-working-tree-secret-scan.txt: OK
+./25-standalone-engine-before-after.txt: OK
+./26-standalone-engine-validation.txt: OK
+exit_code=0

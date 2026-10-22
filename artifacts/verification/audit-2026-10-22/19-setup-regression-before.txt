@@ -1,0 +1,38 @@
+TAP version 13
+# Subtest: actual setup-dev preserves a strong secret and restricts an existing .env
+ok 1 - actual setup-dev preserves a strong secret and restricts an existing .env
+  ---
+  duration_ms: 75.919478
+  type: 'test'
+  ...
+# Subtest: actual setup-dev creates a private .env and keeps it private on later runs
+not ok 2 - actual setup-dev creates a private .env and keeps it private on later runs
+  ---
+  duration_ms: 85.842678
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/setup-dev-permissions.test.cjs:50:1'
+  failureType: 'testCodeFailure'
+  error: 'an empty value must not inherit the following comment as its secret'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/setup-dev-permissions.test.cjs:66:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 1
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 233.127003

@@ -1,0 +1,4 @@
+Tentative de lecture du job E2E CI exact. Aucun log brut ne sera recopié dans les livrables.
+e2e_log_api_exit_code=1
+e2e_log_bytes=0
+Get "URL_REDACTED EOF

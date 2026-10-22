@@ -1,0 +1,82 @@
+Inspection des sources @prisma/fetch-engine et du cache npm, sans exécuter les téléchargements.
+
+=== CHEMINS ET VARIABLES DE TÉLÉCHARGEMENT ===
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2056:        "@prisma/engines-version": "5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2",
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2237:    const sha256FilePath = cachedFile + ".sha256";
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2238:    if (await exists(sha256FilePath)) {
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2239:      const sha256File = await import_fs.default.promises.readFile(sha256FilePath, "utf-8");
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2240:      const sha256Cache = await (0, import_chunk_CWGQAQ3T.getHash)(cachedFile);
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2241:      if (sha256File === sha256Cache) {
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2248:        if (sha256File !== targetSha256) {
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2258:        `The checksum file: ${sha256FilePath} is missing but this was ignored as the PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING environment variable is truthy.`
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2337:  const { sha256, zippedSha256 } = await (0, import_chunk_QLWYUM7O.downloadZip)(downloadUrl, targetFilePath, progressCb);
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2342:  await saveFileToCache(options2, version, sha256, zippedSha256);
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2344:async function saveFileToCache(job, version, sha256, zippedSha256) {
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2350:  const cachedSha256Path = import_path.default.join(cacheDir, job.binaryName + ".sha256");
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2351:  const cachedSha256ZippedPath = import_path.default.join(cacheDir, job.binaryName + ".gz.sha256");
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2354:    if (sha256 != null) {
+node_modules/@prisma/fetch-engine/dist/chunk-2BCLJS3M.js:2355:      await import_fs.default.promises.writeFile(cachedSha256Path, sha256);
+node_modules/@prisma/fetch-engine/dist/chunk-CWGQAQ3T.js:37:  const hash = import_crypto.default.createHash("sha256");
+node_modules/@prisma/fetch-engine/dist/chunk-FQ2BOR66.js:2429:  process.env.PRISMA_ENGINES_MIRROR || "https://binaries.prisma.sh";
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2056:        "@prisma/engines-version": "5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2",
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2237:    const sha256FilePath = cachedFile + ".sha256";
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2238:    if (await exists(sha256FilePath)) {
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2239:      const sha256File = await import_fs.default.promises.readFile(sha256FilePath, "utf-8");
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2240:      const sha256Cache = await (0, import_chunk_CWGQAQ3T.getHash)(cachedFile);
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2241:      if (sha256File === sha256Cache) {
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2248:        if (sha256File !== targetSha256) {
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2258:        `The checksum file: ${sha256FilePath} is missing but this was ignored as the PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING environment variable is truthy.`
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2337:  const { sha256, zippedSha256 } = await (0, import_chunk_QLWYUM7O.downloadZip)(downloadUrl, targetFilePath, progressCb);
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2342:  await saveFileToCache(options2, version, sha256, zippedSha256);
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2344:async function saveFileToCache(job, version, sha256, zippedSha256) {
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2350:  const cachedSha256Path = import_path.default.join(cacheDir, job.binaryName + ".sha256");
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2351:  const cachedSha256ZippedPath = import_path.default.join(cacheDir, job.binaryName + ".gz.sha256");
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2354:    if (sha256 != null) {
+node_modules/@prisma/fetch-engine/dist/chunk-KJ74H3SQ.js:2355:      await import_fs.default.promises.writeFile(cachedSha256Path, sha256);
+node_modules/@prisma/fetch-engine/dist/chunk-QLWYUM7O.js:8002:    const checksumUrl = `${url}.sha256`;
+node_modules/@prisma/fetch-engine/dist/chunk-QLWYUM7O.js:8007:      let errorMessage = `Failed to fetch sha256 checksum at ${checksumUrl} - ${response.status} ${response.statusText}`;
+node_modules/@prisma/fetch-engine/dist/chunk-QLWYUM7O.js:8037:  const [zippedSha256, sha256] = await (0, import_p_retry.default)(
+node_modules/@prisma/fetch-engine/dist/chunk-QLWYUM7O.js:8073:          algorithm: "sha256"
+node_modules/@prisma/fetch-engine/dist/chunk-QLWYUM7O.js:8076:          algorithm: "sha256"
+node_modules/@prisma/fetch-engine/dist/chunk-QLWYUM7O.js:8080:          resolve({ lastModified, sha256, zippedSha256 });
+node_modules/@prisma/fetch-engine/dist/chunk-QLWYUM7O.js:8085:          return reject(new Error(`sha256 checksum of ${url} (zipped) should be ${zippedSha256} but is ${zippedHash}`));
+node_modules/@prisma/fetch-engine/dist/chunk-QLWYUM7O.js:8087:        if (sha256 !== null && sha256 !== hash) {
+node_modules/@prisma/fetch-engine/dist/chunk-QLWYUM7O.js:8088:          return reject(new Error(`sha256 checksum of ${url} (unzipped) should be ${sha256} but is ${hash}`));
+node_modules/@prisma/fetch-engine/dist/downloadZip.d.ts:3:    sha256: string | null;
+node_modules/@prisma/engines/dist/index.js:41:var import_engines_version = require("@prisma/engines-version");
+node_modules/@prisma/engines/dist/index.js:44:var import_engines_version2 = require("@prisma/engines-version");
+node_modules/@prisma/engines/dist/scripts/postinstall.js:27:var import_engines_version3 = require("@prisma/engines-version");
+node_modules/@prisma/engines/dist/scripts/postinstall.js:34:var import_engines_version = require("@prisma/engines-version");
+node_modules/@prisma/engines/dist/scripts/postinstall.js:37:var import_engines_version2 = require("@prisma/engines-version");
+node_modules/@prisma/engines/dist/index.d.ts:2:import { enginesVersion } from '@prisma/engines-version';
+
+=== VALEURS PUBLIQUES DE VERSION ===
+node_modules/@prisma/engines-version/index.js
+node_modules/@prisma/engines-version/package.json
+node_modules/@prisma/engines-version/README.md
+node_modules/@prisma/engines-version/index.d.ts
+node_modules/@prisma/engines-version/LICENSE
+
+=== INTÉGRITÉ NPM DU PAQUET ENGINES ===
+{
+  "shasum": "28f3f52a2812c990a8b66eb93a0987816a5b6d84",
+  "tarball": "https://registry.npmjs.org/@prisma/engines/-/engines-5.22.0.tgz",
+  "fileCount": 10,
+  "integrity": "sha512-UNjfslWhAt06kVL3CjkuYpHAWSO6L4kDCVPegV6itt7nD1kSJavd3vhgAEhjglLJJKEdJ7oIqDJ+yHk6qO8gPA==",
+  "signatures": [
+    {
+      "sig": "MEQCIFD4vXdmtRxCd6J6V7zLWKCkVDSmaOkZay8yZAV+h3i3AiBeRBC4whnw6HWpcCGiFLI1XEyxFXcOYR1IyP66lfzfWw==",
+      "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+    }
+  ],
+  "attestations": {
+    "url": "https://registry.npmjs.org/-/npm/v1/attestations/@prisma%2fengines@5.22.0",
+    "provenance": {
+      "predicateType": "https://slsa.dev/provenance/v1"
+    }
+  },
+  "unpackedSize": 95026
+}
+
+=== AUTRES CACHES SYSTÈME ===
+cargo_registry_absent

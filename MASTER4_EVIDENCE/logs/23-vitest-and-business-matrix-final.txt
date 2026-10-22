@@ -1,0 +1,99 @@
+date_utc=2026-10-22T19:08:50.475Z
+{
+  "failureCategories": {
+    "PRISMA_NATIVE": 79,
+    "SERVER_CLIENT": 5,
+    "OTHER": 0
+  },
+  "pendingReasons": {
+    "WINDOWS_ARTIFACT_MISSING": 1,
+    "SUITE_SETUP_FAILED": 834,
+    "TEST_POSTGRES_URL_MISSING": 23,
+    "TEST_REDIS_URL_MISSING": 5,
+    "ISSUING_PRIVATE_KEY_UNAVAILABLE": 4,
+    "GF_TEST_LICENSE_MISSING": 2
+  },
+  "business": {
+    "license": {
+      "files": 28,
+      "passedFiles": 26,
+      "failedFiles": 2,
+      "passed": 251,
+      "failed": 0,
+      "pending": 30
+    },
+    "clients": {
+      "files": 8,
+      "passedFiles": 3,
+      "failedFiles": 5,
+      "passed": 33,
+      "failed": 0,
+      "pending": 70
+    },
+    "interventions": {
+      "files": 16,
+      "passedFiles": 10,
+      "failedFiles": 6,
+      "passed": 162,
+      "failed": 0,
+      "pending": 54
+    },
+    "quotes": {
+      "files": 8,
+      "passedFiles": 3,
+      "failedFiles": 5,
+      "passed": 50,
+      "failed": 0,
+      "pending": 47
+    },
+    "invoices": {
+      "files": 20,
+      "passedFiles": 11,
+      "failedFiles": 9,
+      "passed": 91,
+      "failed": 0,
+      "pending": 104
+    },
+    "stock": {
+      "files": 26,
+      "passedFiles": 15,
+      "failedFiles": 11,
+      "passed": 131,
+      "failed": 0,
+      "pending": 119
+    },
+    "dashboard": {
+      "files": 3,
+      "passedFiles": 1,
+      "failedFiles": 2,
+      "passed": 15,
+      "failed": 0,
+      "pending": 12
+    },
+    "auth": {
+      "files": 21,
+      "passedFiles": 13,
+      "failedFiles": 8,
+      "passed": 280,
+      "failed": 0,
+      "pending": 103
+    },
+    "concurrency": {
+      "files": 5,
+      "passedFiles": 4,
+      "failedFiles": 1,
+      "passed": 15,
+      "failed": 0,
+      "pending": 8
+    },
+    "backup": {
+      "files": 14,
+      "passedFiles": 11,
+      "failedFiles": 3,
+      "passed": 83,
+      "failed": 3,
+      "pending": 15
+    }
+  }
+}
+matrix_exit_code=0

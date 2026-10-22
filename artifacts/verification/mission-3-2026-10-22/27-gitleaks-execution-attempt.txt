@@ -1,0 +1,11 @@
+Gitleaks officiel requis pour working tree ET historique.
+gitleaks_binary=absent
+go_binary=absent
+docker_binary=absent
+podman_binary=absent
+npm_homonym_version=1.0.0 — dépôt ycjcl868/gitleaks, quatre fichiers texte, aucun binaire ; non utilisé.
+official_release_previous_result=EOF sur release-assets.githubusercontent.com (preuve MASTER 2 34-final-static-security.txt)
+working_tree_gitleaks=NOT_EXECUTED
+history_gitleaks=NOT_EXECUTED
+gitleaks_overall=BLOQUE
+Aucun scan de substitution n est présenté comme Gitleaks.

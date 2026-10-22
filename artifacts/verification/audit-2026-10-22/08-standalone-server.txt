@@ -1,0 +1,13 @@
+   ▲ Next.js 15.5.27
+   - Local:        http://localhost:3100
+   - Network:      http://0.0.0.0:3100
+
+ ✓ Starting...
+ ✓ Ready in 191ms
+[2026-10-22T16:35:56.104Z] [INFO] AUTH {"step":"AUTH_STEP_0_ROUTE_LOADED","result":"ok"}
+prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Error validating datasource `db`: the URL must start with the protocol `prisma://`
+[2026-10-22T16:36:03.464Z] [ERROR] [health] base de données injoignable {"name":"PrismaClientKnownRequestError","message":"\nInvalid `prisma.$queryRaw()` invocation:\n\n\nError validating datasource `db`: the URL must start with the protocol `prisma://`","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.$queryRaw()` invocation:\n\n\nError validating datasource `db`: the URL must start with the protocol `prisma://`\n    at $n.handleRequestError (/home/<user>/GarageFlowsV2/.next/standalone/node_modules/@prisma/client/runtime/library.js:121:7315)\n    at $n.handleAndLogRequestError (/home/<user>/GarageFlowsV2/.next/standalone/node_modules/@prisma/client/runtime/library.js:121:6623)\n    at $n.request (/home/<user>/GarageFlowsV2/.next/standalone/node_modules/@prisma/client/runtime/library.js:121:6307)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async l (/home/<user>/GarageFlowsV2/.next/standalone/node_modules/@prisma/client/runtime/library.js:130:9633)\n    at async E (/home/<user>/GarageFlowsV2/.next/standalone/.next/server/app/api/health/route.js:2:1372)\n    at async H (/home/<user>/GarageFlowsV2/.next/standalone/.next/server/app/api/health/route.js:2:3276)\n    at async rB.do (/home/<user>/GarageFlowsV2/.next/standalone/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:5:21134)\n    at async rB.handle (/home/<user>/GarageFlowsV2/.next/standalone/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:5:25952)\n    at async k (/home/<user>/GarageFlowsV2/.next/standalone/.next/server/app/api/health/route.js:2:6641)"}

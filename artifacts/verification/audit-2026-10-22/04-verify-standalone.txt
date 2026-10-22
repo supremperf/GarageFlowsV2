@@ -1,0 +1,7 @@
+
+> garageflow@1.1.0 verify:standalone
+> node scripts/verify-standalone-build.cjs
+
+🔎 Sortie autonome : .next/standalone
+✅ Sortie autonome complète (4 éléments vérifiés) — prête à être empaquetée.
+   Étape suivante : `npm run dist` (installeur Windows).
