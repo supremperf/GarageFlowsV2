@@ -26,14 +26,20 @@ export class FunctionProvider implements ChannelProvider {
   }
 }
 
-/** In-app notifications — always available; persistence handled by the caller. */
+/**
+ * Placeholder for a future recipient-visible in-app inbox.
+ *
+ * The notification journal is not delivery to a recipient, so this channel must
+ * stay unconfigured until a real inbox/persistence path exists. In particular,
+ * it must never turn a journal write into a reported successful delivery.
+ */
 export class InternalProvider implements ChannelProvider {
   readonly channel: Channel = 'internal'
   isConfigured(): boolean {
-    return true
+    return false
   }
   async send() {
-    return { ok: true, id: 'internal' }
+    return { ok: false, error: 'not_configured' }
   }
 }
 

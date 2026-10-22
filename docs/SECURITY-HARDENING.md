@@ -158,15 +158,22 @@ protéger :
    peuvent casser du code dynamique.
 3. **Suppression des métadonnées** — ne pas embarquer de source maps en prod
    (`productionBrowserSourceMaps: false` — défaut Next), retirer commentaires.
-4. **Fuses Electron** (durcissement du runtime) :
-
-   ```bash
-   npm i -D @electron/fuses
-   ```
-   Désactiver `RunAsNode`, `EnableNodeCliInspectArguments`,
-   `EnableNodeOptionsEnvironmentVariable` et activer
-   `OnlyLoadAppFromAsar` + `EnableEmbeddedAsarIntegrityValidation` empêche de
-   lancer l'app en « mode Node » ou de charger un asar substitué.
+4. **Fuses Electron** (durcissement du runtime, déjà appliqués par
+   `scripts/afterPack.js` via le plan explicite `scripts/fuse-config.js`). La
+   configuration du build Windows cible Electron 44.9.3 + `@electron/fuses` 2.1.3 :
+   `RunAsNode`, `NODE_OPTIONS` et `--inspect` sont désactivés ; `OnlyLoadAppFromAsar`,
+   la validation ASAR embarquée par electron-builder 26.15.3, le chiffrement des
+   cookies et `WasmTrapHandlers` sont activés. `strictlyRequireAllFuses` refuse
+   une mise à jour future qui n’examine pas chaque bit. Les valeurs et exceptions
+   documentées sont dans `scripts/fuse-config.js` et `docs/security/ELECTRON_SECURITY_BASELINE.md`.
+   `GrantFileProtocolExtraPrivileges` reste activé parce que le splash et la
+   fenêtre de licence chargent encore des fichiers `file://` depuis l’ASAR ; il
+   ne sera désactivé qu’après une migration testée vers un protocole applicatif.
+   **Statut de validation 2026-10-22 :** Electron 44.9.3 est le candidat de la
+   ligne maintenue retenue après la fin de support d’Electron 42. La validation
+   Windows de ce candidat reste à faire ; Electron embarque Node 24.x alors que
+   le Node système/build déclaré reste 22.x. Aucun de ces statuts ne vaut preuve
+   de lancement ou de livraison.
 
 ## 8. Signature numérique
 

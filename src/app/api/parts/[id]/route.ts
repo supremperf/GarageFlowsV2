@@ -31,9 +31,8 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
     )
   }
   const body = parsed.data
-  // `supplierName` / `supplierRef` manquaient à cette liste : le fournisseur
-  // d'une pièce n'était donc modifiable par aucun écran, et le module de
-  // réapprovisionnement groupé restait vide sur toute installation réelle.
+  // `supplierName` / `supplierRef` are editable descriptive metadata. They do
+  // not feed a live provider or generate a fabricated supplier quote.
   const allowed = ['name', 'reference', 'description', 'minQuantity', 'location', 'supplierName', 'supplierRef'] as const
   const data: Record<string, unknown> = {}
   for (const f of allowed) { if (body[f] !== undefined) data[f] = body[f] }

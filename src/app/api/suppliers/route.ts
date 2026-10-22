@@ -1,111 +1,35 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
-import { fromScaled, toScaled, fromCents, lineTotalCentsFromScaled } from '@/lib/money'
-import { serializePoLinesJsonV2, poTotalHtCents, parsePoLinesJson } from '@/lib/money-json'
+import { fromScaled } from '@/lib/money'
+import { parsePoLinesJson } from '@/lib/money-json'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { logAudit } from '@/lib/audit'
-import {
-  SupplierEngine,
-  StaticConnector,
-  transition,
-  type CatalogEntry,
-  type OrderStatus,
-  type PartQuery,
-  type SupplierConnector,
-} from '@/lib/suppliers'
+import { transition } from '@/lib/suppliers/order'
+import type { OrderStatus } from '@/lib/suppliers/types'
 import { MOVEMENT } from '@/lib/stock/invoice-stock'
-
-// Assumed lead time (days) for a garage's habitual supplier when unknown, and the
-// sentinel "available to order" quantity for a catalogue we don't hold stock for.
-const DEFAULT_LEAD_TIME_DAYS = 5
-const ASSUMED_AVAILABLE = 100_000
 
 const KNOWN_STATUSES: OrderStatus[] = ['draft', 'sent', 'confirmed', 'received', 'cancelled', 'returned']
 
-interface PartRow {
-  id: string
-  name: string
-  reference: string | null
-  supplierName: string | null
-  supplierRef: string | null
-  unitCost: number
-  quantity: number
-  minQuantity: number
+/** No live supplier adapter exists; never turn local cost data into a quote/order. */
+const SUPPLIER_INTEGRATION_UNAVAILABLE = {
+  error: 'SUPPLIER_INTEGRATION_REQUIRED',
+  message: 'Aucune intégration fournisseur en temps réel n’est configurée. Les prix, disponibilités et délais ne peuvent pas être vérifiés. Aucune commande automatique n’est créée.',
 }
 
-/** Build one StaticConnector per known supplier from the garage's part catalogue. */
-function connectorsFromParts(parts: PartRow[]): SupplierConnector[] {
-  const bySupplier = new Map<string, CatalogEntry[]>()
-  for (const p of parts) {
-    const supplier = p.supplierName?.trim()
-    if (!supplier) continue
-    const list = bySupplier.get(supplier) ?? []
-    list.push({
-      reference: p.reference,
-      name: p.name,
-      supplierRef: p.supplierRef,
-      unitPrice: p.unitCost,
-      availableQty: ASSUMED_AVAILABLE,
-      leadTimeDays: DEFAULT_LEAD_TIME_DAYS,
-      note: 'Fournisseur habituel',
-    })
-    bySupplier.set(supplier, list)
-  }
-  return Array.from(bySupplier.entries()).map(
-    ([name, catalog], i) => new StaticConnector({ id: `sup-${i}`, name, catalog }),
-  )
-}
-
-/** Reorder queries for parts at/below their low-stock threshold. */
-function lowStockQueries(parts: PartRow[], targetMultiplier: number): PartQuery[] {
-  const queries: PartQuery[] = []
-  for (const p of parts) {
-    if (p.quantity > p.minQuantity) continue
-    const target = Math.max(p.minQuantity * targetMultiplier, p.minQuantity + 1)
-    const need = Math.max(target - p.quantity, 1)
-    queries.push({ partId: p.id, name: p.name, reference: p.reference, quantity: need, supplierRef: p.supplierRef })
-  }
-  return queries
-}
-
-async function loadParts(garageId: string): Promise<PartRow[]> {
-  const rows = await prisma.part.findMany({
-    where: { garageId },
-    select: { id: true, name: true, reference: true, supplierName: true, supplierRef: true, unitCostTenThousandths: true, quantity: true, minQuantity: true },
-    take: 5000,
-  })
-  // Vue euros du coût exact (dix-millièmes) pour le contrat PartRow existant.
-  return rows.map(({ unitCostTenThousandths, ...r }) => ({ ...r, unitCost: fromScaled(unitCostTenThousandths) }))
-}
-
-// ── GET: preview the automatic reorder plan (read-only, no writes) ─────────────
-// GET /api/suppliers?targetMultiplier=2
-export const GET = withAuth(async (req) => {
-  const session = await requireSession()
-  const garageId = session.user.garageId
-  const { searchParams } = new URL(req.url)
-  const targetMultiplier = Math.min(10, Math.max(1, Number(searchParams.get('targetMultiplier') ?? '2')))
-
-  const parts = await loadParts(garageId)
-  const queries = lowStockQueries(parts, targetMultiplier)
-  const engine = new SupplierEngine(connectorsFromParts(parts))
-  const { plan, errors } = await engine.quote(queries)
-
-  return NextResponse.json({ ...plan, errors, scope: { targetMultiplier, lowStockParts: queries.length } })
+// GET /api/suppliers — deliberately fail closed until a real supplier adapter is configured.
+export const GET = withAuth(async () => {
+  await requireSession()
+  return NextResponse.json(SUPPLIER_INTEGRATION_UNAVAILABLE, { status: 501 })
 })
 
-// ── POST: create grouped draft orders, or advance an order's lifecycle ─────────
-// Every impactful action is confirmation-gated: without `confirm: true` the
-// endpoint returns a preview and `confirmationRequired: true` — it never writes.
+// ── POST: create an automatic order (disabled) or advance a saved order ───────
 const CreateSchema = z.object({
   action: z.literal('create-orders'),
   confirm: z.boolean().optional(),
-  targetMultiplier: z.number().min(1).max(10).optional(),
-  parts: z.array(z.object({ partId: z.string().min(1), quantity: z.number().int().positive() })).max(500).optional(),
 })
 
 const TransitionSchema = z.object({
@@ -116,14 +40,6 @@ const TransitionSchema = z.object({
 })
 
 const BodySchema = z.discriminatedUnion('action', [CreateSchema, TransitionSchema])
-
-interface POLine {
-  partId?: string | null
-  partName: string
-  reference?: string | null
-  qty: number
-  unitCost: number
-}
 
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
@@ -142,68 +58,7 @@ export const POST = withAuth(async (req) => {
   const body = parsed.data
 
   if (body.action === 'create-orders') {
-    const parts = await loadParts(garageId)
-    let queries: PartQuery[]
-    if (body.parts?.length) {
-      const byId = new Map(parts.map((p) => [p.id, p]))
-      queries = body.parts.flatMap(({ partId, quantity }) => {
-        const p = byId.get(partId)
-        return p ? [{ partId: p.id, name: p.name, reference: p.reference, quantity, supplierRef: p.supplierRef }] : []
-      })
-    } else {
-      queries = lowStockQueries(parts, body.targetMultiplier ?? 2)
-    }
-
-    const engine = new SupplierEngine(connectorsFromParts(parts))
-    const { plan, errors } = await engine.quote(queries)
-
-    // Preview unless explicitly confirmed.
-    if (!body.confirm) {
-      return NextResponse.json({ confirmationRequired: true, preview: plan, errors })
-    }
-    if (plan.orders.length === 0) {
-      return NextResponse.json({ error: 'Aucune commande à créer.', unfulfillable: plan.unfulfillable }, { status: 400 })
-    }
-
-    // Persist one draft PurchaseOrder per supplier. Each order takes its own
-    // number via a transactional counter increment, so concurrent runs never
-    // collide on the unique (garageId, number) constraint.
-    const created: { id: string; number: string; supplierName: string; totalHT: number }[] = []
-    for (const order of plan.orders) {
-      // Lignes en ENTIERS exacts (dix-millièmes) — persistées au format V2.
-      const exactLines = order.lines.map((l) => {
-        const qtyTenThousandths = toScaled(l.quantity)
-        const unitCostTenThousandths = toScaled(l.unitPrice)
-        return {
-          partId: l.partId,
-          partName: l.name,
-          reference: l.reference ?? null,
-          qtyTenThousandths,
-          unitCostTenThousandths,
-          lineTotalCents: lineTotalCentsFromScaled(unitCostTenThousandths, qtyTenThousandths),
-        }
-      })
-      const po = await prisma.$transaction(async (tx) => {
-        const garage = await tx.garage.update({ where: { id: garageId }, data: { purchaseOrderCounter: { increment: 1 } } })
-        const year = new Date().getFullYear()
-        const number = `${garage.purchaseOrderPrefix}-${year}-${String(garage.purchaseOrderCounter).padStart(3, '0')}`
-        return tx.purchaseOrder.create({
-          data: {
-            number,
-            garageId,
-            supplierName: order.supplierName,
-            linesJson: serializePoLinesJsonV2(exactLines),
-            totalHtCents: poTotalHtCents(exactLines), // centimes exacts par ligne
-            status: 'draft',
-            notes: `Commande auto — ${order.lines.length} référence(s), livraison ~${order.maxLeadTimeDays} j.`,
-          },
-        })
-      })
-      created.push({ id: po.id, number: po.number, supplierName: po.supplierName ?? '—', totalHT: fromCents(po.totalHtCents) })
-      await logAudit({ action: 'create', entityType: 'PurchaseOrder', entityId: po.id, session, req, details: { auto: true, supplier: po.supplierName, totalHT: fromCents(po.totalHtCents) } })
-    }
-
-    return NextResponse.json({ created, unfulfillable: plan.unfulfillable }, { status: 201 })
+    return NextResponse.json(SUPPLIER_INTEGRATION_UNAVAILABLE, { status: 501 })
   }
 
   // ── action === 'transition' ──────────────────────────────────────────────────
@@ -222,97 +77,121 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ confirmationRequired: true, order: { id: order.id, number: order.number, status: from }, to: body.to, effects: t.effects })
   }
 
-  // Parsing STRICT versionné (v1 historique OU v2), comme
-  // `/api/purchase-orders/[id]/receive`. Un `JSON.parse` nu suivi de
-  // `lines.filter(...)` levait un TypeError sur TOUTE commande écrite par
-  // `action: 'create-orders'` ci-dessus — qui persiste un OBJET
-  // `{ schemaVersion: 2, lines: [...] }` et non un tableau : 500 systématique et
-  // stock jamais incrémenté à la réception (GF31-AUD-002).
-  let lines: POLine[] = []
+  // The receipt/return paths alter stock, so malformed, empty, fractional or
+  // non-positive lines must fail before any terminal status can be committed.
+  let stockLines: Array<{ partId: string; qty: number }> = []
+  let stockPartIds: string[] = []
+  if (t.effects.incrementStock || t.effects.decrementStock) {
+    let exactLines: ReturnType<typeof parsePoLinesJson>['lines']
+    try {
+      exactLines = parsePoLinesJson(order.linesJson).lines
+    } catch {
+      return NextResponse.json({ error: 'Lignes du bon de commande invalides ; corrigez-les avant cette transition.', code: 'INVALID_PURCHASE_ORDER_LINES' }, { status: 409 })
+    }
+    if (!exactLines.length || exactLines.some((line) =>
+      !line.partName.trim() || fromScaled(line.qtyTenThousandths) <= 0
+    )) {
+      return NextResponse.json({ error: 'Le bon ne contient aucune ligne exploitable ; corrigez-le avant cette transition.', code: 'INVALID_PURCHASE_ORDER_LINES' }, { status: 409 })
+    }
+    const fractional = exactLines.filter((line) => !Number.isInteger(fromScaled(line.qtyTenThousandths)))
+    if (fractional.length) {
+      return NextResponse.json({ error: 'Le stock se compte en unités entières ; corrigez les quantités fractionnaires avant cette transition.', code: 'INVALID_STOCK_QUANTITY' }, { status: 409 })
+    }
+    stockLines = exactLines.flatMap((line) => line.partId
+      ? [{ partId: line.partId, qty: fromScaled(line.qtyTenThousandths) }]
+      : [])
+    stockPartIds = [...new Set(stockLines.map((line) => line.partId))]
+  }
+
+  let result: { raced: boolean; unavailableParts: boolean; stockUpdated: number }
   try {
-    lines = parsePoLinesJson(order.linesJson).lines.map((l) => ({
-      partId: l.partId,
-      partName: l.partName,
-      reference: l.reference,
-      // Stock en unités entières — même conversion que la route de réception.
-      qty: Math.round(fromScaled(l.qtyTenThousandths)),
-      unitCost: fromScaled(l.unitCostTenThousandths),
-    }))
-  } catch { lines = [] }
-  const stockLines = lines.filter((l): l is POLine & { partId: string } => !!l.partId && l.qty > 0)
+    result = await prisma.$transaction(async (tx) => {
+      if (stockPartIds.length) {
+        const ownedParts = await tx.part.findMany({
+          where: { id: { in: stockPartIds }, garageId },
+          select: { id: true },
+        })
+        if (ownedParts.length !== stockPartIds.length) {
+          return { raced: false, unavailableParts: true, stockUpdated: 0 }
+        }
+      }
 
-  const result = await prisma.$transaction(async (tx) => {
-    // The status flip is the concurrency guard: only the request that actually
-    // changes the row applies stock side effects.
-    const claim = await tx.purchaseOrder.updateMany({
-      where: { id: order.id, garageId, status: from },
-      data: {
-        status: body.to,
-        ...(t.effects.stampSent ? { sentAt: new Date() } : {}),
-        ...(t.effects.stampReceived ? { receivedAt: new Date() } : {}),
-      },
-    })
-    if (claim.count === 0) return { raced: true }
-
-    // ── Les mouvements fournisseur sont journalisés (GF-037) ─────────────────
-    // Réception et retour sont les deux ENTRÉES/SORTIES fournisseur du garage,
-    // et n'écrivaient rien dans `StockMovement`. Le journal ne montrait donc
-    // que les ventes : un inventaire qui ne tombe pas juste n'avait aucune
-    // entrée à confronter, alors que le schéma pose le stock comme
-    // reconstituable à partir de ce journal.
-    const journaliser = (partId: string, delta: number) =>
-      tx.stockMovement.create({
+      // The status flip is the concurrency guard: only the request that actually
+      // changes the row applies stock side effects.
+      const claim = await tx.purchaseOrder.updateMany({
+        where: { id: order.id, garageId, status: from },
         data: {
-          garageId, partId, type: MOVEMENT.ADJUST, quantityDelta: delta,
-          reason: `Commande fournisseur ${order.number} — ${from} → ${body.to}`,
+          status: body.to,
+          ...(t.effects.stampSent ? { sentAt: new Date() } : {}),
+          ...(t.effects.stampReceived ? { receivedAt: new Date() } : {}),
         },
       })
+      if (claim.count === 0) return { raced: true, unavailableParts: false, stockUpdated: 0 }
 
-    if (t.effects.incrementStock) {
-      for (const l of stockLines) {
-        const part = await tx.part.findFirst({ where: { id: l.partId, garageId }, select: { id: true } })
-        if (part) {
-          await tx.part.update({ where: { id: l.partId }, data: { quantity: { increment: l.qty } } })
-          await journaliser(l.partId, l.qty)
+      const journaliser = (partId: string, delta: number) =>
+        tx.stockMovement.create({
+          data: {
+            garageId, partId, type: MOVEMENT.ADJUST, quantityDelta: delta,
+            reason: `Commande fournisseur ${order.number} — ${from} → ${body.to}`,
+          },
+        })
+
+      let stockUpdated = 0
+      if (t.effects.incrementStock) {
+        for (const line of stockLines) {
+          const inc = await tx.part.updateMany({
+            where: { id: line.partId, garageId },
+            data: { quantity: { increment: line.qty } },
+          })
+          if (inc.count !== 1) throw new SupplierTransitionError('Une pièce liée au bon n’est plus disponible. Aucune transition n’a été appliquée.')
+          await journaliser(line.partId, line.qty)
+          stockUpdated++
+        }
+      } else if (t.effects.decrementStock) {
+        for (const line of stockLines) {
+          const dec = await tx.part.updateMany({
+            where: { id: line.partId, garageId, quantity: { gte: line.qty } },
+            data: { quantity: { decrement: line.qty } },
+          })
+          if (dec.count === 1) {
+            await journaliser(line.partId, -line.qty)
+            stockUpdated++
+            continue
+          }
+          // Stock insuffisant : plafonner à zéro, mais seulement si la quantité
+          // observée n’a pas changé. Une course est refusée au lieu d’un faux journal.
+          const before = await tx.part.findFirst({ where: { id: line.partId, garageId }, select: { quantity: true } })
+          if (!before) throw new SupplierTransitionError('Une pièce liée au bon n’est plus disponible. Aucune transition n’a été appliquée.')
+          if (before.quantity >= line.qty) throw new SupplierTransitionError('Le stock a changé pendant le retour. Réessayez après vérification.')
+          if (before.quantity === 0) continue
+          const clamp = await tx.part.updateMany({
+            where: { id: line.partId, garageId, quantity: before.quantity },
+            data: { quantity: 0 },
+          })
+          if (clamp.count !== 1) throw new SupplierTransitionError('Le stock a changé pendant le retour. Réessayez après vérification.')
+          await journaliser(line.partId, -before.quantity)
+          stockUpdated++
         }
       }
-    } else if (t.effects.decrementStock) {
-      for (const l of stockLines) {
-        // Décrément ATOMIQUE (comme l'incrément ci-dessus) : updateMany conditionnel
-        // sur un stock suffisant → { decrement } — évite la course lecture-modif-écriture
-        // (lost update) qui, sur PostgreSQL multi-instance, écrasait un incrément concurrent.
-        const dec = await tx.part.updateMany({
-          where: { id: l.partId, garageId, quantity: { gte: l.qty } },
-          data: { quantity: { decrement: l.qty } },
-        })
-        if (dec.count === 1) {
-          await journaliser(l.partId, -l.qty)
-          continue
-        }
-        // Stock insuffisant (donnée incohérente) : on plafonne à 0 de façon atomique
-        // (condition quantity < qty → set 0), sans jamais passer sous zéro.
-        //
-        // Le mouvement journalisé est alors celui RÉELLEMENT appliqué — la
-        // quantité qui restait — et non celui demandé : le journal doit décrire
-        // le stock, pas l'intention.
-        const avant = await tx.part.findFirst({
-          where: { id: l.partId, garageId }, select: { quantity: true },
-        })
-        if (!avant) continue
-        await tx.part.updateMany({
-          where: { id: l.partId, garageId, quantity: { lt: l.qty } },
-          data: { quantity: 0 },
-        })
-        if (avant.quantity > 0) await journaliser(l.partId, -avant.quantity)
-      }
+      return { raced: false, unavailableParts: false, stockUpdated }
+    })
+  } catch (error) {
+    if (error instanceof SupplierTransitionError) {
+      return NextResponse.json({ error: error.message, code: 'PURCHASE_ORDER_STOCK_CONFLICT' }, { status: 409 })
     }
-    return { raced: false }
-  })
+    throw error
+  }
+
+  if (result.unavailableParts) {
+    return NextResponse.json({ error: 'Une pièce liée au bon est introuvable dans ce garage. Corrigez les lignes avant réception ou retour.', code: 'PURCHASE_ORDER_PART_UNAVAILABLE' }, { status: 409 })
+  }
 
   if (result.raced) {
     return NextResponse.json({ error: 'La commande a déjà changé d\'état.' }, { status: 409 })
   }
 
   await logAudit({ action: 'update', entityType: 'PurchaseOrder', entityId: order.id, session, req, details: { from, to: body.to } })
-  return NextResponse.json({ ok: true, order: { id: order.id, number: order.number, status: body.to }, effects: t.effects })
+  return NextResponse.json({ ok: true, order: { id: order.id, number: order.number, status: body.to }, effects: t.effects, stockUpdated: result.stockUpdated })
 })
+
+class SupplierTransitionError extends Error {}

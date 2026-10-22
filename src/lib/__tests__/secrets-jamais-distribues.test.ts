@@ -36,7 +36,12 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
+import { createRequire } from 'node:module'
+import { generateKeyPairSync } from 'node:crypto'
 
+const requireCjs = createRequire(import.meta.url)
+const { scanVersionedPrivateKeys } = requireCjs('../../../scripts/lib/scan-versioned-private-keys.cjs')
+const { containsPrivateKeyMaterial } = requireCjs('../../../scripts/lib/private-key-material.cjs')
 const RACINE = path.resolve(__dirname, '../../..')
 
 /** Secrets dont la fuite donnerait un pouvoir de signature ou d'élévation. */
@@ -90,21 +95,44 @@ describe('aucun secret racine n’est lu côté CLIENT (GF-DUR-044)', () => {
 })
 
 describe('aucune clé privée dans l’arbre (GF-DUR-044)', () => {
-  it('aucun corps de bloc PEM dans les sources versionnées', () => {
-    // Un en-tête seul ne prouve rien (les détecteurs en contiennent) : on
-    // cherche le CORPS, une ligne de base64 pur assez longue pour être une clé.
-    const suspects: string[] = []
-    for (const f of fichiers(path.join(RACINE, 'src'), /\.(ts|tsx|js|mjs|json)$/)
-      .concat(fichiers(path.join(RACINE, 'scripts'), /\.(js|mjs|ps1|cmd)$/))
-      .concat(fichiers(path.join(RACINE, 'electron'), /\.js$/))) {
-      const src = fs.readFileSync(f, 'utf8')
-      if (!/BEGIN [A-Z ]*PRIVATE KEY/.test(src)) continue
-      // Corps PEM = ligne de base64 pur d'au moins 60 caractères.
-      if (/^[A-Za-z0-9+/]{60,}={0,2}$/m.test(src)) {
-        suspects.push(path.relative(RACINE, f).replace(/\\/g, '/'))
-      }
-    }
-    expect(suspects, 'ces fichiers contiennent un bloc PEM complet').toEqual([])
+  it('analyse tout le texte versionné, les sources critiques et les liens en moins de 5 secondes', () => {
+    const debut = performance.now()
+    const scan = scanVersionedPrivateKeys(RACINE)
+    const duree = performance.now() - debut
+
+    expect(scan.issues, 'aucun fichier source ne doit être ignoré ou impossible à inspecter').toEqual([])
+    expect(scan.findings, 'ces fichiers contiennent une véritable clé privée PEM').toEqual([])
+    expect(scan.trackedFileCount).toBeGreaterThan(1000)
+    expect(scan.trackedPaths).toContain('src/lib/__tests__/secrets-jamais-distribues.test.ts')
+    expect(scan.trackedPaths).toContain('scripts/check-artifact-secrets.mjs')
+    expect(scan.trackedPaths).toContain('electron/preload.js')
+    expect(scan.trackedPaths).toContain('prisma/schema.prisma')
+    expect(scan.trackedPaths).toContain('configuation automatique/config.js')
+    expect(scan.trackedPaths).toContain('.env.example')
+    expect(duree, `scan Git natif: ${duree.toFixed(1)} ms`).toBeLessThan(5000)
+  })
+
+  it('détecte une vraie clé privée, y compris encapsulée dans du JSON', () => {
+    const { privateKey, publicKey } = generateKeyPairSync('ed25519')
+    const pem = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString()
+    const publicPem = publicKey.export({ type: 'spki', format: 'pem' }).toString()
+
+    expect(containsPrivateKeyMaterial(pem)).toBe(true)
+    expect(containsPrivateKeyMaterial(JSON.stringify({ value: pem }))).toBe(true)
+    expect(containsPrivateKeyMaterial(publicPem)).toBe(false)
+  })
+
+  it('ne confond pas un marqueur de documentation et une ligne Base64 légitime avec une clé privée', () => {
+    const base64SansCle = Buffer.from('documentation, hash de contenu et données de test').toString('base64')
+    const fauxBloc = [
+      '-----BEGIN PRIVATE KEY-----',
+      base64SansCle,
+      '-----END PRIVATE KEY-----',
+    ].join('\n')
+    const marqueurDeCode = `const marker = '-----BEGIN PRIVATE KEY-----';\nconst digest = '${'A'.repeat(128)}';`
+
+    expect(containsPrivateKeyMaterial(fauxBloc)).toBe(false)
+    expect(containsPrivateKeyMaterial(marqueurDeCode)).toBe(false)
   })
 
   it('`keys/*.pem` reste ignoré par git', () => {

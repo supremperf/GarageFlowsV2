@@ -107,8 +107,8 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
     }
   }
 
-  // Confirming an action proposal never writes here — it hands off to the real,
-  // fully-formed tool (where the user finalises and confirms the actual write).
+  // Confirming an action proposal never writes here — it only opens the relevant
+  // screen. That screen may explain that a live integration is not available.
   const onConfirmAction = (idx: number) => {
     const res = messages[idx]?.res
     const intent = res?.intent ?? res?.action?.id
@@ -194,7 +194,7 @@ function Bubble({ m, onConfirm, onDecline }: { m: Msg; onConfirm: () => void; on
             <div style={{ fontSize: 12.5, fontWeight: 700, color: m.confirmed ? '#4ade80' : m.declined ? '#94a3b8' : '#fbbf24', display: 'flex', alignItems: 'center', gap: 7 }}>
               {m.confirmed ? `✓ ${t.cpActionConfirmed}` : m.declined ? t.cpActionDeclined : `⚠ ${t.cpActionNeedsConfirm}`}
             </div>
-            {m.confirmed && <p style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 6 }}>Ouverture de l’outil demandée. L’enregistrement ou l’envoi doit être validé et vérifié dans son formulaire ; le chat n’a effectué aucune écriture.</p>}
+            {m.confirmed && <p style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 6 }}>Ouverture de l’outil demandée. Le chat n’a effectué aucune écriture ni aucun envoi ; vérifiez les possibilités et l’état affichés par l’outil.</p>}
             {!m.confirmed && !m.declined && (
               <>
                 <p style={{ fontSize: 11.5, color: '#64748b', margin: '6px 0 9px' }}>{t.cpActionHint}</p>

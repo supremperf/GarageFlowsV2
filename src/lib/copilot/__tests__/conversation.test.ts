@@ -25,6 +25,11 @@ describe('bounded sourced conversation', () => {
     expect(searchKnowledge('marge finance rapports commandes fournisseurs', 'RECEPTIONIST').some(a => ['finance', 'reports', 'purchases'].includes(a.id))).toBe(false)
     expect(searchKnowledge('marge', 'UNKNOWN')).toEqual([])
   })
+  it('states that supplier automation is unavailable rather than promising a quote/form', () => {
+    const article = KNOWLEDGE.find(a => a.id === 'purchases')
+    expect(article?.text).toMatch(/création automatique est désactivée/i)
+    expect(article?.text).toMatch(/prix, disponibilité et délais ne sont pas vérifiés/i)
+  })
   it('uses previous user topic for help, never assistant facts', async () => {
     const r = await ask('Et comment faire ?', 'OWNER', ['Comment préparer un devis ?'])
     expect(r.sources?.some(s => s.id === 'quotes')).toBe(true)

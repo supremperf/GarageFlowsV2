@@ -1,55 +1,46 @@
 'use strict'
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Plan de durcissement des Electron Fuses (appliqué au binaire packagé par
-//  scripts/afterPack.js via @electron/fuses).
-//
-//  Les « fuses » sont des bits gravés dans le binaire Electron qui désactivent
-//  définitivement des capacités dangereuses. On applique le sous-ensemble SÛR :
-//    • RunAsNode:false                       → pas de mode Node.js caché (ELECTRON_RUN_AS_NODE)
-//    • EnableNodeOptionsEnvironmentVariable:false → NODE_OPTIONS ignoré
-//    • EnableNodeCliInspectArguments:false   → --inspect / débogage distant désactivé
-//    • OnlyLoadAppFromAsar:true              → l'app ne se charge QUE depuis l'asar
-//    • EnableCookieEncryption:true           → cookies chiffrés au repos
-//
-//  ⚠️ GrantFileProtocolExtraPrivileges DOIT rester à TRUE : parmi les « privilèges
-//  étendus » que ce fuse contrôle figure la résolution des chemins À L'INTÉRIEUR
-//  d'une archive asar par le protocole file://. Avec le fuse à false, app.asar
-//  redevient un simple FICHIER pour le service réseau : toute URL
-//  file://…/app.asar/electron/*.html échoue en ERR_FILE_NOT_FOUND. Or splash.html
-//  et license.html sont chargés exactement ainsi (BrowserWindow.loadFile depuis
-//  __dirname, qui pointe dans l'asar) → les deux fenêtres restaient VIDES, peintes
-//  uniquement par leur backgroundColor : l'« écran noir » au démarrage, sans
-//  aucune trace dans le log (aucun handler did-fail-load n'était posé).
-//  Vérifié empiriquement (A/B sur le binaire packagé, Electron 31.7.7) :
-//    fuse=false → ERR_FILE_NOT_FOUND ; fuse=true → page rendue normalement.
-//  Ne repasser ce fuse à false qu'après avoir servi ces pages autrement
-//  (protocole applicatif dédié via protocol.handle, ou fichiers déballés hors asar).
-//
-//  ⚠️ EnableEmbeddedAsarIntegrityValidation est laissé à FALSE : ce fuse exige que
-//  l'EMPREINTE de l'asar soit embarquée dans le binaire (electron-builder v25, ou
-//  une étape manuelle). electron-builder 24.x ne l'embarque pas → activer le fuse
-//  briquerait le chargement de l'asar au runtime. En attendant, l'intégrité
-//  d'app.asar est déjà vérifiée au démarrage par le manifeste HMAC signé
-//  (electron/integrity.js, mode « enforce » en build packagé). Voir
-//  docs/SECURITY-HARDENING.md (interventions restantes).
-// ─────────────────────────────────────────────────────────────────────────────
-
+// Fuses are an explicit release contract for Electron 44.9.3. Keep every
+// current V1 bit assigned and require all known fuses: an Electron/fuses update
+// that introduces another bit must stop packaging until it is reviewed.
 const { FuseVersion, FuseV1Options } = require('@electron/fuses')
 
 const fusePlan = {
   version: FuseVersion.V1,
-  // macOS uniquement : re-signature ad-hoc après flip. Build Windows → sans effet.
+  strictlyRequireAllFuses: true,
+  // macOS-only behavior; this project currently ships Windows x64.
   resetAdHocDarwinSignature: false,
+
+  // Remove alternate Node execution, environment-injected Node options, and
+  // remote inspector entry points. The Next server runs through utilityProcess,
+  // not ELECTRON_RUN_AS_NODE.
   [FuseV1Options.RunAsNode]: false,
-  [FuseV1Options.EnableCookieEncryption]: true,
   [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
   [FuseV1Options.EnableNodeCliInspectArguments]: false,
-  [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: false, // voir avertissement ci-dessus
+
+  // Persist cookies encrypted with OS-provided keys. This is already the
+  // shipped posture; do not downgrade it because that can invalidate cookies.
+  [FuseV1Options.EnableCookieEncryption]: true,
+
+  // electron-builder 26.15.3 embeds the app.asar header SHA-256 in the Windows
+  // executable (ElectronAsarIntegrity resource). Electron 44 supports this on
+  // Windows; verify the generated binary with check-artifact-fuses after pack.
+  [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
   [FuseV1Options.OnlyLoadAppFromAsar]: true,
-  // TRUE obligatoire : file:// doit pouvoir lire DANS app.asar (splash + licence).
-  // Voir l'avertissement ci-dessus — le mettre à false rend l'app inutilisable.
+
+  // No custom browser_v8_context_snapshot.bin is shipped. Leave the optional
+  // snapshot switch explicitly off rather than selecting a missing resource.
+  [FuseV1Options.LoadBrowserProcessSpecificV8Snapshot]: false,
+
+  // Required by splash.html and license.html, which BrowserWindow.loadFile()
+  // loads from app.asar using file://. Previous A/B testing on Electron 31.7.7
+  // showed false -> ERR_FILE_NOT_FOUND and true -> pages rendered. Replacing
+  // file:// with a registered application protocol is a separate migration.
   [FuseV1Options.GrantFileProtocolExtraPrivileges]: true,
+
+  // Electron 42+ enables the Wasm trap-handler fuse by default. Keep the safer,
+  // faster guarded-memory behavior explicit instead of relying on that default.
+  [FuseV1Options.WasmTrapHandlers]: true,
 }
 
 module.exports = { fusePlan }

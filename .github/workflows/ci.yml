@@ -576,6 +576,10 @@ jobs:
           cache: npm
       - run: npm install --global npm@11.16.0
       - run: npm ci
+      - name: Install the pinned Electron binary (Electron 42+ removed postinstall download)
+        run: npx install-electron --no
+      - name: Verify private-key source scanner on Windows (Git paths with spaces)
+        run: node --test tests/private-key-material.test.cjs
       # Restores the existing public anchor only: no private key, no rotation,
       # no independent attestation of the external publisher and no release.
       - run: node scripts/materialize-build-public-key.cjs

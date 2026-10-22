@@ -9,7 +9,7 @@ export interface KnowledgeArticle {
   permission?: Permission
   source: { path: string; anchor: string }
 }
-export const KNOWLEDGE_VERSION = '2026-10-15.2'
+export const KNOWLEDGE_VERSION = '2026-10-22.1'
 export const KNOWLEDGE: readonly KnowledgeArticle[] = [
   { id: 'planning', title: 'Planning et rendez-vous', keywords: ['planning', 'rdv', 'rendez vous', 'intervention', 'planifier'], permission: 'job:manage',
     text: 'Depuis le planning, créer une intervention avec le client, le véhicule, la date, l’heure et le mécanicien. « Crée un rendez-vous » ouvre le formulaire après confirmation ; le chat ne crée pas une intervention avec des champs manquants.',
@@ -21,7 +21,7 @@ export const KNOWLEDGE: readonly KnowledgeArticle[] = [
     text: '« Quelles pièces sont en rupture de stock ? » consulte les besoins de réapprovisionnement. Les coûts d’achat sont retirés pour les utilisateurs sans accès financier. Un besoin de réapprovisionnement n’est pas une commande déjà passée.',
     source: { path: 'src/lib/copilot/server-readers.ts', anchor: 'redactReorderCosts(' } },
   { id: 'purchases', title: 'Commandes fournisseurs', keywords: ['fournisseur', 'fournisseurs', 'commande', 'achat'], permission: 'stock:manage',
-    text: '« Commander des pièces » propose d’ouvrir l’outil fournisseurs. Le formulaire de commande doit être complété et validé. La création d’une commande requiert stock:manage côté serveur ; le copilote n’envoie pas de commande automatiquement.',
+    text: '« Commander des pièces » ouvre le panneau de suivi des commandes existantes ; cette confirmation ne crée ni n’envoie une commande. Aucun connecteur fournisseur en temps réel n’est configuré : prix, disponibilité et délais ne sont pas vérifiés, et la création automatique est désactivée. Confirmez les conditions directement auprès du fournisseur ; le panneau peut suivre les commandes enregistrées et leur réception.',
     source: { path: 'src/app/api/purchase-orders/route.ts', anchor: "'stock:manage'" } },
   { id: 'clients', title: 'Clients et véhicules', keywords: ['client', 'clients', 'vehicule', 'vehicules', 'immatriculation'], permission: 'customer:manage',
     text: 'Les fiches clients et leurs véhicules sont liés au garage connecté. La recherche client utilise un nom et retourne les véhicules associés. Pour retrouver une intervention dans le chat, donner une immatriculation ou un nom : « retrouve le dossier AB-123-CD ». Sans référence, le copilote demande une précision.',

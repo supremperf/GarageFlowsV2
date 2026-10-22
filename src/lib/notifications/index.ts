@@ -7,7 +7,8 @@
  *   })
  *
  * Offline-safe: unconfigured channels yield a 'not_configured' result rather
- * than an error, so a complete journal is always produced.
+ * than an error. The notification journal is not treated as recipient delivery;
+ * an in-app channel stays disabled until a real recipient-visible inbox exists.
  */
 export * from './types'
 export { renderTemplate, extractVariables } from './template'

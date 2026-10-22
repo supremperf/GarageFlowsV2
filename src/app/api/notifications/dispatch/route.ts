@@ -87,8 +87,9 @@ export const POST = withAuth(async (req) => {
   if (!garage) return NextResponse.json({ error: 'Garage introuvable' }, { status: 404 })
 
   const emailSend = buildEmailSender(garage)
-  // SMS / WhatsApp / Push have no built-in gateway yet → not_configured (structured
-  // so a real gateway can be added without touching the engine or the callers).
+  // SMS / WhatsApp / Push have no built-in gateway yet → not_configured. The
+  // internal channel is also deliberately unconfigured: writing an audit journal
+  // is not delivery to the named recipient.
   const engine = new NotificationEngine({
     providers: [
       new InternalProvider(),

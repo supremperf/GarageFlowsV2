@@ -53,11 +53,11 @@ describe('renderMessage', () => {
 describe('NotificationEngine.dispatch', () => {
   const template: TemplateDef = { key: 't', subject: 'S', body: 'Hello {{ name }}', variables: ['name'] }
 
-  it('sends via the internal channel by default', async () => {
+  it('does not report journal-only internal notifications as delivered', async () => {
     const engine = new NotificationEngine({ sleep: noSleep })
     const r = await engine.dispatch({ channel: 'internal', to: 'u1', context: { name: 'A' }, template })
-    expect(r.status).toBe('sent')
-    expect(r.attempts).toBe(1)
+    expect(r.status).toBe('not_configured')
+    expect(r.attempts).toBe(0)
   })
 
   it('reports not_configured for a channel with no provider', async () => {
@@ -107,7 +107,7 @@ describe('NotificationEngine.dispatchTrigger', () => {
     expect(byChannel.sms).toBe('sent')
     expect(byChannel.whatsapp).toBe('not_configured')
     expect(byChannel.email).toBe('not_configured')
-    expect(byChannel.internal).toBe('sent')
+    expect(byChannel.internal).toBe('not_configured')
     // The built-in template rendered with the currency filter.
     expect(sms.sent[0].message.body).toContain('240,00 €')
   })

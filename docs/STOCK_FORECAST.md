@@ -47,6 +47,11 @@ commande), consommation nulle (aucun risque), plancher de seuil mini, arrondi au
 conditionnement, stock de sécurité qui augmente avec la variabilité, tri par
 urgence + résumé.
 
-## À venir
-- Meilleur fournisseur (délai/prix) et commande groupée — jonction avec le module
-  Commande automatique fournisseurs ; saisonnalité annuelle dès 24 mois.
+## Limites et suite
+
+La recommandation de quantité/coût est une **estimation fondée sur l’historique et
+les coûts saisis localement** : elle ne vérifie pas un prix ou un stock fournisseur
+et ne crée pas un bon de commande. Les devis et commandes fournisseurs automatiques
+restent désactivés tant qu’aucune intégration réelle n’est validée (voir
+[`SUPPLIERS.md`](./SUPPLIERS.md)). Une future intégration nécessitera un sandbox,
+une validation du contrat et des preuves multi-garages avant activation.

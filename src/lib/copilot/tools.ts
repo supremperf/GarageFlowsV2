@@ -30,10 +30,14 @@ const READ_DETAILS: Record<string, [string, Permission | null, string, string, s
 const HANDOFF_PERMISSIONS: Record<string, Permission> = { create_appointment: 'job:manage', create_quote: 'quote:manage', send_reminder: 'customer:manage', order_parts: 'stock:manage', generate_report: 'financial:read' }
 export const TOOLS: readonly ToolDefinition[] = [
   ...INTENTS.map(i => {
-    if (i.kind === 'action') return { id: i.id, intent: i.id, title: i.keywords[0], kind: 'handoff' as const,
-      permission: HANDOFF_PERMISSIONS[i.id], schema: Empty, parameters: 'Aucun champ métier envoyé : formulaire à compléter',
-      access: 'Ouverture d’un outil existant uniquement ; aucune écriture depuis le chat', confirmation: 'Confirmation du chat puis validation effective dans le formulaire',
-      verification: 'Le chat vérifie seulement la proposition. Vérifier création/envoi dans l’outil après sa réponse serveur.', errors: ['forbidden', 'needs_confirmation', 'form_unavailable'] }
+    if (i.kind === 'action') return { id: i.id, intent: i.id,
+      title: i.id === 'order_parts' ? 'Ouvrir le suivi des commandes fournisseurs' : i.keywords[0], kind: 'handoff' as const,
+      permission: HANDOFF_PERMISSIONS[i.id], schema: Empty,
+      parameters: i.id === 'order_parts' ? 'Aucun champ envoyé ; le suivi des commandes existantes s’ouvre. Aucune commande automatique sans intégration réelle.' : 'Aucun champ métier envoyé : compléter dans l’outil dédié',
+      access: 'Ouverture d’un outil existant uniquement ; aucune écriture depuis le chat',
+      confirmation: i.id === 'order_parts' ? 'La confirmation ouvre le panneau ; elle ne crée ni n’envoie une commande.' : 'Confirmation du chat puis validation effective dans le formulaire',
+      verification: i.id === 'order_parts' ? 'Le panneau liste uniquement les commandes déjà enregistrées. Aucun prix, stock fournisseur ou délai n’est vérifié.' : 'Le chat vérifie seulement la proposition. Vérifier création/envoi dans l’outil après sa réponse serveur.',
+      errors: i.id === 'order_parts' ? ['forbidden', 'needs_confirmation', 'integration_unavailable'] : ['forbidden', 'needs_confirmation', 'form_unavailable'] }
     const [title, permission, access, verification, period] = READ_DETAILS[i.id]
     return { id: i.id, intent: i.id, title, kind: 'read' as const, permission, resolver: i.resolver,
       schema: i.id === 'vin_decode' ? VinInput : i.id === 'diagnostic' ? DiagnosticInput : Empty,

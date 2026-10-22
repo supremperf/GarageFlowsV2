@@ -1,10 +1,11 @@
 /**
- * Automatic supplier ordering — public entry point.
+ * Supplier quote/order domain — offline-testable core, not a live provider.
  *
  *   import { SupplierEngine, StaticConnector, transition } from '@/lib/suppliers'
  *
+ *   // Unit tests/demos only: never use static/fallback catalogues for a live order.
  *   const engine = new SupplierEngine([
- *     new StaticConnector({ id: 'oscaro', name: 'Oscaro', favorite: true, catalog }),
+ *     new StaticConnector({ id: 'fixture-supplier', name: 'Fixture', favorite: true, catalog }),
  *   ])
  *   const { plan } = await engine.quote(queries)   // ranked + grouped draft orders
  *   const next = transition('draft', 'sent')       // guarded lifecycle step

@@ -1,108 +1,87 @@
-# Module Premium — Commande automatique fournisseurs
+# Commandes fournisseurs — état vérifié
 
-Transforme les besoins en pièces (ruptures de stock, liste explicite) en
-**commandes groupées par fournisseur**, après **comparaison automatique** des
-offres (prix / délai / disponibilité + favoris). Chaque commande suit un
-**cycle de vie contrôlé**, et chaque action impactante est **confirmée** avant
-d'écrire.
+## État de production
 
-## Architecture
+**L’intégration fournisseur en temps réel n’est pas implémentée.** En conséquence,
+GarageFlows ne compare pas d’offres réelles et ne connaît ni le prix actuel, ni
+la disponibilité, ni le délai de livraison auprès d’un fournisseur. L’application
+n’invente pas ces données et ne crée pas de bon de commande automatique à partir
+du coût historique d’une pièce.
 
-```
-src/lib/suppliers/
-├── types.ts       # PartQuery, SupplierOffer, LineComparison, Order, OrderStatus, SupplierConnector
-├── connectors.ts  # SupplierConnector (interface) + StaticConnector / FallbackConnector (offline)
-├── compare.ts     # rankLine, buildGroupedOrders, buildOrderPlan (déterministe)
-├── order.ts       # machine à états du cycle de vie + effets (stock, horodatage)
-├── engine.ts      # SupplierEngine : connecteurs → comparaison → commandes
-└── index.ts
-```
+- `GET /api/suppliers` renvoie `501 SUPPLIER_INTEGRATION_REQUIRED`.
+- `POST /api/suppliers` avec `action: 'create-orders'` renvoie le même `501`,
+  avec ou sans `confirm`, et n’écrit rien en base.
+- Le panneau Fournisseurs l’indique explicitement et ne présente plus de devis
+  estimé comme une offre fournisseur.
+- `Part.supplierName` et `Part.supplierRef` restent des métadonnées saisies par
+  le garage. Elles ne prouvent pas un tarif ou un stock actuel.
+- Les bons de commande déjà enregistrés restent consultables. Le cycle d’état,
+  la réception et les mouvements de stock restent disponibles pour ces bons,
+  sous contrôle `stock:manage` et `garageId`.
+- `POST /api/purchase-orders` permet toujours d’enregistrer un bon avec des lignes
+  non vides et des quantités entières positives fournies par l’appelant. Ces données
+  ne sont pas vérifiées par GarageFlows auprès du fournisseur ; le logiciel ne
+  prétend donc pas que le bon a été transmis.
 
-Le cœur est **pur et déterministe** : les connecteurs renvoient des offres, le
-comparateur les classe, les commandes sont regroupées par fournisseur. Les
-**vraies intégrations fournisseurs** (API type TecDoc, EDI, catalogues) se
-branchent derrière l'interface `SupplierConnector` sans toucher au moteur.
+## Cœur hors ligne (tests/démonstrations uniquement)
 
-## Comparaison — priorité de classement
+`src/lib/suppliers/` conserve un moteur déterministe permettant de tester le
+classement et le cycle de vie :
 
-Pour chaque pièce demandée, les offres sont classées par :
+- `StaticConnector` utilise un catalogue mémoire de fixtures.
+- `FallbackConnector` peut fabriquer une offre de test.
+- `SupplierEngine` compare, classe et regroupe des offres fournies par un
+  connecteur.
 
-1. **Couverture** — une offre qui couvre toute la quantité passe avant une offre
-   partielle moins chère.
-2. **Prix effectif** — avec une **bande de tolérance** (5 % par défaut) dans
-   laquelle un **fournisseur favori** l'emporte même s'il est légèrement plus
-   cher.
-3. **Délai de livraison** le plus court.
-4. Favori, puis nom du fournisseur (départage stable → sortie déterministe).
+Ces classes sont **hors ligne uniquement** et ne sont pas branchées dans la route
+de production. Leur résultat ne constitue ni une preuve commerciale ni un
+connecteur fournisseur. Aucun fournisseur externe (API, EDI ou catalogue) n’est
+actuellement configuré.
 
-Chaque décision est **explicable** (`OfferRanking.reason`). Les lignes que
-personne ne peut fournir sont isolées dans `unfulfillable`.
+## Cycle des bons enregistrés
 
-## Connecteurs
-
-| Connecteur | Rôle |
-|---|---|
-| `StaticConnector` | Catalogue en mémoire ; correspondance par référence exacte (insensible aux accents) puis par nom. Déterministe. |
-| `FallbackConnector` | Renvoie une offre unique « sur commande » — filet de sécurité / tests. |
-| *(votre intégration)* | Implémentez `quote(queries): Promise<SupplierOffer[]>` — API, EDI, e‑mail catalogue. Ne jamais lever pour un simple « pièce non trouvée ». |
-
-Le `SupplierEngine` interroge **tous** les connecteurs en parallèle
-(`Promise.allSettled`) : un connecteur qui échoue (panne réseau, identifiants)
-est **isolé** — son erreur est remontée dans `errors` et le calcul continue.
-
-## Cycle de vie de commande
-
-```
-draft ─▶ sent ─▶ confirmed ─▶ received ─▶ returned
-  │        │          │
-  └────────┴──────────┴─▶ cancelled
+```text
+draft → sent → confirmed → received → returned
+  └──────────────────────────────→ cancelled
 ```
 
-`transition(from, to)` valide la transition et décrit ses **effets** sans muter :
-`incrementStock` (réception), `decrementStock` (retour), `stampSent`,
-`stampReceived`. `cancelled` et `returned` sont **terminaux**.
+`POST /api/suppliers` avec `action: 'transition'` applique le cycle après
+confirmation. La réception et le retour ajustent le stock dans une transaction,
+avec contrôle du garage, revendication atomique de l’état et journalisation des
+mouvements. Les lignes JSON malformées, vides, sans article, à quantité nulle,
+fractionnaire, ou liées à une pièce absente/d’un autre garage sont refusées avant
+que le statut terminal ne soit enregistré. Toute course de suppression ou
+modification de pièce annule la transaction ; la réponse indique le nombre de
+lignes de stock effectivement mises à jour. Cette opération met à jour l’état du
+bon et le stock ; elle ne prouve pas qu’un fournisseur a reçu ou confirmé la
+commande. La transmission reste manuelle et doit être confirmée auprès du fournisseur.
 
-## API — `POST` / `GET /api/suppliers`
+## Conditions préalables à la réactivation de l’automatisation
 
-Authentifié, cloisonné par `garageId`, limité en débit (30 req/min sur POST).
+Avant de renvoyer autre chose que `501`, il faut :
 
-- **`GET /api/suppliers?targetMultiplier=2`** — *lecture seule*. Construit le plan
-  de réapprovisionnement : pièces **à/sous le seuil** (`quantity ≤ minQuantity`),
-  quantité recommandée pour remonter à `minQuantity × targetMultiplier`, sourcées
-  via un `StaticConnector` par **fournisseur habituel** (déduit de
-  `Part.supplierName` / `supplierRef` / `unitCost`). Renvoie
-  `{ comparisons, orders, unfulfillable, summary, errors }`.
-
-- **`POST` `{ action: 'create-orders', confirm, parts?, targetMultiplier? }`** —
-  crée un **brouillon de commande par fournisseur**. Sans `confirm: true`,
-  renvoie `{ confirmationRequired: true, preview }` **sans rien écrire**. Avec
-  `confirm: true`, persiste chaque commande en `PurchaseOrder` (numéro via
-  compteur transactionnel, lignes au format de l'écran d'achats existant) →
-  réceptionnables via l'endpoint `purchase-orders/[id]/receive` déjà en place.
-
-- **`POST` `{ action: 'transition', orderId, to, confirm }`** — avance une
-  commande dans son cycle de vie. Sans `confirm`, renvoie l'aperçu des effets.
-  Avec `confirm`, applique la transition **atomiquement** : le changement de
-  statut sert de garde de concurrence (pas de double comptage), et le stock est
-  ajusté à la **réception** (+) ou au **retour** (−).
-
-Aucune écriture n'a lieu sans confirmation explicite (`confirm: true`).
+1. sélectionner un fournisseur et obtenir une intégration/API réellement prise en
+   charge, son contrat et son environnement sandbox ;
+2. définir comment sont authentifiés les garages, protégés les identifiants et
+   séparés les comptes/commandes multi-garages ;
+3. vérifier les prix, taxes, devise, références, quantité disponible, délais,
+   erreurs, expirations et idempotence à partir de réponses réelles ;
+4. implémenter une transmission de bon qui ne prétend pas réussir avant l’accusé
+   réel du fournisseur ;
+5. ajouter des tests contractuels et d’isolation, puis exécuter un parcours de
+   bout en bout dans le sandbox fournisseur ;
+6. ne réactiver l’interface qu’après revue et preuve datée. Les fixtures hors ligne
+   seules ne satisfont pas ces exigences.
 
 ## Tests
 
-`src/lib/suppliers/__tests__/suppliers.test.ts` — 17 tests : correspondance
-catalogue (référence / nom accent‑insensible, hors stock ignoré), classement
-(favori dans la bande, prix hors bande, couverture vs partiel, rupture),
-regroupement + plafonnement à la disponibilité, résilience (connecteur en
-panne isolé, fallback, requêtes invalides ignorées) et machine à états
-(chemin nominal, transitions interdites/no‑op, états terminaux, effets stock).
-
-## Choix produit & suite
-
-Faute de catalogue fournisseur multi‑sources en base, `GET` s'appuie sur le
-**fournisseur connu par pièce** — ce qui donne déjà de vrais regroupements par
-fournisseur, exploitables. La **comparaison multi‑fournisseurs** s'active dès
-qu'on enregistre plusieurs connecteurs (API réelles, favoris par garage). À
-venir : modèle `Supplier` (favoris, délais, e‑mail), connecteurs API réels
-derrière l'interface, et envoi automatique du bon de commande par e‑mail via le
-module **Notifications**.
+- `src/lib/suppliers/__tests__/suppliers.test.ts` : tests unitaires du moteur hors
+  ligne à l’aide de fixtures ; ils ne vérifient aucun fournisseur réel.
+- `src/integration/suppliers.test.ts` : réponses `501` sans écriture, cycle des
+  commandes enregistrées, isolation du garage et contrôle des permissions.
+- `src/app/api/purchase-orders/__tests__/receive-guards.test.ts` et
+  `src/app/api/suppliers/__tests__/transition-guards.test.ts` : tests de route
+  sans DB pour lignes invalides, pièces absentes/hors garage, course de
+  suppression, stock réellement modifié et mouvements journalisés.
+- `src/integration/supplier-linkage.test.ts` : enregistrement de métadonnées
+  fournisseur et refus de les traiter comme des offres réelles.

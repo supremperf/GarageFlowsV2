@@ -72,3 +72,46 @@ exécution = poste opérateur Windows (voir `EXTERNAL_VALIDATIONS`).
 `nav-guard` (unitaires), `update-verify` (MàJ signées/hashées fail-closed),
 `user-data-path`, `pre-migration-backup`, `secret-cipher`, intégrité des
 ressources — tous dans la suite verte (voir baseline finale).
+
+## 9. Revalidation du 2026-10-22 — candidat Electron 44.9.3 (non validé)
+
+Les sections précédentes sont un relevé historique de la V13. Le candidat
+courant est verrouillé sur Electron **44.9.3**, `@electron/fuses` 2.1.3 et
+`electron-builder` 26.15.3. Electron 42 a atteint sa fin de support le
+2026-10-20 ; 42.11.3 corrigeait bien les erreurs d’origine HID/USB mais ne
+constituait plus une base maintenue au jour de cette revalidation. La version
+44.9.3 est le correctif alors disponible sur la ligne 44 maintenue et intègre
+la mitigation du certificat intermédiaire eMudhra compromis
+([release Electron 44.9.3](https://github.com/electron/electron/releases/tag/v44.9.3),
+[GHSA-jr5w-w6x2-84p9](https://github.com/electron/electron/security/advisories/GHSA-jr5w-w6x2-84p9)).
+Les correctifs de validation d’origine HID/USB et `openExternal` sont également
+présents dans cette branche (respectivement [GHSA-fw47-9c62-h3vw](https://github.com/electron/electron/security/advisories/GHSA-fw47-9c62-h3vw)
+et [GHSA-997q-gvvc-jwmx](https://github.com/electron/electron/security/advisories/GHSA-997q-gvvc-jwmx)).
+Cette sélection est un **candidat de sécurité**, pas une validation de lancement.
+
+Le contrat Node/npm système du dépôt reste inchangé (`node >=22.12.0 <23`) ;
+Electron 44 embarque son propre Node 24.x dans le runtime desktop. Ce n’est pas
+une migration du Node système, mais cette différence ABI/runtime doit être
+exercée sur l’installateur Windows. L’option macOS `openAsHidden` supprimée dans
+Electron 44 a été retirée de l’appel `setLoginItemSettings` (la cible de
+packaging est Windows).
+
+Le build exige une valeur explicite pour chacun des **neuf** fuses V1
+(`strictlyRequireAllFuses`) :
+
+| Fuse V1 | Valeur configurée | Motif |
+|---|---:|---|
+| `RunAsNode` | `false` | Pas de mode Node via environnement ; Next est lancé par `utilityProcess.fork`. |
+| `EnableCookieEncryption` | `true` | Cookies chiffrés par le magasin de clés OS ; ne pas rétrograder une base existante. |
+| `EnableNodeOptionsEnvironmentVariable` | `false` | Désactive `NODE_OPTIONS`. Ne prétend pas filtrer `NODE_EXTRA_CA_CERTS` ni d’autres variables de processus. |
+| `EnableNodeCliInspectArguments` | `false` | Désactive les points d’entrée d’inspection distants. |
+| `EnableEmbeddedAsarIntegrityValidation` | `true` | electron-builder 26.15.3 sait inclure `ElectronAsarIntegrity` dans l’exécutable Windows ; le test verrouille `asar:true` et l’absence de `disableAsarIntegrity`. |
+| `OnlyLoadAppFromAsar` | `true` | Pas de chargement de code depuis un dossier `app` substitué. |
+| `LoadBrowserProcessSpecificV8Snapshot` | `false` | Aucun snapshot `browser_v8_context_snapshot.bin` spécifique n’est livré. |
+| `GrantFileProtocolExtraPrivileges` | `true` | Exception nécessaire aux fenêtres locales chargées depuis `file://` dans l’ASAR ; l’A/B historique Electron 31.7.7 doit être rejoué sur l’artefact 44/Windows. |
+| `WasmTrapHandlers` | `true` | Comportement mémoire WebAssembly sûr, explicitement fixé au lieu de dépendre du défaut Electron. |
+
+`check-artifact-fuses` relit les bits du binaire empaqueté. Aucun binaire Windows
+44.9.3, installateur, lancement, installation/réinstallation/désinstallation
+ou test Authenticode n’a été vérifié ici. Le job Windows du candidat doit fournir
+ces preuves avant publication.

@@ -47,6 +47,15 @@ describe('prepareAction — confirmation gating', () => {
     expect(a.endpoint).toBe('/api/quotes')
     expect(a.method).toBe('POST')
   })
+
+  it('opens supplier-order tracking read-only instead of pointing at an empty POST', () => {
+    const a = prepareAction('order_parts', {})!
+    expect(a.confirmationRequired).toBe(true)
+    expect(a.summary).toMatch(/suivi des commandes fournisseurs/i)
+    expect(a.endpoint).toBe('/api/purchase-orders')
+    expect(a.method).toBe('GET')
+    expect(a.params).toEqual({})
+  })
 })
 
 describe('handleQuery', () => {

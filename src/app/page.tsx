@@ -211,8 +211,8 @@ export default function Home() {
     setSelectedDate(format(addDays(parseISO(selectedDate), 1), 'yyyy-MM-dd'))
   }, [selectedDate, setSelectedDate])
 
-  // Copilot proposes an action, then hands off to the real, fully-formed tool —
-  // it never fires an underspecified write itself.
+  // Copilot proposes an action, then opens its dedicated screen — it never
+  // fires an underspecified write itself. The screen must disclose unavailable flows.
   const handleCopilotAction = useCallback((intent: string) => {
     switch (intent) {
       case 'create_appointment': openCreateModal(); break

@@ -50,6 +50,25 @@ test('patched tar aborts a bounded high-compression fixture without extracting o
     parser.end(compressed)
   }), /max decompression ratio exceeded/)
 })
+test('Vitest, @vitest/mocker and coverage-v8 are aligned at the GHSA-qxg6 / GHSA-xp26 fix', () => {
+  for (const name of ['vitest', '@vitest/mocker', '@vitest/coverage-v8']) {
+    assertPatched(name, '>=4.1.12 <5.0.0')
+  }
+  const versions = new Set(['vitest', '@vitest/mocker', '@vitest/coverage-v8'].flatMap(name =>
+    instances(name).map(([, item]) => item.version)))
+  assert.equal(versions.size, 1, 'all direct Vitest packages must stay on the same patch')
+})
+
+test('Electron stays on the patched, supported 44.x line without changing the project Node 22 contract', () => {
+  assertPatched('electron', '>=44.9.3 <45.0.0')
+  const app = require('../package.json')
+  assert.equal(app.devDependencies.electron, '44.9.3')
+  assert.equal(app.engines.node, '>=22.12.0 <23')
+  assert.ok(semver.satisfies(process.versions.node, app.engines.node), 'test runtime must match the declared Node 22 line')
+  const workflow = fs.readFileSync(path.join(root, '.github/workflows/ci.yml'), 'utf8')
+  assert.match(workflow, /npx install-electron --no/, 'Electron 42+ no longer downloads its runtime from postinstall')
+})
+
 test('patched tar still accepts a normal uncompressed archive and preserves file content', async () => {
   const tar = require('tar'), data = Buffer.from('GarageFlows fixture')
   const header = Buffer.alloc(512)

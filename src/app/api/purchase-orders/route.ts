@@ -33,6 +33,29 @@ export const POST = withAuth(async (req) => {
   } catch {
     return NextResponse.json({ error: 'Lignes de commande invalides' }, { status: 400 })
   }
+  // Do not report success for an empty draft (the old Copilot handoff could
+  // POST {} here) or persist quantities that the stock-receive path must reject.
+  if (!exactLines.length || exactLines.some((line) =>
+    !line.partName.trim() || line.qtyTenThousandths <= 0 || line.qtyTenThousandths % 10_000 !== 0
+  )) {
+    return NextResponse.json({
+      error: 'Au moins une ligne avec un article et une quantité entière positive est requise.',
+      code: 'INVALID_PURCHASE_ORDER_LINES',
+    }, { status: 400 })
+  }
+  const linkedPartIds = [...new Set(exactLines.flatMap((line) => line.partId ? [line.partId] : []))]
+  if (linkedPartIds.length) {
+    const ownedParts = await prisma.part.findMany({
+      where: { id: { in: linkedPartIds }, garageId: session.user.garageId },
+      select: { id: true },
+    })
+    if (ownedParts.length !== linkedPartIds.length) {
+      return NextResponse.json({
+        error: 'Une pièce liée est invalide pour ce garage.',
+        code: 'INVALID_PURCHASE_ORDER_PART',
+      }, { status: 400 })
+    }
+  }
   const linesJson = serializePoLinesJsonV2(exactLines)
   const totalHtCents = poTotalHtCents(exactLines)
 

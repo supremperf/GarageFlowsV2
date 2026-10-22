@@ -125,13 +125,9 @@ export interface Part {
   unitPrice: number
   location?: string
   /**
-   * Fournisseur de la pièce et référence chez ce fournisseur.
-   *
-   * Ces colonnes existent en base (migrations 048/049) et sont lues par le
-   * réapprovisionnement groupé, la recherche de stock et l'autocomplétion des
-   * devis — mais elles manquaient à ce type, au schéma de validation et aux
-   * routes d'écriture : le fournisseur d'une pièce n'était donc renseignable
-   * par aucun écran, et le module « Fournisseurs » restait vide.
+   * Supplier name and supplier-side SKU stored as garage-entered metadata.
+   * These values do not prove current price, availability, or lead time; no live
+   * supplier adapter is currently wired to the production order routes.
    */
   supplierName?: string | null
   supplierRef?: string | null

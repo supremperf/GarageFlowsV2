@@ -128,9 +128,8 @@ function AddPartForm({ onAdd }: { onAdd: (p: Partial<Part>) => Promise<void> }) 
   const [form, setForm] = useState({
     name: '', reference: '', quantity: '0', minQuantity: '5',
     unitCost: '0', unitPrice: '0', location: '',
-    // Fournisseur : c'est ce champ qui alimente le réapprovisionnement groupé du
-    // module « Fournisseurs ». Sans lui, aucune pièce n'était rattachée à un
-    // fournisseur et ce module restait vide sur toute installation réelle.
+    // Supplier identity/SKU are optional metadata; they are not a live quote or
+    // an automatic ordering integration.
     supplierName: '', supplierRef: '',
   })
   const [saving, setSaving] = useState(false)
@@ -184,10 +183,8 @@ function AddPartForm({ onAdd }: { onAdd: (p: Partial<Part>) => Promise<void> }) 
               onChange={e => setForm(f => ({ ...f, reference: e.target.value }))} />
             <input className={input} placeholder={t.stkLocation} value={form.location}
               onChange={e => setForm(f => ({ ...f, location: e.target.value }))} />
-            {/* Fournisseur — c'est ce couple qui rend le réapprovisionnement
-                groupé possible : /api/suppliers regroupe les pièces sous le
-                seuil par `supplierName`, et interroge le connecteur avec
-                `supplierRef` comme référence catalogue. */}
+            {/* Supplier identity/SKU are saved as metadata for purchase orders.
+                No live supplier price, availability, or delivery estimate is fetched. */}
             <input className={input} placeholder={t.stkSupplier} value={form.supplierName}
               onChange={e => setForm(f => ({ ...f, supplierName: e.target.value }))} />
             <input className={input} placeholder={t.stkSupplierRef} value={form.supplierRef}

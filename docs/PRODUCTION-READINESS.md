@@ -2,12 +2,13 @@
 
 # GarageFlows — Résumé de préparation à la production
 
-> **Ce document est un RÉSUMÉ de production. Pour les résultats de validation
-> faisant autorité (commit, comptes de tests, toolchain, classification), voir
-> la source canonique unique : [`docs/audit/FINAL_VERIFICATION_BASELINE.md`](./audit/FINAL_VERIFICATION_BASELINE.md).**
-> En cas de divergence de chiffres, la baseline canonique fait foi. Les chiffres
-> historiques ci-dessous (§3, datés 2026-08-06) sont conservés comme instantané
-> et NE représentent PAS l'état courant.
+> **Ce document est un RÉSUMÉ de production. Pour la baseline machine et les
+> mesures historiques, voir [`docs/audit/FINAL_VERIFICATION_BASELINE.md`](./audit/FINAL_VERIFICATION_BASELINE.md).
+> Pour la revalidation ponctuelle du worktree Arena au 2026-10-22, voir le
+> [rapport du candidat](./audit/2026-10-22/CANDIDATE_READINESS.md) : il est lié à
+> sa branche/HEAD, non commité, et ne remplace pas la baseline machine.**
+> Les chiffres historiques ci-dessous (§3, datés 2026-08-06) sont conservés comme
+> instantané et NE représentent PAS l'état courant.
 
 ## 1. Identité (voir la baseline canonique pour les valeurs faisant foi)
 

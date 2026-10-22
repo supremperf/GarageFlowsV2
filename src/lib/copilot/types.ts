@@ -51,9 +51,9 @@ export interface Classification {
 export interface PreparedAction {
   id: IntentId
   summary: string
-  /** Existing business endpoint for reference; never POST incomplete params from chat. */
+  /** Existing business endpoint for reference; chat never executes this request. */
   endpoint: string
-  method: 'POST'
+  method: 'GET' | 'POST'
   params: Record<string, unknown>
   /** Always true — impactful actions are never auto-executed by the copilot. */
   confirmationRequired: true

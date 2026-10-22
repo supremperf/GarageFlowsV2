@@ -1,28 +1,8 @@
 /**
- * GF-FINAL-018 — le lien PIÈCE → FOURNISSEUR doit être posable par le produit.
- *
- * `Part.supplierName` / `Part.supplierRef` existent en base depuis les
- * migrations 048/049 et sont LUS partout : `/api/suppliers` groupe le
- * réapprovisionnement par `supplierName`, `/api/parts/search` et
- * l'autocomplétion des devis les affichent, la recherche de stock les indexe.
- *
- * Mais aucune route ne les ÉCRIVAIT : absents de `CreatePartSchema`, du `create`
- * de `POST /api/parts` et de la liste blanche du `PATCH`. Seuls le jeu de
- * démonstration et les fixtures de test les renseignaient — en écrivant
- * DIRECTEMENT avec Prisma. C'est ce qui rendait le défaut invisible : la suite
- * `suppliers.test.ts` sème ses pièces via `prisma.part.create(...)` et prouve
- * donc que le moteur de réapprovisionnement fonctionne SI les données existent,
- * jamais qu'un garage peut les saisir.
- *
- * Sur une installation réelle, aucune pièce ne portait de fournisseur :
- * `connectorsFromParts` sortait de boucle à chaque pièce, le plan de
- * réapprovisionnement était toujours vide, le panneau « Fournisseurs »
- * affichait en permanence 0 fournisseur / 0 € et son bouton « Préparer les
- * commandes » restait désactivé.
- *
- * Ce test suit donc le chemin de l'UTILISATEUR de bout en bout : créer une pièce
- * par l'API, la modifier par l'API, puis constater que le plan de
- * réapprovisionnement la voit. Aucune écriture directe en base.
+ * Supplier metadata is editable through the product, but it is not a live
+ * supplier integration and must never be treated as a current quote or proof
+ * of availability. This test verifies the CRUD path and the production route's
+ * fail-closed response while no real supplier adapter is configured.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import path from 'node:path'
@@ -105,8 +85,7 @@ describe('POST /api/parts — le fournisseur est réellement enregistrable', () 
   })
 
   it('les espaces de bordure sont retirés, une saisie vide vaut « pas de fournisseur »', async () => {
-    // Sans cela, « Oscaro » et « Oscaro » (avec espace) formeraient DEUX
-    // fournisseurs distincts dans le plan de réapprovisionnement.
+    // Normalize supplier metadata at the boundary so stored labels stay consistent.
     const res = await creerPiece({ name: 'Durite', quantity: 1, minQuantity: 5, supplierName: '  Oscaro  ', supplierRef: '   ' })
     expect(res.status).toBe(201)
     const enBase = await prisma.part.findFirst({ where: { garageId: garageA, name: 'Durite' } })
@@ -132,20 +111,13 @@ describe('PATCH /api/parts/[id] — le fournisseur est modifiable', () => {
   })
 })
 
-describe('le plan de réapprovisionnement voit les pièces saisies par le produit', () => {
-  it('un fournisseur créé UNIQUEMENT via l\'API apparaît dans le plan', async () => {
-    // C'est l'assertion qui compte : avant correction, ce plan était
-    // systématiquement vide sur une installation réelle, quelle que soit la
-    // saisie de l'utilisateur.
+describe('GET /api/suppliers — no fabricated quote from supplier metadata', () => {
+  it('returns an explicit unavailable response even when supplier names/SKUs exist', async () => {
     const res = await suppliersGET(new Request('http://localhost/api/suppliers'))
-    expect(res.status).toBe(200)
-    const plan = await res.json()
-
-    const fournisseurs: string[] = plan.orders.map((o: { supplierName: string }) => o.supplierName)
-    expect(fournisseurs.length).toBeGreaterThan(0)
-    // « Mecapièces » vient du PATCH, « Oscaro » du POST : les deux chemins
-    // d'écriture aboutissent réellement au moteur de réapprovisionnement.
-    expect(fournisseurs).toContain('Mecapièces')
-    expect(fournisseurs).toContain('Oscaro')
+    expect(res.status).toBe(501)
+    const body = await res.json()
+    expect(body.error).toBe('SUPPLIER_INTEGRATION_REQUIRED')
+    expect(body).not.toHaveProperty('orders')
+    expect(body.message).toMatch(/prix.*disponibilit.*délais/i)
   })
 })

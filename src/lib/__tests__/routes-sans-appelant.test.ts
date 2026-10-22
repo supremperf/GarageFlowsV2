@@ -74,6 +74,11 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   '/api/auth/[...nextauth]': { motif: 'cadre', note: 'point d’entrée NextAuth, atteint par signIn()' },
 
   '/api/ping': { motif: 'exploitation', note: 'sonde de disponibilité ; Electron interroge le serveur de licences, pas celle-ci' },
+  '/api/suppliers': {
+    motif: 'sans-interface',
+    classe: 'PRODUCT_REQUIRED',
+    note: 'DÉCISION : l’intégration réelle est bloquée tant qu’un fournisseur et son sandbox ne sont pas choisis ; GET/création automatique restent en 501. Le suivi/réception des bons enregistrés passe par /api/purchase-orders ; la transition retour de cette route n’a pas encore de commande dans l’interface.',
+  },
   // DÉCLENCHEUR RÉEL : tâche planifiée de l'exploitant (cron), authentifiée par
   // `EINVOICING_QUEUE_TOKEN` (Bearer, comparaison à temps constant). Aucun écran
   // ne la déclenche — une reprise automatique ne se clique pas.

@@ -27,7 +27,7 @@ export function handleQuery(text: string): CopilotResponse {
     return {
       type: 'action_proposal',
       intent: c.intent,
-      message: `Souhaitez-vous que je prépare : ${action?.summary} ? Cette action nécessite votre confirmation.`,
+      message: `Souhaitez-vous ouvrir l’outil : ${action?.summary} ? Cette ouverture nécessite votre confirmation. Le chat ne crée ni n’envoie rien.`,
       action: action ?? undefined,
       confidence: c.confidence,
       slots: c.slots,

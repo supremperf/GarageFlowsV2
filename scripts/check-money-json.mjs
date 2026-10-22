@@ -55,6 +55,24 @@ const ALLOWED = [
     reason:
       "Le helper local `lignesBon` DÉLÈGUE au sérialiseur v2 : `serialiserLignes` est déstructuré depuis `serializePoLinesJsonV2` (@/lib/money-json) et reçoit des champs v2 exacts (qtyTenThousandths, unitCostTenThousandths, lineTotalCents). SAFE_RHS ne reconnaît que l'appel direct au sérialiseur, d'où le faux positif de la règle 1 sur un simple alias de nommage.",
   },
+  {
+    file: 'src/app/api/purchase-orders/__tests__/route-guards.test.ts',
+    needle: "body: JSON.stringify({ supplierName: 'Manual supplier', linesJson: lines })",
+    reason:
+      "CORPS DE REQUÊTE HTTP uniquement : le test exerce l'API avec des lignes entrantes, avant l'écriture. La route valide ces lignes puis les re-sérialise en v2 avant toute persistance.",
+  },
+  {
+    file: 'src/app/api/purchase-orders/__tests__/receive-guards.test.ts',
+    needle: 'linesJson: rawLinesJson',
+    reason:
+      "Fixture mémoire d'une route de réception : les cas valides viennent de `serializePoLinesJsonV2`, et les chaînes invalides servent uniquement à prouver le refus avant transaction ; aucune persistance n'est simulée par cette affectation.",
+  },
+  {
+    file: 'src/app/api/suppliers/__tests__/transition-guards.test.ts',
+    needle: 'linesJson: rawLinesJson',
+    reason:
+      "Fixture mémoire d'une route de transition : les cas valides viennent de `serializePoLinesJsonV2`, et les chaînes invalides servent uniquement à prouver le refus avant transaction ; aucune persistance n'est simulée par cette affectation.",
+  },
 ]
 
 // Fixtures v1 de test : prouvent la LECTURE du format historique (chemin de

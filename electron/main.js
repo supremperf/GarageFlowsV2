@@ -1185,7 +1185,6 @@ function definirDemarrageAuto(actif) {
   try {
     app.setLoginItemSettings({
       openAtLogin: !!actif,
-      openAsHidden: false,
       path: process.execPath,
       args: demarrageArgs(),
     })
