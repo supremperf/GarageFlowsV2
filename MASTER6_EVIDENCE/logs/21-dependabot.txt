@@ -1,0 +1,30 @@
+=== Alertes Dependabot du dépôt — constat MASTER 6 ===
+date_utc=2026-10-23T12:20:58Z
+
+GitHub signale 2 vulnérabilités ouvertes sur la branche par défaut :
+  [critical] certifi >= 2019.03.09, < 2026.10.19 -> corrigé en 2026.10.19
+      manifeste : docs/audit/resumption-2026-10-14/scanner-requirements-linux.txt
+  [medium] mcp >= 1.8.0, < 1.30.0 -> corrigé en 1.30.0
+      manifeste : docs/audit/resumption-2026-10-14/scanner-requirements-linux.txt
+
+--- ANALYSE ---
+Les deux portent sur docs/audit/resumption-2026-10-14/scanner-requirements-linux.txt.
+Ce fichier est un GEL D'ENVIRONNEMENT D'AUDIT : une liste de wheels Python
+épinglés avec leurs empreintes SHA-256, vérifiés contre les métadonnées PyPI
+officielles, qui documente l'environnement exact d'un scanner à une date donnée.
+
+Ce ne sont PAS des dépendances du produit :
+  . certifi et mcp sont des paquets PYTHON, absents de package.json
+  . aucune référence à ce fichier dans package.json, scripts/ ni .github/workflows/
+  . rien ne l'installe ni ne l'exécute dans la chaîne du produit
+
+C'est pourquoi l'audit npm strict du projet reste vert à tous les niveaux :
+node scripts/audit-ci.js -> OK, et check-desktop-runtime-audit.mjs -> OK.
+
+--- DÉCISION ---
+NON CORRIGÉ, délibérément : mettre à jour les versions épinglées falsifierait
+une preuve d'audit DATÉE. Un gel documente ce qui a été utilisé, pas ce qui
+serait souhaitable aujourd'hui. Le signalement figure dans
+MASTER6_SECURITY_AUDIT.md et MASTER6_MANUAL_ACTIONS.md.
+
+DEPENDABOT_HORS_PERIMETRE_PRODUIT=true
