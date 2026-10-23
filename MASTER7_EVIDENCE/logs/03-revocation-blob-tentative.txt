@@ -1,0 +1,114 @@
+=== MASTER 7 / Phase 2 — revocation du jeton Vercel Blob : tentative et blocage ===
+
+date_utc : 2026-10-23
+
+--------------------------------------------------------------------------------
+1. CIBLE IDENTIFIEE SANS AMBIGUITE
+--------------------------------------------------------------------------------
+
+Le jeton `BLOB_READ_WRITE_TOKEN` expose dans l'historique public a la forme
+`vercel_blob_rw_<storeId>_<secret>`. L'identifiant de store qu'il embarque — qui
+n'est pas un secret, `vercel blob list-stores` l'affiche — designe :
+
+    store_4TyemjFvecVTkX2W   « garageflows-update »
+
+Etat releve avant toute action :
+
+    Blob Store    : garageflows-update (store_4TyemjFvecVTkX2W)
+    Billing State : Active
+    Blob Count    : 0
+    Size          : 0B
+    Region        : cdg1
+    Access        : Public
+    Base URL      : 4tyemjfvecvtkx2w.public.blob.vercel-storage.com
+    Created At    : 07/26/2026 21:03:04
+    Updated At    : 08/15/2026 06:32:15
+
+Deux autres stores existent et NE SONT PAS concernes :
+
+    store_ILUycD5y1HG8jsM4   « app.garageflows.fr-blob »   0 fichier, 6 j
+    store_CCws0YfpjZlolTqN   « garageflow-updates »         0 fichier, 89 j
+
+--------------------------------------------------------------------------------
+2. POURQUOI C'EST LE STORE LE PLUS SENSIBLE DES TROIS
+--------------------------------------------------------------------------------
+
+`garageflows-update` est le store de DISTRIBUTION DES MISES A JOUR, et son acces
+est `Public`. Un jeton en lecture-ECRITURE rendu public signifie que n'importe qui
+peut y deposer un fichier arbitraire, servi ensuite depuis
+`4tyemjfvecvtkx2w.public.blob.vercel-storage.com`, un domaine rattache au compte.
+
+C'est un vecteur d'empoisonnement du canal de mise a jour.
+
+Ce qui limite la portee, et qui est verifie :
+  - le store est VIDE (0 fichier, 0 octet) : rien a exfiltrer ;
+  - aucune variable Blob n'est configuree sur le projet `app.garageflows.fr`
+    (`vercel env ls` : 0 occurrence de « blob ») — le canal n'est pas en service ;
+  - le mecanisme de mise a jour du produit exige un manifeste SIGNE
+    (`npm run release:sign`), qu'un fichier depose ne pourrait pas produire.
+
+--------------------------------------------------------------------------------
+3. LA REVOCATION A ETE TENTEE, ET REFUSEE PAR L'OUTIL
+--------------------------------------------------------------------------------
+
+Chez Vercel Blob, le jeton de lecture-ecriture est lie au store : il n'existe pas
+de rotation de jeton isolee. Revoquer = supprimer le store.
+
+    $ vercel blob delete-store store_4TyemjFvecVTkX2W --non-interactive
+
+    {
+      "status": "error",
+      "reason": "dangerous_operation_requires_user",
+      "message": "Deleting a blob store cannot be undone and cannot be performed
+                  non-interactively. Agents must not make this change on behalf of
+                  a user. The user must run this command interactively in a
+                  terminal to review the impact and confirm.",
+      "cliVersion": "65.1.0"
+    }
+
+La CLI Vercel refuse par conception qu'un agent supprime un store. Ce garde-fou
+n'a pas ete contourne, et ne doit pas l'etre : l'operation est irreversible.
+
+    operation tentee      : suppression du store compromis
+    resultat              : REFUSEE PAR L'OUTIL
+    contournement cherche : AUCUN
+    jeton public          : TOUJOURS ACTIF a l'heure de ce journal
+
+--------------------------------------------------------------------------------
+4. CE QUE LE PROPRIETAIRE DOIT EXECUTER
+--------------------------------------------------------------------------------
+
+Deux commandes, dans cet ordre, depuis un terminal interactif :
+
+    vercel blob delete-store store_4TyemjFvecVTkX2W
+    vercel blob create-store garageflows-update
+
+La premiere revoque le jeton public. La seconde recree un canal de distribution
+avec un jeton neuf.
+
+Le nouveau jeton ne doit JAMAIS etre colle dans un terminal partage, un rapport ou
+une conversation : le recuperer depuis
+`https://vercel.com/garage-flows/~/stores/blob` et le deposer directement dans les
+variables d'environnement Vercel.
+
+--------------------------------------------------------------------------------
+5. COMMENT VERIFIER QUE LA REVOCATION A PRIS EFFET
+--------------------------------------------------------------------------------
+
+Apres suppression, l'ancien jeton doit cesser de fonctionner. Le controle est
+reproductible et ne demande pas de divulguer le jeton :
+
+    node MASTER7_EVIDENCE/outils/verifier-revocation-blob.cjs
+
+Il relit le jeton depuis l'historique git, appelle le listing Blob, et attend un
+HTTP 401 ou 403. Tant qu'il repond 200, la revocation n'a pas eu lieu.
+
+Etat au moment de ce journal :
+
+    GET https://blob.vercel-storage.com?limit=1   ->   HTTP 200   (NON REVOQUE)
+
+BLOB_STORE_COMPROMIS=store_4TyemjFvecVTkX2W
+REVOCATION_TENTEE=oui
+REVOCATION_REFUSEE_PAR_L_OUTIL=oui
+REVOCATION_EFFECTIVE=non
+ACTION_UTILISATEUR_REQUISE=oui
