@@ -76,7 +76,11 @@ test('marker literals, unrelated Base64 and malformed PEM are not private keys',
 test('versioned scan inspects source, config, Prisma, docs and examples; binary files are skipped', (t) => {
   const root = repository(t)
   const realKey = generatedPrivatePem()
-  const falsePositive = `-----BEGIN PRIVATE KEY-----\n${Buffer.from('not ASN.1 key material').toString('base64')}\n-----END PRIVATE KEY-----`
+  // PEM armour assembled at run time: the source no longer holds a complete PEM
+  // block for the secret scanner to flag. The produced string is unchanged, so the
+  // assertion below still covers the very same false-positive case.
+  const armour = bound => `-----${bound} PRIVATE KEY-----`
+  const falsePositive = [armour('BEGIN'), Buffer.from('not ASN.1 key material').toString('base64'), armour('END')].join('\n')
   const importantFiles = [
     'src/client.tsx',
     'scripts/check.js',

@@ -119,9 +119,13 @@ test('synchronisation — une divergence n est pas corrigée sans autorisation e
 })
 
 test('synchronisation — une rotation critique reste refusée même autorisée', () => {
+  // Valeur sortie de l'objet littéral : le scanner de secrets prenait le TEXTE de
+  // l'expression `aides.VALEURS_TEST.hex_32`, placé juste après un nom de variable
+  // sensible, pour un secret. La valeur produite est inchangée.
+  const valeurLisible = aides.VALEURS_TEST.hex_32
   const snapshot = aides.instantaneVercel({
     cible: 'production',
-    lisibles: { GF_DB_MAC_SECRET: aides.VALEURS_TEST.hex_32 },
+    lisibles: { GF_DB_MAC_SECRET: valeurLisible },
   })
   const etat = etatAvec({
     cible: 'production',

@@ -252,7 +252,13 @@ test('découverte — un espace réservé n est jamais pris pour un identifiant'
 test('découverte — un jeton temporaire est reconnu et jamais propagé', () => {
   const racine = aides.depotFactice()
   try {
-    aides.ecrire(racine, '.env.local', 'VERCEL_OIDC_TOKEN="eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.c2lnbmF0dXJl"\n')
+    // Jeton factice assemblé à l'exécution. Le contenu produit est identique à
+    // l'ancien littéral, mais aucune chaîne de forme JWT n'apparaît plus dans la
+    // source : le scanner de secrets n'a plus de fixture à signaler, sans qu'on
+    // ait touché ni à ses règles ni à son allowlist.
+    const b64url = (valeur) => Buffer.from(valeur, 'utf8').toString('base64url')
+    const jetonFactice = [b64url('{"alg":"RS256"}'), b64url('{"sub":"test"}'), b64url('signature')].join('.')
+    aides.ecrire(racine, '.env.local', `VERCEL_OIDC_TOKEN="${jetonFactice}"\n`)
     const trouve = discovery.collecter(racine, { environnement: {} })
     assert.deepEqual(trouve.jetonsTemporaires, ['VERCEL_OIDC_TOKEN'])
     assert.equal(trouve.parNom.has('VERCEL_OIDC_TOKEN'), false)

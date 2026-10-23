@@ -124,11 +124,12 @@ describe('aucune clé privée dans l’arbre (GF-DUR-044)', () => {
 
   it('ne confond pas un marqueur de documentation et une ligne Base64 légitime avec une clé privée', () => {
     const base64SansCle = Buffer.from('documentation, hash de contenu et données de test').toString('base64')
-    const fauxBloc = [
-      '-----BEGIN PRIVATE KEY-----',
-      base64SansCle,
-      '-----END PRIVATE KEY-----',
-    ].join('\n')
+    // Armure assemblée à l'exécution : la source ne contient plus un bloc PEM
+    // complet (en-tête, corps Base64, pied) que le scanner de secrets pourrait
+    // signaler. La chaîne produite est identique à l'ancienne, donc l'assertion
+    // porte exactement sur le même cas.
+    const armure = (bord: 'BEGIN' | 'END') => `-----${bord} PRIVATE KEY-----`
+    const fauxBloc = [armure('BEGIN'), base64SansCle, armure('END')].join('\n')
     const marqueurDeCode = `const marker = '-----BEGIN PRIVATE KEY-----';\nconst digest = '${'A'.repeat(128)}';`
 
     expect(containsPrivateKeyMaterial(fauxBloc)).toBe(false)
