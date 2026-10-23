@@ -1,0 +1,68 @@
+=== MASTER 6 — release:gate sur l'arbre publie ===
+date_utc=2026-10-23T13:31:34Z
+commit            : 947be2fc641683536bb7ee06e47096d89875470c
+branche           : master6-integration
+arbre avant porte : SALE
+TEST_POSTGRES_URL : PostgreSQL local jetable (Docker, postgres:17-alpine, port 55433)
+TEST_REDIS_URL    : Redis local jetable (Docker, redis:7-alpine, port 6380)
+psql              : psql (PostgreSQL) 16.14
+
+
+> garageflow@1.1.0 release:gate
+> node scripts/final-release-gate.mjs
+
+
+════ GarageFlows — FINAL RELEASE GATE ════
+
+▶ TypeScript (tsc --noEmit)… OK (10s)
+▶ ESLint… OK (15s)
+▶ Gardes de cohérence (check:consistency)… OK (14s)
+▶ Preuve de rotation des secrets… OK (0s)
+▶ Suite de tests (vitest) + baseline machine + baseline humaine… OK (52s)
+▶ Cohérence documentaire (post-baseline)… OK (1s)
+▶ Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)… OK (10s)
+▶ Migrations PostgreSQL sur base neuve + smoke test… OK (5s)
+▶ Rate-limit distribué multi-instance (Redis réel)… OK (4s)
+▶ Audit complet dépendances (tous niveaux)… OK (2s)
+▶ Audit runtime desktop empaqueté (Electron)… OK (2s)
+▶ Manifeste de release (commit-bound)… OK (1s)
+▶ Vérification d'artefact (identité + cohérence + secrets)… OK (0s)
+▶ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)… OK (7s)
+▶ Build de production (next build)… OK (202s)
+▶ Budget de performance (bundle client)… OK (1s)
+
+════ RÉCAPITULATIF ════
+✅ TypeScript (tsc --noEmit)                                                  OK
+✅ ESLint                                                                     OK
+✅ Gardes de cohérence (check:consistency)                                    OK
+✅ Preuve de rotation des secrets                                             OK
+✅ Suite de tests (vitest) + baseline machine + baseline humaine              OK
+✅ Cohérence documentaire (post-baseline)                                     OK
+✅ Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)  OK
+✅ Migrations PostgreSQL sur base neuve + smoke test                          OK
+✅ Rate-limit distribué multi-instance (Redis réel)                           OK
+✅ Audit complet dépendances (tous niveaux)                                   OK
+✅ Audit runtime desktop empaqueté (Electron)                                 OK
+✅ Manifeste de release (commit-bound)                                        OK
+✅ Vérification d'artefact (identité + cohérence + secrets)                   OK
+✅ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)        OK
+✅ Build de production (next build)                                           OK
+✅ Budget de performance (bundle client)                                      OK
+
+✅ GATE LOCAL PASSÉ : exécutez encore `npm run readiness:final` avec les preuves Playwright, Windows, staging et conformité.
+EXIT=0
+arbre apres porte : SALE
+
+--- preuves d'integrite au meme commit ---
+✅ MASTER4_EVIDENCE                                       disque  69/69  versionné  69/69
+✅ MASTER5_EVIDENCE                                       disque  48/48  versionné  48/48
+✅ artifacts/verification/audit-2026-10-22                disque  26/26  versionné  26/26
+✅ artifacts/verification/mission-3-2026-10-22            disque  57/57  versionné  57/57
+✅ artifacts/verification/production-readiness-2026-10-22 disque  41/41  versionné  41/41
+✅ artifacts/verification/production-readiness-master5    disque  32/32  versionné  32/32
+
+✅ preuves : 273/273 sur disque, 273/273 versionnées — 6 manifestes
+
+--- readiness:final au meme commit ---
+Contrôles : 25 pass, 8 bloquant(s), 33 total
+NON PRÊT POUR LA PRODUCTION
