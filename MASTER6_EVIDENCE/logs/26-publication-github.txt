@@ -1,0 +1,49 @@
+=== MASTER 6 — publication reelle sur GitHub main ===
+date_utc=2026-10-23T13:41:44Z
+
+--- 1. commande exacte, sans force ---
+    git merge --no-ff origin/main      # rend le distant ancetre
+    git push origin HEAD:main          # aucune option --force
+
+--- 2. resultat du push ---
+    483aae3..277e1f2  HEAD -> main     (avance rapide)
+    EXIT=0
+
+--- 3. verification du distant ---
+{
+  "depot": "supremperf/GarageFlowsV2",
+  "url": "https://github.com/supremperf/GarageFlowsV2",
+  "visibilite": "PUBLIC",
+  "brancheParDefautDuDepot": "arena/84940ac2-garageflowsv2",
+  "branchePubliee": "main",
+  "commitDistantAvant": "483aae32d522ef0a31275ab863d9ed61b2996de3",
+  "commitLocalFinal": "277e1f2f16a0ceb333fdfffcfe1a80b159dd33b0",
+  "commitDistantApres": "277e1f2f16a0ceb333fdfffcfe1a80b159dd33b0",
+  "identiques": true,
+  "commitsPublies": 51,
+  "fichiersModifies": 754,
+  "ancienEstAncetre": true,
+  "fichiersSupprimes": [],
+  "auteurs": {
+    "Mathys": 21,
+    "supremperf": 16,
+    "Claude": 14
+  }
+}
+
+--- 4. l'arbre distant est-il exactement le mien ? ---
+    distant : a89298c63efd354b6a07fe2ee285d27a1c9d6cd5
+    local   : a89298c63efd354b6a07fe2ee285d27a1c9d6cd5
+
+--- 5. preuve decisive : verification depuis un clone GitHub neuf ---
+    git clone --branch main https://github.com/supremperf/GarageFlowsV2.git
+    core.autocrlf = true  (le defaut Windows, celui qui cassait tout)
+
+✅ MASTER4_EVIDENCE                                       disque  69/69  versionné  69/69
+✅ MASTER5_EVIDENCE                                       disque  48/48  versionné  48/48
+✅ artifacts/verification/audit-2026-10-22                disque  26/26  versionné  26/26
+✅ artifacts/verification/mission-3-2026-10-22            disque  57/57  versionné  57/57
+✅ artifacts/verification/production-readiness-2026-10-22 disque  41/41  versionné  41/41
+✅ artifacts/verification/production-readiness-master5    disque  32/32  versionné  32/32
+
+✅ preuves : 273/273 sur disque, 273/273 versionnées — 6 manifestes

@@ -135,6 +135,89 @@ Les bases équivalentes du PostgreSQL local ont disparu avec leurs conteneurs, d
 
 ---
 
+### 7 ter. Triager formellement les 5 faux positifs gitleaks — pour remettre la CI au vert
+
+**Mesuré.** Mon push a fait passer le job *Secret scan (Gitleaks)* de **0 à 5**
+signalements. Les cinq fichiers n'existaient pas, ou pas sous cette forme, au
+commit précédent : ce sont des tests apportés par les 51 commits publiés.
+
+**Vérifié.** Les cinq ont été examinés puis soumis chacun à une tentative de
+réfutation indépendante : **5 / 5 confirmés inoffensifs, 0 réfutation aboutie.**
+**Aucun secret réel n'est exposé.** Citations de code dans
+`MASTER6_EVIDENCE/logs/27-triage-gitleaks-ci.txt`.
+
+**Pourquoi je ne l'ai pas fait.** `tests/secret-scan-policy.test.cjs:35` impose que
+`.gitleaksignore` soit *exactement* l'union de registres de triage hash-verrouillés.
+Ajouter une entrée exige donc aussi :
+
+1. une ligne classifiée et hash-verrouillée dans
+   `docs/audit/copilot-phase5/gitleaks-triage.json`, acceptée par `verifyFinding`
+   (`scripts/lib/copilot-receipt-triage.cjs`) — dont l'ensemble des classifications
+   est **fermé** ;
+2. la mise à jour de `summary.triagedTotal` dans
+   `docs/audit/copilot-phase5/gitleaks-triage-summary.json` ;
+3. le respect des compteurs assertés en dur (`669`, `290`, `957`, `2`).
+
+Modifier une bibliothèque de sécurité pour faire passer un scan en échec au succès
+n'est pas de mon ressort : le mandat interdit de contourner les contrôles release et
+de transformer un `BLOCKED` en `PASS`.
+
+**Empreintes prêtes à triager**, au format exact des entrées existantes :
+
+```
+configuation automatique/tests/02-moteur.test.js:jwt:255
+configuation automatique/tests/03-synchronisation.test.js:generic-api-key:124
+src/lib/__tests__/secrets-jamais-distribues.test.ts:private-key:128
+tests/private-key-material.test.cjs:private-key:79
+tests/setup-dev-permissions.test.cjs:generic-api-key:39
+```
+
+**Alternative, souvent préférable** : plutôt que d'allonger l'allowlist, rendre les
+fixtures non détectables — par exemple en assemblant l'armure PEM à l'exécution
+(`'-----BEGIN ' + 'PRIVATE KEY-----'`) au lieu de l'écrire en un seul littéral.
+C'est ce qui a déjà été fait pour `GF2.fixture.signature`. Aucun contrôle n'est
+alors affaibli, et le job redevient vert de lui-même.
+
+**Preuve attendue.** Job *Secret scan (Gitleaks)* vert sur `main`, et
+`tests/secret-scan-policy.test.cjs` toujours au vert.
+
+---
+
+### 7 bis. Déclarer la cible de staging approuvée pour la CI — la seule cause du rouge sur `main`
+
+**Mesuré.** Le run CI `39193727183` sur `main` était **déjà en échec avant ma
+publication**, et pour une seule raison : le job *Authenticated browser validation
+(approved staging only)* refuse de démarrer en 5 secondes sur un code
+`MISSING_INPUT`. Il exige les secrets de dépôt `BASE_URL`, `E2E_EMAIL`,
+`E2E_PASSWORD`, `E2E_LICENSE` et la variable `E2E_NON_PRODUCTION`. Le job
+`Required validation` échoue ensuite par propagation.
+
+**Ce n'est pas un défaut.** C'est un refus volontaire *fail-closed* : le workflow
+interdit de lancer des tests authentifiés contre une cible qui n'a pas été
+explicitement approuvée comme non-productive. Tous les autres jobs passent, y
+compris l'empaquetage Windows et le scan de secrets.
+
+**La capacité, elle, est prouvée** : les 135 tests Playwright authentifiés sont
+verts, exécutés localement contre une cible locale avec une licence de test.
+Seul le câblage CI manque.
+
+**Action.** Déclarer, dans *Settings → Secrets and variables → Actions* :
+
+```
+secret  BASE_URL             URL d'un déploiement NON productif
+secret  E2E_EMAIL            compte de recette
+secret  E2E_PASSWORD         mot de passe de recette
+secret  E2E_LICENSE          licence de test (jamais une licence client)
+variable E2E_NON_PRODUCTION  la valeur que le workflow attend (voir ci.yml)
+```
+
+**À ne jamais faire.** Y mettre `https://app.garageflows.fr` : le workflow est
+précisément écrit pour refuser une cible de production.
+
+**Preuve attendue.** Un run CI vert sur `main`.
+
+---
+
 ### 8. Connecter le projet Vercel au dépôt GitHub — si vous voulez le déploiement automatique
 
 **Mesuré.** Toutes les variables `VERCEL_GIT_*` sont vides et `vercel project inspect` ne montre aucune section Git. **Un push sur `main` ne déclenche donc aucun déploiement.**

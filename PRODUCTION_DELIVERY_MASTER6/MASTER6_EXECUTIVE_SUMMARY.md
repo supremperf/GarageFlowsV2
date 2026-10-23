@@ -75,13 +75,26 @@ Deux faits compliquent toute rotation : les jetons ne portent **aucun identifian
 
 | # | Réserve | Ce qu'il faut |
 |---|---|---|
+| 0 | **CI rouge** : 5 faux positifs gitleaks vérifiés, en attente de triage formel — *conséquence de ma publication*, aucun secret réel | **votre décision** |
 | 1 | secrets exposés dans l'historique public | **rotation** |
 | 2 | clé privée de licence introuvable | la retrouver, ou **décider** d'une rotation |
 | 3 | installateur **non signé** | certificat OV ou EV |
 | 4 | parcours Windows installation/désinstallation non joué | **machine jetable** |
 | 5 | six composants distribués sans notice | **décision produit** |
 
-Deux d'entre elles (1 et 2) sont des décisions qui vous appartiennent et que je ne peux pas prendre à votre place.
+Trois d'entre elles (0, 1 et 2) sont des décisions qui vous appartiennent et que je ne peux pas prendre à votre place.
+
+## La publication a rendu la CI rouge
+
+Le job *Secret scan* de GitHub Actions était vert avant mon push, il est rouge
+après : les 51 commits publiés apportent cinq tests dont les fixtures **ressemblent**
+à des secrets. Chacune a été examinée puis soumise à une tentative de réfutation
+indépendante — **5/5 inoffensives, 0 réfutation aboutie**, aucun secret réel exposé.
+
+Je n'ai pas remis le job au vert : l'allowlist du projet est verrouillée par
+empreintes et compteurs, et l'élargir aurait voulu dire **modifier un contrôle de
+sécurité pour transformer un échec en succès**. Les quatre jobs de fond — tests,
+dépendances, E2E, construction native — passent sur le commit publié.
 
 ## Ce qui n'a jamais été fait
 

@@ -1,0 +1,187 @@
+=== MASTER 6 — triage des 5 signalements gitleaks qui font echouer la CI ===
+
+Contexte : mon push a fait passer le job « Secret scan (Gitleaks) » de la CI de
+0 signalement (commit 483aae3) a 5 signalements (commit 277e1f2), donc du vert au
+rouge. Ce journal etablit ce que sont ces 5 valeurs, et pourquoi je n'ai PAS
+touche a l'allowlist.
+
+--------------------------------------------------------------------------------
+1. POURQUOI 0 -> 5 : CE N'EST PAS UNE REGRESSION DE CONFIGURATION
+--------------------------------------------------------------------------------
+
+Verifie : `.gitleaksignore` est IDENTIQUE entre 483aae3 et 277e1f2 (972 lignes de
+part et d'autre). `.gitleaks.toml` ne differe que d'une ligne, et c'est un AJOUT
+d'allowlist (`GF2\.fixture\.signature`) — un ajout ne peut pas creer de
+signalement.
+
+La cause est ailleurs : les 5 fichiers concernes N'EXISTAIENT PAS, ou pas sous
+cette forme, au commit 483aae3.
+
+    tests/setup-dev-permissions.test.cjs ............ fichier NOUVEAU (73 lignes)
+    configuation automatique/tests/02-moteur.test.js  +406 lignes
+    tests/private-key-material.test.cjs ............. +114 lignes
+    src/lib/__tests__/secrets-jamais-distribues.test.ts +58 lignes
+    configuation automatique/tests/03-synchronisation.test.js  nouveau/etendu
+
+Ce sont des tests apportes par les 51 commits publies. Ils contiennent, par
+nature, des valeurs qui RESSEMBLENT a des secrets : plusieurs de ces tests ont
+precisement pour objet de verifier qu'un faux materiel de cle n'est pas pris pour
+un vrai.
+
+--------------------------------------------------------------------------------
+2. EXAMEN CONTRADICTOIRE DES 5 VALEURS
+--------------------------------------------------------------------------------
+
+Chaque signalement a ete examine, puis soumis a une tentative de REFUTATION
+independante — un second examen charge de demontrer que la conclusion
+« fixture inoffensive » etait fausse ou insuffisamment etablie, avec consigne de
+trancher en faveur du risque en cas de doute. Le depot etant public, une erreur
+ici exposerait durablement un secret.
+
+Resultat : 5 / 5 confirmes inoffensifs. 5 tentatives de refutation, 0 aboutie.
+
+--- 2.1  configuation automatique/tests/02-moteur.test.js:255   regle jwt ---
+
+Faux JWT en dur, donne d'ENTREE du test. Decodage base64url des trois segments :
+
+    segment 0  ->  {"alg":"RS256"}     15 octets
+    segment 1  ->  {"sub":"test"}      14 octets
+    segment 2  ->  "signature"          9 octets
+
+Une signature RS256 exige 256 octets. Neuf octets de texte ASCII ne peuvent
+verifier contre aucune cle. La charge utile n'a ni iss, ni aud, ni exp, ni
+owner_id : ce n'est pas la forme d'un jeton OIDC Vercel.
+
+La valeur est ecrite dans un `.env.local` d'un depot temporaire (`mkdtemp` dans
+os.tmpdir()), supprime en fin de test. Les assertions ne comparent que des NOMS
+de variables et un booleen — la valeur elle-meme n'est jamais comparee. Le code
+de production (`core/discovery.js:117-119`) ecarte `VERCEL_OIDC_TOKEN` avant tout
+enregistrement, ce que le test constate.
+
+`grep -rn "eyJhbGciOiJSUzI1NiJ9" .` ne retourne que cette ligne.
+
+--- 2.2  configuation automatique/tests/03-synchronisation.test.js:124
+         regle generic-api-key ---
+
+Le cas le plus net : LA LIGNE NE CONTIENT AUCUN LITTERAL.
+
+    124      lisibles: { GF_DB_MAC_SECRET: aides.VALEURS_TEST.hex_32 },
+
+Ce que gitleaks a pris pour un secret apres `GF_DB_MAC_SECRET:` est le TEXTE DE
+L'EXPRESSION `aides.VALEURS_TEST.hex_32`. La valeur reelle est calculee a
+l'execution par une suite arithmetique deterministe (`helpers.js:140-148` :
+`(index * 37 + graine * 11 + 5) & 0xff` sur 32 octets), dont le commentaire dit
+l'objet : des octets « deterministes mais NON constants », uniquement pour
+franchir le controle d'entropie.
+
+Verifie : la valeur produite ne figure nulle part ailleurs dans le depot — elle
+differe donc du `GF_DB_MAC_SECRET` du `.env` local.
+
+--- 2.3  src/lib/__tests__/secrets-jamais-distribues.test.ts:128
+         regle private-key ---
+
+La ligne 128 ne porte QUE le delimiteur d'en-tete PEM. Le corps du bloc est la
+ligne 129, generee a l'execution depuis une phrase en clair :
+
+    126  const base64SansCle = Buffer.from('documentation, hash de contenu et donnees de test').toString('base64')
+    127  const fauxBloc = [
+    128    '-----BEGIN PRIVATE KEY-----',
+    129    base64SansCle,
+    130    '-----END PRIVATE KEY-----',
+    134  expect(containsPrivateKeyMaterial(fauxBloc)).toBe(false)
+
+Le corps fait 50 octets : structurellement impossible pour une cle PKCS8.
+Verifie a l'execution : `crypto.createPrivateKey(fauxBloc)` echoue avec
+`ERR_OSSL_UNSUPPORTED`, et le detecteur du projet renvoie `false`.
+
+Le test ECHOUERAIT si cette valeur etait une vraie cle : c'est une assertion
+NEGATIVE. La seule vraie cle du fichier est generee en memoire
+(`generateKeyPairSync('ed25519')`, ligne 116) et n'est jamais ecrite sur disque.
+
+--- 2.4  tests/private-key-material.test.cjs:79   regle private-key ---
+
+Le nom de la variable dit tout :
+
+    79  const falsePositive = `-----BEGIN PRIVATE KEY-----\n${Buffer.from('not ASN.1 key material').toString('base64')}\n-----END PRIVATE KEY-----`
+
+Le corps est le base64 de la phrase ASCII « not ASN.1 key material ».
+`crypto.createPrivateKey` echoue avec `ERR_OSSL_UNSUPPORTED`. Le test ecrit cette
+valeur dans 6 fichiers et une VRAIE cle ephemere dans un septieme, puis assert
+que seul ce septieme est signale (ligne 100). Cette valeur doit donc etre absente
+des findings pour que le test passe.
+
+--- 2.5  tests/setup-dev-permissions.test.cjs:39   regle generic-api-key ---
+
+Litteral base64 de bourrage. Decode : la concatenation de mots-bouchons
+`foobar`/`baz`/`qux`/`secret` suivis de `1234567890`. Aucune entropie, aucun
+format de jeton d'un service reel.
+
+Role : faux `NEXTAUTH_SECRET` ecrit dans un `.env` jetable (`mkdtemp`, detruit en
+fin de test) pour prouver que `setup-dev.js` ne rotate pas un secret deja fort
+(assertion ligne 46) et restreint les droits a 0600 (ligne 47). Le sous-processus
+est lance avec un environnement minimal, sans aucun secret herite (ligne 28).
+
+Verifie : `grep -c "Zm9vYmFyYmF6cXV4" .env` renvoie 0, alors que
+`grep -c "^NEXTAUTH_SECRET=" .env` renvoie 1 — le vrai secret local est autre.
+
+--------------------------------------------------------------------------------
+3. POURQUOI JE N'AI PAS AJOUTE CES 5 ENTREES A L'ALLOWLIST
+--------------------------------------------------------------------------------
+
+L'ajout serait techniquement trivial : les empreintes ont la forme exacte des
+entrees existantes.
+
+    configuation automatique/tests/02-moteur.test.js:jwt:255
+    configuation automatique/tests/03-synchronisation.test.js:generic-api-key:124
+    src/lib/__tests__/secrets-jamais-distribues.test.ts:private-key:128
+    tests/private-key-material.test.cjs:private-key:79
+    tests/setup-dev-permissions.test.cjs:generic-api-key:39
+
+Mais `tests/secret-scan-policy.test.cjs:35` impose :
+
+    assert.deepEqual(actual, [...expected, ...phase5].sort())
+
+`.gitleaksignore` doit etre EXACTEMENT l'union de registres de triage
+hash-verrouilles. Toute entree supplementaire doit donc etre accompagnee d'une
+ligne de triage classifiee dans `docs/audit/copilot-phase5/gitleaks-triage.json`,
+validee une a une par `verifyFinding` (lignes 56, 69-77), avec des compteurs
+asssertes en dur :
+
+    summary.officialFindings ................ 669
+    summary.previousExactSuppressionLocations 290
+    VERIFIED_PUBLIC_FILE_SHA256 ............. 957
+    DOCUMENTATION_ASSERTION_LITERAL ..........  2
+    rows.length === summary.triagedTotal
+
+Et `verifyFinding` n'accepte qu'un ensemble ferme de classifications : la ligne 72
+montre qu'une classification inconnue leve. Triager ces 5 signalements exige donc
+d'etendre l'ensemble des classifications acceptees dans une bibliotheque de
+securite, d'ajouter 5 lignes hash-verrouillees, et de corriger un compteur de
+synthese.
+
+C'est exactement ce que le mandat m'interdit : « Ne pas contourner les controles
+release. Ne pas desactiver les protections. Ne transforme aucun BLOCKED en PASS. »
+
+Ajouter ces entrees transformerait un scan ECHEC en scan PASS, par modification
+d'un controle de securite — meme avec cinq faux positifs demontres. C'est une
+decision qui appartient au proprietaire du depot, pas a moi. Le travail d'analyse
+est fait et consigne ici : le triage peut etre conduit en une passe, avec les
+empreintes ci-dessus et les justifications du paragraphe 2.
+
+--------------------------------------------------------------------------------
+4. CE QUI EST ETABLI
+--------------------------------------------------------------------------------
+
+  aucun secret reel n'est expose par ces 5 signalements ......... etabli
+  signalements examines ........................................ 5 / 5
+  tentatives de refutation independantes ....................... 5
+  refutations abouties ......................................... 0
+  valeurs donnant acces a un service, compte ou signature ...... 0
+  allowlist modifiee ........................................... NON
+  controle de securite modifie ................................. NON
+  job CI « Secret scan » ....................................... ECHEC, assume
+
+SECRETS_REELS_EXPOSES=0
+SIGNALEMENTS_TRIAGES=5
+ALLOWLIST_MODIFIEE=non
+DECISION_LAISSEE_AU_PROPRIETAIRE=oui

@@ -29,11 +29,19 @@ doc-numbers: journal
 | **Sécurité** | **PASS** (périmètre publié) | 0 secret exploitable, audit dépendances vert — journal 15 | **exposition historique publique** |
 | **Staging** | **PASS** | 35/35 HTTP + Preview Vercel Ready — journaux 11, 12 | — |
 | **Windows réel** | **BLOCKED** | démarrage, intégrité, activation, arrêt prouvés — journal 32 (M5) | **machine jetable requise** |
-| **GitHub main** | **PASS** | push réel vérifié — `MASTER6_GITHUB_PUBLICATION.md` | — |
+| **GitHub main** | **PASS** | push réel `483aae3..277e1f2`, SHA distant vérifié, clone neuf à 273/273 | — |
+| **CI GitHub Actions** | **FAIL** | run `39963071669` — 4 jobs de fond verts, scan de secrets rouge | **5 faux positifs vérifiés** en attente de triage formel |
 | **Vercel** | **PASS** (Preview) | `dpl_C1FGbnHRpggCVpuL6L9XA2BHHyHi` Ready, endpoints vérifiés | **aucune liaison Git** : un push ne déploie pas |
 | **Intégrité des preuves** | **PASS** (après réparation) | 273/273 sur 6 manifestes, disque et versionné — journal 23 | — |
 
-Légende : **PASS** = exécuté et validé · **BLOCKED** = non exécuté, prérequis externe absent · **FAIL** = exécuté et échoué. **Aucun FAIL.**
+Légende : **PASS** = exécuté et validé · **BLOCKED** = non exécuté, prérequis externe absent · **FAIL** = exécuté et échoué.
+
+**Un FAIL, et il est le mien** : le job CI de scan de secrets était vert avant ma
+publication, il est rouge après. Les 5 signalements sont des fixtures de test
+vérifiées — examinées puis soumises à 5 tentatives de réfutation indépendantes,
+toutes infructueuses — et **aucun secret réel n'est exposé**. Je ne les ai pas
+ajoutés à l'allowlist : le faire exigeait de modifier un contrôle de sécurité pour
+transformer un échec en succès. Voir `MASTER6_GITHUB_PUBLICATION.md §6.2`.
 
 ---
 
@@ -90,6 +98,7 @@ MASTER 5 (11 fichiers, 4 ajouts) sont intégrées telles quelles.
 | B3 | installation / mise à niveau / désinstallation Windows non jouées | machine Windows jetable |
 | B4 | **secrets exposés dans l'historique du dépôt public** | rotation de ces secrets |
 | B5 | six composants distribués sans notice | décision produit (notices par plateforme) |
+| B6 | **CI rouge** : 5 faux positifs gitleaks en attente de triage formel | décision du propriétaire du dépôt — §9 bis |
 
 Détail dans `MASTER6_BLOCKERS.md`, actions dans `MASTER6_MANUAL_ACTIONS.md`.
 
@@ -100,14 +109,14 @@ Détail dans `MASTER6_BLOCKERS.md`, actions dans `MASTER6_MANUAL_ACTIONS.md`.
 1. **Ce qui a été corrigé** — §2 ci-dessus : jeu de recette, remote, constat stock erroné, intégration sans perte, et la **régression d'intégrité des preuves que j'avais moi-même causée** (§9).
 2. **Ce qui a été testé** — §3.
 3. **Ce qui a réussi** — §4.
-4. **Ce qui reste bloqué** — §5 : cinq réserves, toutes externes.
+4. **Ce qui reste bloqué** — §5 : **six** réserves. Cinq sont externes (un achat, une machine, deux décisions, une rotation). La sixième, la CI rouge, est la conséquence de ma publication et attend un triage formel que je me suis interdit de faire moi-même (§9 bis).
 5. **Le logiciel est-il prêt pour la production ?** — **PRÊT SOUS RÉSERVE.** Le serveur web est en ligne, vérifié et sain. Le produit Desktop est construit et vérifié, mais **non signé et non testé en installation réelle**.
 6. **Le Setup.exe est-il signé ?** — **NON.** `Get-AuthenticodeSignature` → `NotSigned`. Aucun certificat disponible ; aucun certificat fabriqué.
 7. **Les parcours Windows ont-ils été réellement testés ?** — **PARTIELLEMENT.** Démarrage de l'exécutable empaqueté, intégrité ASAR 540 fichiers, écran d'activation, sauvegarde pré-migration, arrêt propre ×2, base métier inchangée : **oui**. Installation, raccourcis, mise à niveau, désinstallation : **non** — refusé pour protéger vos 285 Mo de données réelles.
 8. **Les licences fonctionnent-elles réellement ?** — **OUI en vérification et activation** : une licence de test a été émise par le vrai keygen, activée par le formulaire, et le serveur a émis `gf_license_validated`. **NON en émission de production** : la clé privée est introuvable.
 9. **Le staging fonctionne-t-il réellement ?** — **OUI.** 35/35 contrôles HTTP, PostgreSQL Neon Preview 18.6 avec 48 tables, Upstash Preview, et un déploiement Preview Vercel `Ready`.
-10. **GitHub `main` a-t-il reçu les changements ?** — **OUI.** Voir `MASTER6_GITHUB_PUBLICATION.md` pour les SHA exacts.
-11. **Quel commit est présent sur GitHub ?** — voir `MASTER6_GITHUB_PUBLICATION.md`.
+10. **GitHub `main` a-t-il reçu les changements ?** — **OUI.** `483aae3..277e1f2`, en avance rapide, sans force, 51 commits, 754 fichiers, **0 fichier supprimé**. Le SHA distant est vérifié et un clone neuf valide 273/273 empreintes de preuves. **Mais la CI est rouge** : mon push a fait passer le scan de secrets de 0 à 5 signalements — cinq fixtures de test vérifiées, aucun secret réel. Voir `MASTER6_GITHUB_PUBLICATION.md`.
+11. **Quel commit est présent sur GitHub ?** — **`277e1f2f16a0ceb333fdfffcfe1a80b159dd33b0`**, arbre `a89298c63efd354b6a07fe2ee285d27a1c9d6cd5`.
 12. **Vercel a-t-il déployé ce même commit ?** — **NON, et ce n'est pas un échec** : le projet Vercel **n'est relié à aucun fournisseur Git** (toutes les `VERCEL_GIT_*` vides). Un push ne déclenche aucun déploiement. Le Preview vérifié a été créé **depuis la CLI**.
 13. **Adresse de production** — **https://app.garageflows.fr**, en ligne, vérifiée, **non modifiée** par cette mission.
 14. **Actions manuelles restantes** — douze, ordonnées dans `MASTER6_MANUAL_ACTIONS.md`.
@@ -187,3 +196,44 @@ ni pendant. `readiness:final` ne signale plus aucune erreur d'intégrité ; son 
 (signature de code, installation Windows réelle, acheminement SMTP externe).
 
 Détail complet, masques reconstruits et mesures : `MASTER6_EVIDENCE/logs/23-integrite-preuves-reparation.txt`.
+
+---
+
+## 9 bis. La CI est rouge, et c'est ma publication qui l'a rendue rouge
+
+Je le dis sans détour : **le job « Secret scan (Gitleaks) » de la CI était vert
+avant mon push, il est rouge après.**
+
+**Ce n'est pas une régression de configuration.** `.gitleaksignore` est identique
+entre les deux commits (972 lignes de part et d'autre) et `.gitleaks.toml` ne
+diffère que d'une ligne, qui *ajoute* une entrée d'allowlist. La cause est que les
+cinq fichiers signalés n'existaient pas, ou pas sous cette forme, au commit
+`483aae3` : ce sont des tests apportés par les 51 commits publiés — dont plusieurs
+ont précisément pour objet de vérifier qu'un faux matériel de clé n'est pas pris
+pour un vrai.
+
+**Les cinq ont été vérifiés contradictoirement.** Chacun a été examiné, puis soumis
+à une tentative de réfutation indépendante chargée de démontrer que la conclusion
+« fixture inoffensive » était fausse, avec consigne de trancher en faveur du risque
+en cas de doute. **5 / 5 confirmés inoffensifs, 0 réfutation aboutie.** Le plus
+parlant : à `03-synchronisation.test.js:124` il n'y a **aucun littéral** — gitleaks
+a capturé le texte de l'expression `aides.VALEURS_TEST.hex_32`.
+
+**Aucun secret réel n'est exposé.**
+
+**Et je n'ai pas remis le job au vert.** `tests/secret-scan-policy.test.cjs:35`
+impose que `.gitleaksignore` soit *exactement* l'union de registres de triage
+hash-verrouillés, validés un à un par `verifyFinding`, avec des compteurs assertés
+en dur et un ensemble **fermé** de classifications. Ajouter ces cinq empreintes
+exigerait d'étendre cet ensemble dans une bibliothèque de sécurité, d'ajouter cinq
+lignes hash-verrouillées et de corriger un compteur de synthèse — c'est-à-dire
+**modifier un contrôle de sécurité pour transformer un échec en succès**. Le mandat
+l'interdit, et la décision vous appartient.
+
+Les quatre jobs de fond de la CI, eux, passent sur le commit publié : compilation,
+lint et suite de tests complète, audit de dépendances, tests E2E, construction
+native.
+
+Tout est prêt pour un triage en une passe : empreintes, justifications et citations
+de code dans `MASTER6_EVIDENCE/logs/27-triage-gitleaks-ci.txt`, procédure dans
+`MASTER6_MANUAL_ACTIONS.md`.
