@@ -61,7 +61,7 @@ nombre d’assertions échouées. Voir la ventilation nominative de la phase 6.
 | Tests failed | 0 |
 | Tests skipped | 34 |
 
-Commit : `577ae19` · Branche : `main` · Généré (UTC) : `2026-10-23T10:11:19.141Z`
+Commit : `3f0e764` · Branche : `master6-integration` · Généré (UTC) : `2026-10-23T13:17:48.388Z`
 
 <!-- END AUTO-GENERATED BASELINE -->
 

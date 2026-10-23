@@ -338,7 +338,7 @@ Running 144 tests using 8 workers
         - user-agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1
         - accept: */*
         - accept-encoding: gzip,deflate,br
-        - cookie: next-auth.csrf-token=ae3a0ed54650ca9c3cd21d8e38dbc471c7237513aae4b168e3ae17f74c753c1b%7Cc2fac7f33c861adfbc69466bc196c05fdee377558281e4aee5e4a0c19030499c; next-auth.callback-url=http%3A%2F%2Flocalhost%3A3200%2Flogin; gf_session=eyJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJwcmVtaXVtIiwibGlkIjoiYTE4OTZmYzctY2ViMC00NzBjLTk4Y2UtZjI0ZGIzZWZhM2E5IiwiZGlkIjoiY212a3JkcGhzMDAwNHFlbW05djBuZTczYSIsImlhdCI6MTc5Mjc0NzE3NSwiZXhwIjoxNzk1MzM5MTc1fQ.q-Hg3P1--xAsd3P-bW7iGtxamJQjZlVxGn5qteMZ8v4; gf_license_validated=1; gf_license_type=premium; next-auth.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..blVKZ5dJWuU5Xqiw.jfulJu_A7Rp2BQQu--u5k0t6qNV1szMLByFKNJFkw4gBsgqlkejNdDVkE74ehNZIf9sHTO_Ymh4VAQL-_bjK5Ji4pZ8DtXVhpCHcHUUqX3-s1HUQqWwwGi8lfcvhJy3VZxH1m913W-6B-Xd5pDyP7J-aP8ufMduaikdvM2cVJbKSgjgg6EfedkPNAwubmDoo6MFx0HHUSvuWoAUTAJJQ39knrmSERqX85BchT6ful1jD9KVTGdpFWe2I6bJgewaFbXJXJ0E55Z95_prlvn-NFg4ggZe4bB7b0znXUAUUMN_pcG40cDnfDxBzdLG4-RZqWVJjDJDAkbvYvKbEn_eCF00IGy7OrRMmQ6HnK7jQg-dqHzuH6ouLsCA-gmvB4wEU7EBuG_5TJNnCAGoyRRxw06bv6x7z75FVxYsEngo.yaRycD3fIAYx3qlMs8XBOA
+        - cookie: next-auth.csrf-token=<valeur-expurgee-master6>; next-auth.callback-url=http%3A%2F%2Flocalhost%3A3200%2Flogin; gf_session=<valeur-expurgee-master6>; gf_license_validated=1; gf_license_type=premium; next-auth.session-token=<valeur-expurgee-master6>
 
 
       162 |     // sur une bordure parfaitement correcte. On martèle donc largement au-delà

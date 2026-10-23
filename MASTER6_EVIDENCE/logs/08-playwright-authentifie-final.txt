@@ -343,7 +343,7 @@ Running 144 tests using 2 workers
         - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.7922.34 Safari/537.36
         - accept: */*
         - accept-encoding: gzip,deflate,br
-        - cookie: next-auth.csrf-token=ae3a0ed54650ca9c3cd21d8e38dbc471c7237513aae4b168e3ae17f74c753c1b%7Cc2fac7f33c861adfbc69466bc196c05fdee377558281e4aee5e4a0c19030499c; next-auth.callback-url=http%3A%2F%2Flocalhost%3A3200%2Flogin; gf_session=eyJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJwcmVtaXVtIiwibGlkIjoiYTE4OTZmYzctY2ViMC00NzBjLTk4Y2UtZjI0ZGIzZWZhM2E5IiwiZGlkIjoiY212a3JkcGhzMDAwNHFlbW05djBuZTczYSIsImlhdCI6MTc5Mjc0NzE3NSwiZXhwIjoxNzk1MzM5MTc1fQ.q-Hg3P1--xAsd3P-bW7iGtxamJQjZlVxGn5qteMZ8v4; gf_license_validated=1; gf_license_type=premium; next-auth.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..1km5iR9GCHiSWLyR.bH9V_xn3F9OwPuqMDOXpty0rn7E7qauRgMSRf9HoBFZLuTOXZYCCQsjOvxYkbWki036s7rWpccAYfudmXzSvpwltmxJEeTcuggZy_4IOxNXYQfI0te7EPE1x4vE7VY9PjW7HmPRnOyUmieZHmR9PMJvDiABptG71aWPEoYVUvmMmNNlitS6XKAi-49Id54_G18A_eMdeQ31M36dz9TqnNqBlZ-rSqO7eEXtUYXoRd71ST1NuOGuuAW5KPVYnnkNbO8u3V5D2dAkiZgQ63uFBBMOrYfuaSbv9WAuBfUKWl05V-F6uDRO6Q2agQJZCpkkKqGOqAWyvU12_Wb-v3R64DJILajoJIgTBHn8W-Ut8Fsrs-v3n4Fg99eAtYF1G4KPkP2qKdwxZ8EzCyuzHlDIT9LlHfwh0MjOJ56LiopQ.VArwM0p8rIDNE7_2dzfdkw
+        - cookie: next-auth.csrf-token=<valeur-expurgee-master6>; next-auth.callback-url=http%3A%2F%2Flocalhost%3A3200%2Flogin; gf_session=<valeur-expurgee-master6>; gf_license_validated=1; gf_license_type=premium; next-auth.session-token=<valeur-expurgee-master6>
 
 
       60 |    */
