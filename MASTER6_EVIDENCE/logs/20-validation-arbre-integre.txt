@@ -1,0 +1,42 @@
+=== Validation de l'arbre INTÉGRÉ (3 188 fichiers suivis) ===
+date_utc=2026-10-23T12:06:56Z
+
+--- TypeScript ---
+EXIT=0
+
+--- ESLint ---
+> eslint src --ext .ts,.tsx
+
+EXIT=0
+
+--- gardes de cohérence ---
+✅ check:public-key — 2 consommateurs internes alignés sur keys/public.pem (b16d2e1bf6b9662f…)
+
+> garageflow@1.1.0 keys:check
+> node scripts/sync-public-key.mjs --check
+
+✅ sync:public-key — 3 ancrages déjà alignés sur keys/public.pem (b16d2e1bf6b9662f…)
+EXIT=0
+
+--- release-safety (dont secret-scan-policy et GF-DUR-044) ---
+1..193
+# tests 193
+# suites 0
+# pass 190
+# fail 0
+# cancelled 0
+# skipped 3
+# todo 0
+# duration_ms 8032.5855
+EXIT=0
+
+--- suite Vitest complète sur l'arbre intégré ---
+ ✓ src/lib/pdf/__tests__/poids-pdf.test.ts (4 tests) 7ms
+ ✓ src/app/api/__tests__/financial-authz.test.ts (5 tests) 11ms
+
+ Test Files  360 passed | 5 skipped (365)
+      Tests  4390 passed | 34 skipped (4424)
+   Start at  14:08:06
+   Duration  65.37s (transform 40.28s, setup 0ms, import 146.84s, tests 507.73s, environment 121ms)
+
+EXIT=0
