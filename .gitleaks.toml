@@ -37,6 +37,15 @@ regexes = [
   '''GF2\.jeton\.mecanicien''',
   '''GF2\.fixture\.signature''',
   '''eyJhbGciOiJIUzI1NiJ9\.eyJ0eXAiOiJwb3J0YWwifQ\.sig''',
+  # EXPRESSION DE CODE, pas une valeur. `generic-api-key` capture le TEXTE
+  # « aides.VALEURS_TEST.hex_32 » lorsqu'il suit un nom de variable sensible. La
+  # valeur réelle est calculée à l'exécution par une suite arithmétique
+  # déterministe (« configuation automatique/tests/helpers.js »), et n'est donc
+  # jamais écrite dans le dépôt. La source a été corrigée pour sortir cette
+  # expression de l'objet littéral ; cette regex ne couvre plus que la CITATION
+  # qu'en fait un journal de preuves MASTER 6, immuable par mandat.
+  # Exemption d'UNE chaîne exacte : aucun fichier n'est soustrait au scan.
+  '''aides\.VALEURS_TEST\.hex_32''',
 ]
 # Les fichiers auth-secret, health et public-key ne sont PLUS exclus en entier :
 # seuls leurs littéraux publics/faibles connus sont couverts par les regexes.

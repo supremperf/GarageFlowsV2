@@ -131,4 +131,38 @@ test("la politique du scanner n'a pas été relâchée pour obtenir ce résultat
   const config = lire('.gitleaks.toml')
   assert.match(config, /useDefault\s*=\s*true/)
   assert.ok(!config.includes('[[rules]]'), 'aucune règle maison ne doit affaiblir le scanner')
+
+  // Aucun FICHIER n'a été soustrait au scan pour obtenir une CI verte : la liste
+  // `paths` doit rester celle d'avant, trois entrées précises. Un ajout ici
+  // soustrairait un fichier entier — exactement ce que le projet s'interdit depuis
+  // le retrait de l'ancienne exemption globale « .*\.md ».
+  const blocPaths = /paths\s*=\s*\[([\s\S]*?)\n\]/.exec(config)
+  assert.ok(blocPaths, 'bloc `paths` introuvable dans .gitleaks.toml')
+  const chemins = [...blocPaths[1].matchAll(/'''([^']*)'''/g)].map((m) => m[1])
+  assert.deepEqual(chemins.sort(), [
+    '\\.env\\.example',
+    'docs/AUDIT_FINALISATION_2026-08\\.md',
+    'src/lib/__tests__/redact\\.test\\.ts',
+  ])
+})
+
+test("l'unique exemption de chaîne ajoutée par MASTER 7 ne couvre qu'une expression de code", () => {
+  const config = lire('.gitleaks.toml')
+  const EXPRESSION = 'aides\\.VALEURS_TEST\\.hex_32'
+  assert.ok(
+    config.includes(`'''${EXPRESSION}'''`),
+    "l'exemption de l'expression citée par le journal de preuves MASTER 6 a disparu",
+  )
+
+  // Elle n'est légitime que parce que la chaîne exemptée est une EXPRESSION, dont
+  // la valeur est calculée à l'exécution et n'existe nulle part dans le dépôt.
+  // Si ce contrat change, l'exemption doit être revue : c'est ce que ce test exige.
+  const aides = lire('configuation automatique/tests/helpers.js')
+  assert.match(aides, /hex_32\s*:\s*octetsVaries\(\s*\d+\s*\)\.toString\('hex'\)/)
+  assert.match(aides, /function\s+octetsVaries\s*\(/)
+  const { VALEURS_TEST } = require('../configuation automatique/tests/helpers.js')
+  assert.match(VALEURS_TEST.hex_32, /^[0-9a-f]{64}$/)
+  // La valeur produite ne doit apparaître dans AUCUN fichier versionné : c'est la
+  // preuve qu'aucun secret n'est masqué par cette exemption.
+  assert.ok(!config.includes(VALEURS_TEST.hex_32))
 })
