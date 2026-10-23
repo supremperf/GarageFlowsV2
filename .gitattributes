@@ -16,3 +16,21 @@
 # Scripts Windows : CRLF volontaire, pas un espace final accidentel.
 *.ps1 whitespace=cr-at-eol
 *.cmd whitespace=cr-at-eol
+
+# ── Dossiers de PREUVES : aucune conversion de fins de ligne ────────────────
+#
+# Ces fichiers sont couverts par des manifestes SHA256SUMS. Avec la conversion
+# automatique (core.autocrlf=true, le defaut sur Windows), git reecrit leurs
+# fins de ligne a l extraction : le fichier sur disque ne correspond alors plus
+# a son empreinte, et la verification echoue pour quiconque clone le depot sous
+# Windows -- alors que le contenu versionne est intact.
+#
+# Constate pendant MASTER 6 : 45 des 48 preuves MASTER 5 apparaissaient
+# << MODIFIEES >> apres un simple checkout, uniquement a cause des CRLF.
+# Les marquer -text garantit une extraction a l octet pres, partout.
+MASTER4_EVIDENCE/** -text
+MASTER5_EVIDENCE/** -text
+MASTER6_EVIDENCE/** -text
+artifacts/verification/** -text
+PRODUCTION_DELIVERY/** -text
+PRODUCTION_DELIVERY_MASTER6/** -text

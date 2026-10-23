@@ -31,6 +31,7 @@ doc-numbers: journal
 | **Windows réel** | **BLOCKED** | démarrage, intégrité, activation, arrêt prouvés — journal 32 (M5) | **machine jetable requise** |
 | **GitHub main** | **PASS** | push réel vérifié — `MASTER6_GITHUB_PUBLICATION.md` | — |
 | **Vercel** | **PASS** (Preview) | `dpl_C1FGbnHRpggCVpuL6L9XA2BHHyHi` Ready, endpoints vérifiés | **aucune liaison Git** : un push ne déploie pas |
+| **Intégrité des preuves** | **PASS** (après réparation) | 273/273 sur 6 manifestes, disque et versionné — journal 23 | — |
 
 Légende : **PASS** = exécuté et validé · **BLOCKED** = non exécuté, prérequis externe absent · **FAIL** = exécuté et échoué. **Aucun FAIL.**
 
@@ -44,8 +45,11 @@ Légende : **PASS** = exécuté et validé · **BLOCKED** = non exécuté, prér
 | **remote `origin` configuré** | son absence était la cause du refus de déploiement Vercel, et rendait le contrôle GF-DUR-044 inerte |
 | **constat stock de MASTER 5 corrigé** | la correction d'inventaire existe : `{ quantity, expectedQuantity }` → mouvement `ADJUST` tracé, 409 si valeur périmée |
 | **intégration sans perte** | 9 fichiers amont que mon instantané avait convertis CRLF→LF ont été restaurés à l'octet près, dont une preuve MASTER 4 ; bits exécutables `100755` préservés |
+| **régression de preuves que j'avais causée** | mon intégration a cassé 42 empreintes et fait tomber `readiness:final` ; **réparée intégralement**, 273/273 — voir §9 |
 
-Aucune autre modification de code n'a été faite en MASTER 6. Les corrections MASTER 5 (11 fichiers, 4 ajouts) sont intégrées telles quelles.
+Aucune autre modification de code n'a été faite en MASTER 6, hormis l'ajout de
+`scripts/verify-evidence-manifests.mjs` (contrôle d'intégrité, §9). Les corrections
+MASTER 5 (11 fichiers, 4 ajouts) sont intégrées telles quelles.
 
 ---
 
@@ -73,7 +77,7 @@ Aucune autre modification de code n'a été faite en MASTER 6. Les corrections M
 - **35/35 contrôles HTTP** contre les services de staging.
 - **Installateur Windows** produit, vérifié, sans secret, 9 fusibles conformes.
 - **Publication GitHub `main`** réelle, sans force, sans rien écraser.
-- **Preuves historiques intactes** : MASTER 4 69/69, MASTER 5 48/48.
+- **Preuves historiques vérifiables** : **273/273** empreintes sur 6 manifestes, sur disque **et** dans le contenu versionné — après réparation de la régression décrite en §9.
 
 ---
 
@@ -93,7 +97,7 @@ Détail dans `MASTER6_BLOCKERS.md`, actions dans `MASTER6_MANUAL_ACTIONS.md`.
 
 ## 6. Réponses aux quatorze questions du mandat
 
-1. **Ce qui a été corrigé** — §2 ci-dessus : jeu de recette, remote, constat stock erroné, intégration sans perte.
+1. **Ce qui a été corrigé** — §2 ci-dessus : jeu de recette, remote, constat stock erroné, intégration sans perte, et la **régression d'intégrité des preuves que j'avais moi-même causée** (§9).
 2. **Ce qui a été testé** — §3.
 3. **Ce qui a réussi** — §4.
 4. **Ce qui reste bloqué** — §5 : cinq réserves, toutes externes.
@@ -125,3 +129,61 @@ Aucune de ces trois réserves ne relève du code. Ce sont un achat, une machine,
 ## 8. Pourquoi pas « NON PRÊT »
 
 Aucune erreur critique ne subsiste dans le code : 0 erreur TypeScript, 0 échec sur 4 390 tests Vitest, 0 échec sur 135 tests Playwright authentifiés, `release:gate` 16/16, et un serveur de production qui démarre et répond correctement — en refusant ce qu'il doit refuser.
+
+---
+
+## 9. Une régression que j'ai causée, et sa réparation
+
+Je dois la signaler explicitement : **mon intégration a cassé l'intégrité des
+preuves historiques, et fait tomber une vraie porte de validation.**
+
+**Ce qui s'est passé.** Au début de MASTER 6, les preuves étaient saines (relevé
+horodaté : MASTER 4 69/69, MASTER 5 48/48). Pour corriger des fins de ligne, j'ai
+désindexé puis ré-extrait les dossiers de preuves. Cette ré-extraction a remplacé
+les fichiers du disque — qui étaient les originaux — par le contenu des blobs.
+Résultat : MASTER 5 à 36/48, le lot `readiness` à 2/32, et `readiness:final`
+retournant **30 erreurs d'empreinte divergente**.
+
+**La cause.** `core.autocrlf=true` normalise les fins de ligne à l'indexation. Les
+preuves MASTER 5 avaient été committées sans attribut `-text`, donc normalisées en
+LF — alors que ces journaux ont des fins de ligne **mixtes** : LF pour les lignes
+écrites par le script, CRLF pour celles capturées d'un programme natif Windows
+(`python.exe`, `powershell.exe`). Aucune conversion globale ne peut inverser cela.
+
+**La réparation.** Trois gestes :
+
+1. `.gitattributes` déclare `-text` sur tous les dossiers de preuves — la cause est
+   supprimée pour l'avenir ;
+2. réécriture des octets du dépôt là où le blob était resté intact (26 fichiers) ;
+3. **reconstruction du masque exact de fins de ligne** là où le blob avait été
+   normalisé (14 fichiers), par recherche bornée sur le nombre de transitions
+   LF↔CRLF. Exemple : `26-hwid-licence-cles.txt` avait **une seule** ligne en
+   CRLF — la sortie de `python.exe`.
+
+**Pourquoi c'est une restauration et non un maquillage.** Chaque reconstruction est
+validée par l'empreinte SHA-256 que MASTER 5 avait elle-même enregistrée. Aucun
+octet n'a été écrit sans que son empreinte corresponde exactement. **Aucun manifeste
+n'a été régénéré** : réécrire les empreintes aurait affiché « conforme » sans rien
+restaurer. Les quatre preuves existant en double exemplaire ont deux manifestes
+indépendants attestant la même empreinte — double contrôle.
+
+**État final**, vérifiable par `node scripts/verify-evidence-manifests.mjs` :
+
+```
+✅ MASTER4_EVIDENCE                                       disque  69/69  versionné  69/69
+✅ MASTER5_EVIDENCE                                       disque  48/48  versionné  48/48
+✅ artifacts/verification/audit-2026-10-22                disque  26/26  versionné  26/26
+✅ artifacts/verification/mission-3-2026-10-22            disque  57/57  versionné  57/57
+✅ artifacts/verification/production-readiness-2026-10-22 disque  41/41  versionné  41/41
+✅ artifacts/verification/production-readiness-master5    disque  32/32  versionné  32/32
+
+✅ preuves : 273/273 sur disque, 273/273 versionnées — 6 manifestes
+```
+
+La colonne « versionné » est celle qui compte : elle atteste que **quiconque clone
+le dépôt obtient des preuves vérifiables**, ce qui n'était vrai ni avant MASTER 6,
+ni pendant. `readiness:final` ne signale plus aucune erreur d'intégrité ; son verdict
+`NON PRÊT` provient désormais uniquement des **8 contrôles légitimement bloqués**
+(signature de code, installation Windows réelle, acheminement SMTP externe).
+
+Détail complet, masques reconstruits et mesures : `MASTER6_EVIDENCE/logs/23-integrite-preuves-reparation.txt`.

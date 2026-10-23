@@ -1,0 +1,160 @@
+=== MASTER 6 — integrite des manifestes de preuves : regression, cause, reparation ===
+
+Ce journal documente une regression que MON integration a introduite sur les preuves
+historiques, la cause exacte, et sa reparation complete. Rien n'y est passe sous
+silence : la regression a casse une vraie porte de validation.
+
+--------------------------------------------------------------------------------
+1. CE QUI S'EST PASSE
+--------------------------------------------------------------------------------
+
+Au debut de MASTER 6, les preuves etaient saines. Releve horodate dans
+MASTER6_EVIDENCE/logs/01-preuves-historiques.txt :
+
+    date_utc=2026-10-23T09:12:16Z
+    --- MASTER 4 ---  OK=69/69  FAILED=0
+    --- MASTER 5 ---  [preuves] 48/48 empreintes verifiees — manifeste conforme.
+
+Pendant l'integration, pour retirer des fins de ligne que mon instantane initial
+avait converties, j'ai desindexe puis re-extrait les dossiers de preuves :
+
+    git rm -r --cached MASTER5_EVIDENCE && rm -rf MASTER5_EVIDENCE
+    git checkout travail-m6 -- MASTER5_EVIDENCE
+
+Cette re-extraction a remplace les fichiers du disque — qui etaient les originaux —
+par le contenu des blobs. Resultat mesure apres l'operation :
+
+    MASTER5_EVIDENCE ................................ 36 / 48 conformes
+    artifacts/verification/production-readiness-master5 .  2 / 32 conformes
+
+Et la porte `readiness:final` est tombee :
+
+    ERREUR: empreinte de preuve divergente : ... (30 erreurs)
+    NON PRET POUR LA PRODUCTION
+
+--------------------------------------------------------------------------------
+2. LA CAUSE EXACTE
+--------------------------------------------------------------------------------
+
+`core.autocrlf=true` — le defaut sous Windows — convertit les fins de ligne a
+l'indexation. Les preuves MASTER 5 ont ete committees sans attribut `-text` :
+leurs blobs ont donc ete normalises en LF.
+
+Or ces journaux ont des fins de ligne MIXTES. Ils sont produits par un script qui
+melange deux sources :
+
+    - les lignes ecrites par le script lui-meme ................ LF
+    - les lignes capturees d'un programme natif Windows ........ CRLF
+      (python.exe, powershell.exe, les outils de signature)
+
+La normalisation CRLF -> LF ecrase cette distinction. Aucune conversion globale ne
+peut l'inverser : c'est pour cela que mes premiers essais (tout LF, tout CRLF, avec
+ou sans BOM, avec ou sans saut final) echouaient tous.
+
+Exemple mesure, logs/26-hwid-licence-cles.txt : 31 lignes, dont UNE SEULE en CRLF —
+la ligne 15, « Python scripts/hwid_v1.py conforme : 5 / 5 », seule ligne provenant
+de python.exe.
+
+Les originaux n'etaient donc plus recuperables par extraction :
+  - recherche dans les 11 080 objets du depot (toutes branches, index, objets
+    orphelins), filtree par taille plausible puis par empreinte : 0 / 10 trouves ;
+  - recherche d'une copie ailleurs sur le disque : aucune hors du depot.
+
+--------------------------------------------------------------------------------
+3. LA REPARATION
+--------------------------------------------------------------------------------
+
+3.1 Empecher la recidive — .gitattributes
+
+    MASTER4_EVIDENCE/**            -text
+    MASTER5_EVIDENCE/**            -text
+    MASTER6_EVIDENCE/**            -text
+    artifacts/verification/**      -text
+    PRODUCTION_DELIVERY/**         -text
+    PRODUCTION_DELIVERY_MASTER6/** -text
+
+Les preuves sont desormais extraites a l'octet pres, quelle que soit la
+configuration locale de celui qui clone.
+
+3.2 Reecriture des octets versionnes
+
+Pour les fichiers dont le blob etait reste intact, et que seule l'EXTRACTION avait
+convertis, il suffisait de reecrire les octets du depot sans filtre :
+26 des 32 preuves readiness ont ete retablies ainsi.
+
+3.3 Reconstruction du masque de fins de ligne
+
+Pour les fichiers dont le BLOB avait ete normalise, le masque exact a ete retrouve
+par recherche en profondeur bornee par le nombre de transitions LF<->CRLF, en
+reutilisant l'etat de hachage du prefixe pour ne pas rehacher le fichier entier a
+chaque candidat.
+
+Point essentiel : la reussite est attestee par l'empreinte SHA-256 du manifeste
+MASTER 5 lui-meme. Aucun octet n'a ete ecrit sans que son empreinte corresponde a
+celle que MASTER 5 avait enregistree. Une reconstruction fausse est donc impossible
+a confondre avec une reconstruction juste.
+
+Masques retrouves :
+
+  artifacts/verification/production-readiness-master5/
+    26-hwid-licence-cles.txt ......... LF x14 + CRLF x1 + LF x16
+    28-ocr-secret-scan.txt ........... LF x4 + CRLF x57 + LF x1
+    38-installateur-arbre-propre.txt . LF x46 + CRLF x3 + LF x287
+    16-vitest-complet.txt ............ LF x2531 + CRLF x33 + LF x30
+    32-application-empaquetee.txt .... tout CRLF
+    40-signature-et-installation.txt . tout CRLF
+
+  MASTER5_EVIDENCE/logs/
+    12-next-build.txt ................ LF x41 + CRLF x3 + LF x228
+    15-windows-dist.txt .............. LF x46 + CRLF x3 + LF x284
+    24-windows-dist-signed-buildid.txt LF x46 + CRLF x3 + LF x287
+    42-windows-dist-final.txt ........ LF x46 + CRLF x3 + LF x287
+    43-production-http-final.txt ..... LF x5 + CRLF x6 + LF x17 + CRLF x1 + LF x8
+    44-windows-dist-livraison.txt .... LF x47 + CRLF x3 + LF x299
+    32-packaged-app-launch.txt ....... tout CRLF
+    40-windows-signature-et-install.txt tout CRLF
+
+Les quatre preuves 16, 26, 28 et 38 existent en double exemplaire — une copie dans
+MASTER5_EVIDENCE/logs, une dans le lot readiness. Les DEUX manifestes attendent la
+MEME empreinte pour chacune : deux attestations independantes de la meme cible, et
+la copie reconstruite a ete reportee a l'identique.
+
+--------------------------------------------------------------------------------
+4. CE QUI N'A PAS ETE FAIT
+--------------------------------------------------------------------------------
+
+  - Aucun manifeste n'a ete regenere. Reecrire les empreintes aurait affiche
+    « conforme » sans rien restaurer, et aurait efface la trace de la regression.
+    Les trois manifestes sont ceux de MASTER 4 et MASTER 5, inchanges.
+  - Aucun contenu de preuve n'a ete modifie, tronque, complete ni re-execute.
+    Seules les fins de ligne ont ete retablies, et uniquement vers la valeur que
+    le manifeste atteste.
+  - Aucun `BLOCKED` n'a ete transforme en `PASS` : les 8 controles bloques de
+    `readiness:final` le restent.
+
+--------------------------------------------------------------------------------
+5. ETAT APRES REPARATION
+--------------------------------------------------------------------------------
+-- fichiers sur disque --
+MASTER 4              69 / 69 conformes a l'octet pres
+MASTER 5              48 / 48 conformes a l'octet pres
+readiness MASTER 5    32 / 32 conformes a l'octet pres
+
+TOTAL 149/149 empreintes verifiees
+PREUVES_INTEGRES=true
+
+-- contenu VERSIONNE (ce qu'obtient un clone) --
+MASTER 4              69 / 69 blobs conformes
+MASTER 5              48 / 48 blobs conformes
+readiness MASTER 5    32 / 32 blobs conformes
+
+TOTAL 149/149 blobs verifies
+PREUVES_VERIFIABLES_DEPUIS_UN_CLONE=true
+
+-- porte readiness:final --
+Contrôles : 25 pass, 8 bloquant(s), 33 total
+NON PRÊT POUR LA PRODUCTION
+
+Le verdict NON PRET ne vient plus d'aucune erreur d'integrite : il vient
+des 8 controles declares bloques (signature de code, installation Windows
+reelle, acheminement SMTP externe...), qui sont des prerequis externes.

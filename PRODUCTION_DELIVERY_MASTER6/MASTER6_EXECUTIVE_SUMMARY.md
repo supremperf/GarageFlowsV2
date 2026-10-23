@@ -29,6 +29,20 @@ Le logiciel est techniquement prêt. **Trois des cinq blocages de MASTER 5 sont 
 
 **3. Staging** — le serveur de **production** du produit a été branché sur les services de staging (PostgreSQL Neon Preview 18.6, Upstash Preview) : 35/35, dont les 11 API privées qui refusent toutes en 401 sans session.
 
+## Une erreur que j'ai commise, et réparée
+
+Mon intégration a **cassé l'intégrité des preuves historiques** : en ré-extrayant les
+dossiers de preuves pour corriger des fins de ligne, j'ai remplacé les fichiers
+originaux du disque par des versions que git avait normalisées. 42 empreintes sont
+tombées, et avec elles la porte `readiness:final`.
+
+C'est réparé en totalité : **273/273 empreintes** sur les 6 manifestes. La cause est
+supprimée (`.gitattributes` déclare `-text` sur les dossiers de preuves) et chaque
+octet restauré est validé par l'empreinte que MASTER 5 avait elle-même enregistrée —
+**aucun manifeste n'a été réécrit**. Un point positif en est sorti : les preuves sont
+désormais vérifiables **depuis un clone**, ce qui n'était vrai ni avant, ni pendant.
+Détail dans `MASTER6_FINAL_REPORT.md §9`.
+
 ## Un constat de MASTER 5 était faux
 
 MASTER 5 affirmait que la quantité de stock n'était pas modifiable. **C'est inexact.** `PATCH /api/parts/:id` accepte `{ quantity, expectedQuantity }`, écrit un mouvement `ADJUST` tracé dans la même transaction, et applique une concurrence optimiste : 400 sans la quantité observée, 200 avec, **409 si elle est périmée**. Mon sondage précédent utilisait le mauvais nom de champ. Seule lacune réelle : le mouvement ne porte pas d'auteur.
@@ -55,7 +69,7 @@ Deux faits compliquent toute rotation : les jetons ne portent **aucun identifian
 | TypeScript / ESLint | **0 / 0** |
 | HTTP réels contre staging | **35 / 35** |
 | 10 parcours métier | **899 assertions, 0 échec** |
-| MASTER 4 / MASTER 5 — preuves | **69/69** et **48/48**, intactes |
+| preuves historiques (6 manifestes) | **273/273**, sur disque **et** en versionné |
 
 ## Les cinq réserves
 
