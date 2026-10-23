@@ -1,0 +1,3 @@
+[licences] récupéré  next-auth@4.24.15  cf5c8f6c5d858d6b…  (791 octets)
+[licences] récupéré  client-only@0.0.1  b85dcd3e453d0598…  (1078 octets)
+[licences] 2 entrée(s) à jour

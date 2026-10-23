@@ -1,0 +1,17 @@
+<claude-code-hint v="1" type="plugin" value="vercel@claude-plugins-official" />
+Vercel CLI 65.1.0 (Node.js 22.23.2)
+  Inspect         https://vercel.com/garage-flows/app.garageflows.fr/8Njtk2c1M7d6Y1ALr6qp4DdUAPhi
+  Preview         https://appgarageflows-8g09dosmc-garage-flows.vercel.app
+{
+  "status": "error",
+  "reason": "deploy_failed",
+  "message": "Not authorized",
+  "next": [
+    {
+      "command": "vercel deploy",
+      "when": "retry deploy"
+    }
+  ]
+}
+Error: Not authorized
+EXIT=1

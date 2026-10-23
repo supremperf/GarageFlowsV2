@@ -1,0 +1,63 @@
+=== Staging : accès réellement disponibles et accès manquants — MASTER 5 ===
+date_utc=2026-10-23T04:23:35Z
+
+--- 1. POSTGRESQL + REDIS DE STAGING : DISPONIBLES ET TESTÉS ---
+PostgreSQL Neon (Preview) : connexion établie, 22 migrations rejouées sur base
+  vierge gf_gate_check_<16 hex>, smoke test CRUD (LicenseKey + LicenseDevice),
+  contraintes et cascade vérifiées. Voir 18-postgres-gate-fresh.txt.
+Redis Upstash (Preview) : PING, SET/GET, INCR atomique, expiration réelle,
+  fenêtre de limitation 3 autorisés / 2 refusés, HTTP 401 sur jeton invalide,
+  0 clé résiduelle. Voir 19-redis-upstash-smoke.txt.
+Rate-limit multi-instance : prouvé contre un Redis réel. Voir 36-release-gate.txt.
+STAGING_POSTGRES_REDIS=PASS
+
+--- 2. DÉPLOIEMENT PREVIEW : BLOQUÉ PAR UNE PERMISSION DE PLATEFORME ---
+Deux tentatives, même refus :
+<claude-code-hint v="1" type="plugin" value="vercel@claude-plugins-official" />
+Vercel CLI 65.1.0 (Node.js 22.23.2)
+> Fetched deployment "appgarageflows-gt4l5xbbp-garage-flows.vercel.app" in garage-flows [434ms]
+
+  General
+
+    id		dpl_BgEV5uhPrWLnHfbfPsAmhn4cMY3G
+    name	app.garageflows.fr
+    target	preview
+    status	● Blocked
+    reason	The deployment was blocked because the commit author doesn’t have permission to create deployments for this project.
+    url		https://appgarageflows-gt4l5xbbp-garage-flows.vercel.app
+    created	Fri Oct 23 2026 06:04:51 GMT+0200 (heure d’été d’Europe centrale) [19m ago]
+
+
+Cause : équipe garage-flows en plan Hobby, qui refuse un déploiement dont
+l'auteur du commit Git n'est pas rattaché au compte. Le déploiement de
+production antérieur avait réussi parce que le dossier n'était alors sous
+AUCUN dépôt Git — aucune métadonnée d'auteur n'était transmise.
+Correctif : ajouter l'adresse de l'auteur aux e-mails du compte Vercel.
+Aucun contournement appliqué : déployer depuis une copie sans .git aurait
+fonctionné mais produit un artefact non rattachable à un commit.
+
+--- 3. SMTP : ENVOI RÉEL PROUVÉ EN LOCAL, ACHEMINEMENT EXTERNE NON VÉRIFIÉ ---
+L'architecture ne porte AUCUNE variable SMTP_* : les identifiants sont des
+données PAR GARAGE, chiffrées au repos (AES-256-GCM, enveloppe GFSEC1:).
+   ✓ .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > le mot de passe est stocké CHIFFRÉ au repos (enveloppe GFSEC1) 4ms
+   ✓ .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > envoie réellement le message et présente l’authentification 32ms
+   ✓ .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > une configuration incomplète est signalée sans exception 2ms
+   ✓ .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > un refus du serveur n’est jamais présenté comme un succès 18ms
+   ✓ .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > une clé de chiffrement modifiée rend le secret illisible et bloque l’envoi 3ms
+   Test Files  1 passed (1)
+        Tests  5 passed (5)
+  → 5/5 : chiffrement au repos, transmission réelle, authentification présentée
+    avec le secret déchiffré, configuration incomplète signalée, refus serveur
+    jamais présenté comme un succès, clé modifiée bloquant l'envoi.
+NON VÉRIFIÉ : SPF, DKIM, DMARC, réputation, réception dans une boîte réelle.
+Aucun serveur SMTP de test autorisé n'a été fourni.
+STAGING_SMTP_PORTAL=BLOCKED (serveur SMTP de test autorisé + Preview servante requis)
+
+--- 4. FACTURATION ÉLECTRONIQUE ET MISE À JOUR SIGNÉE ---
+Couverture par tests : parcours facturation-electronique 206 assertions vertes ;
+parcours installation-windows 177 ; test:update-signing inclus dans les 190
+tests release-safety verts.
+NON EXÉCUTÉ : bac à sable réel du fournisseur (file, webhook, reprise d'erreur),
+et mise à jour signée de bout en bout contre une URL de distribution publique.
+Aucun accès fournisseur ni URL de distribution n'a été fourni.
+STAGING_EINVOICING_UPDATE=BLOCKED (accès fournisseur + URL de distribution requis)

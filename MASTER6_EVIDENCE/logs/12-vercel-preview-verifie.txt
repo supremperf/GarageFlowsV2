@@ -1,0 +1,51 @@
+=== Déploiement PREVIEW Vercel — vérification HTTP réelle ===
+date_utc=2026-10-23T09:53:54Z
+URL : https://appgarageflows-gomy2ln6k-garage-flows.vercel.app
+
+  General
+
+    id		dpl_C1FGbnHRpggCVpuL6L9XA2BHHyHi
+    name	app.garageflows.fr
+    target	preview
+    status	● Ready
+    url		https://appgarageflows-gomy2ln6k-garage-flows.vercel.app
+    created	Fri Oct 23 2026 11:49:32 GMT+0200 (heure d’été d’Europe centrale) [4m ago]
+
+
+
+--- routes ---
+/api/health      status=302 redirect=https://vercel.com/sso-api?url=https%3A%2F%2Fappgarageflows-gomy2ln6k-garage-flows.vercel.app%2Fapi%2Fhealth&nonce=d6b98bdacc2825a72b9898e784050b097aea7fc20a9071e6d1e9141faead40ad total=0.281322s
+/api/ping        status=302 redirect=https://vercel.com/sso-api?url=https%3A%2F%2Fappgarageflows-gomy2ln6k-garage-flows.vercel.app%2Fapi%2Fping&nonce=03fed8d5f25254c66247829804ee8df1bee3d14a527734c450fba7bbb9da62b9 total=0.230684s
+/login           status=302 redirect=https://vercel.com/sso-api?url=https%3A%2F%2Fappgarageflows-gomy2ln6k-garage-flows.vercel.app%2Flogin&nonce=ac1abcbf8ec064284f78ea48433a0e3c21bba8d2a602524f7b69848b1ecf8848 total=0.105866s
+/                status=302 redirect=https://vercel.com/sso-api?url=https%3A%2F%2Fappgarageflows-gomy2ln6k-garage-flows.vercel.app%2F&nonce=f273fa531086ab09dce509a46f833fb7172f433586925f4b145b3442636670b5 total=0.247446s
+/clients         status=302 redirect=https://vercel.com/sso-api?url=https%3A%2F%2Fappgarageflows-gomy2ln6k-garage-flows.vercel.app%2Fclients&nonce=95a9fb4a005c5dbe114df950a5392204bd276384a2c82f477e21f0002388a816 total=0.118684s
+/portal          status=302 redirect=https://vercel.com/sso-api?url=https%3A%2F%2Fappgarageflows-gomy2ln6k-garage-flows.vercel.app%2Fportal&nonce=e566f08335afeaa1b1a5347ae8e5231763916be4eebd29c7ab53618efd0bc406 total=0.112015s
+/api/clients     status=302 redirect=https://vercel.com/sso-api?url=https%3A%2F%2Fappgarageflows-gomy2ln6k-garage-flows.vercel.app%2Fapi%2Fclients&nonce=85875bf3b3e0199cd7380173fb82e1ed8de710229a1c86a68e3eb8f1f0857a62 total=0.232573s
+
+--- corps de /api/health ---
+Protected by Vercel Authentication
+To access this deployment with an authenticated Vercel CLI, run: vercel curl <deployment-url>
+With an authorized Vercel MCP connection (https://mcp.vercel.com), call
+
+--- en-têtes de sécurité sur /login ---
+Server: Vercel
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+X-Frame-Options: DENY
+X-Vercel-Id: fra1::znr6f-1792749245527-64cecd31a710
+
+--- unsafe-eval dans la CSP ? ---
+NON (attendu)
+
+--- statuts et corps réellement obtenus (vercel curl authentifié) ---
+/api/health        status=200  corps={"status":"ok"}
+/api/ping          status=200  corps={"ok":true}
+/api/auth/csrf     status=200  corps={"csrfToken":"edd367f2cadd9554c45e04d1b2399c8655ab95b176e758a4b47d7c42
+/api/clients       status=401  corps={"error":"Non autorisé","code":"UNAUTHENTICATED"}
+/login             status=200  corps=<!DOCTYPE html><!--QoqIPhBbZZrSshiSVf3jm--><html lang="fr"><head><meta
+
+CONSTAT : le déploiement Preview répond réellement. L'API privée refuse sans
+session (401 UNAUTHENTICATED), la page de connexion est rendue, le jeton CSRF
+est émis. Le blocage << commit author doesn't have permission >> de MASTER 5 a
+disparu dès que le remote origin a été configuré : Vercel résout alors le dépôt
+GitHub et rattache l'auteur au compte propriétaire.
+PREVIEW_VERCEL=PASS

@@ -188,3 +188,21 @@ skills-lock.json
 # contenu non — versionner un rapport par exécution noierait l'historique et
 # publierait l'inventaire d'infrastructure d'une machine donnée.
 configuation automatique/reports/*.json
+
+# ── Exceptions d’environnement — DOIT RESTER LE DERNIER BLOC ────────────────
+#
+# Dans un .gitignore, c’est le DERNIER motif correspondant qui décide. Les
+# négations `!.env.example` / `!.env.*.example` déclarées plus haut étaient
+# donc ANNULÉES par les motifs `.env*` ajoutés ensuite — `vercel link` en
+# appose un à chaque exécution (avec `.vercel`), et le fichier en comptait
+# déjà trois copies.
+#
+# Conséquence constatée : `.env.example` — 28 ko de contrat d’environnement
+# documenté, SANS aucune valeur — n’était pas suivi. `git add -A` ne le
+# prenait pas, et le contrôle de sécurité GF-DUR-044 échouait précisément sur
+# son absence (src/lib/__tests__/secrets-jamais-distribues.test.ts).
+#
+# Ces deux lignes doivent rester en fin de fichier. Si un outil ajoute encore
+# un `.env*` après elles, les redéplacer ici — ne pas les dupliquer plus haut.
+!.env.example
+!.env.*.example

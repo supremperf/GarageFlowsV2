@@ -1,0 +1,11 @@
+PASS  connexion + version SQLite  -> 3.45.0
+PASS  inventaire des tables  -> 45 tables / 43 modèles
+PASS  création tenant Garage isolé  -> cmvjy3v7h00004q4vtukp7te5
+PASS  CRUD Client + lecture dans transaction  -> cmvjy3v7t00034q4v1qkgd7p0
+PASS  relation Client -> Vehicle  -> SM-f9df1
+PASS  isolation multi-tenant (filtre garageId)  -> 1 dans le tenant, 0 hors tenant
+PASS  index utilisé (EXPLAIN QUERY PLAN sur garageId)  -> SEARCH Client USING INDEX Client_garageId_idx (garageId=?)
+PASS  rollback de transaction  -> 1 == 1
+PASS  persistance après reconnexion  -> SMOKE-CLIENT-f9df10fc5a
+PASS  suppression en cascade du tenant jetable  -> client et véhicule supprimés avec le garage
+RESULT=PASS

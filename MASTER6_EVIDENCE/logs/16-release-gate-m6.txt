@@ -1,0 +1,48 @@
+[porte] TEST_POSTGRES_URL : PostgreSQL local jetable (Docker, port 55432)
+[porte] TEST_REDIS_URL    : Redis local jetable (Docker, port 6379)
+[porte] psql disponible   : true
+[porte] tesseract         : true
+
+> garageflow@1.1.0 release:gate
+> node scripts/final-release-gate.mjs
+
+
+════ GarageFlows — FINAL RELEASE GATE ════
+
+▶ TypeScript (tsc --noEmit)… OK (12s)
+▶ ESLint… OK (40s)
+▶ Gardes de cohérence (check:consistency)… OK (11s)
+▶ Preuve de rotation des secrets… OK (0s)
+▶ Suite de tests (vitest) + baseline machine + baseline humaine… OK (59s)
+▶ Cohérence documentaire (post-baseline)… OK (1s)
+▶ Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)… OK (9s)
+▶ Migrations PostgreSQL sur base neuve + smoke test… OK (7s)
+▶ Rate-limit distribué multi-instance (Redis réel)… OK (5s)
+▶ Audit complet dépendances (tous niveaux)… OK (2s)
+▶ Audit runtime desktop empaqueté (Electron)… OK (2s)
+▶ Manifeste de release (commit-bound)… OK (1s)
+▶ Vérification d'artefact (identité + cohérence + secrets)… OK (0s)
+▶ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)… OK (7s)
+▶ Build de production (next build)… OK (209s)
+▶ Budget de performance (bundle client)… OK (1s)
+
+════ RÉCAPITULATIF ════
+✅ TypeScript (tsc --noEmit)                                                  OK
+✅ ESLint                                                                     OK
+✅ Gardes de cohérence (check:consistency)                                    OK
+✅ Preuve de rotation des secrets                                             OK
+✅ Suite de tests (vitest) + baseline machine + baseline humaine              OK
+✅ Cohérence documentaire (post-baseline)                                     OK
+✅ Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)  OK
+✅ Migrations PostgreSQL sur base neuve + smoke test                          OK
+✅ Rate-limit distribué multi-instance (Redis réel)                           OK
+✅ Audit complet dépendances (tous niveaux)                                   OK
+✅ Audit runtime desktop empaqueté (Electron)                                 OK
+✅ Manifeste de release (commit-bound)                                        OK
+✅ Vérification d'artefact (identité + cohérence + secrets)                   OK
+✅ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)        OK
+✅ Build de production (next build)                                           OK
+✅ Budget de performance (bundle client)                                      OK
+
+✅ GATE LOCAL PASSÉ : exécutez encore `npm run readiness:final` avec les preuves Playwright, Windows, staging et conformité.
+EXIT=0

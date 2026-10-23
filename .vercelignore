@@ -32,3 +32,23 @@ artifacts/
 *.exe
 *.blockmap
 .env.*
+
+# Bases SQLite LOCALES (poste de développement / recette E2E). Elles n'ont aucun
+# rôle côté serveur — le déploiement PWA utilise PostgreSQL via DATABASE_URL —
+# et téléverser une base de travail vers la plateforme de build est à la fois
+# inutile et contraire à l'hygiène. Le MODÈLE committé reste expédié : il est
+# recopié dans la sortie standalone par scripts/post-build.js.
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-wal
+prisma/*.db-shm
+!prisma/garageflow-template.db
+
+# Preuves d'audit et captures locales : volumineuses, jamais nécessaires au build.
+MASTER4_EVIDENCE/
+MASTER5_EVIDENCE/
+release/
+e2e/shots/
+playwright-report/
+test-results/
+.tmp-*/

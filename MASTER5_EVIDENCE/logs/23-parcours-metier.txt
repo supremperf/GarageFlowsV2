@@ -1,0 +1,22 @@
+
+> garageflow@1.1.0 rapport:parcours
+> node scripts/rapport-10-parcours.mjs
+
+Parcours métier — tests réellement exécutés
+
+parcours                   fich. tests ok ko base non exécutée
+client                         6    78  78  0   3
+vehicule                       4    63  63  0   1
+devis                          6    66  66  0   3
+intervention                   6    50  50  0   3
+facture                        8    70  70  0   3
+facturation-electronique      14   206 206  0   2
+licence                       14   156 150  0   2
+abonnement                     2    24  24  0   0
+sauvegarde                     6    48  48  0   2
+installation-windows          13   177 177  0   0
+
+Total du run : 899/905 assertions, 0 échec(s), 76 fichiers, 14.0 s
+Rapport : artifacts\verification\parcours-metier-10.json
+
+✅ 10 parcours : assertions vertes (périmètre exécutable)

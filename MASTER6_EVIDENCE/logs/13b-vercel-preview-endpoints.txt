@@ -1,0 +1,5 @@
+/api/health        status=200  corps={"status":"ok"}
+/api/ping          status=200  corps={"ok":true}
+/api/auth/csrf     status=200  corps={"csrfToken":"edd367f2cadd9554c45e04d1b2399c8655ab95b176e758a4b47d7c42
+/api/clients       status=401  corps={"error":"Non autorisé","code":"UNAUTHENTICATED"}
+/login             status=200  corps=<!DOCTYPE html><!--QoqIPhBbZZrSshiSVf3jm--><html lang="fr"><head><meta

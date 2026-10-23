@@ -1,0 +1,336 @@
+
+> garageflow@1.1.0 dist
+> npm run preflight:release && cross-env GF_PACKAGE_DESKTOP=1 npm run build && npm run verify:standalone && electron-builder --win --x64 --publish never && npm run check:artifact-secrets && npm run check:artifact-fuses && npm run verify:installer
+
+
+> garageflow@1.1.0 preflight:release
+> node scripts/preflight-release.cjs
+
+
+🔎 Contrôles avant empaquetage
+   Node 22.23.2 — win32/x64
+   Cible : Windows x64 (NSIS) — installeur utilisateur, sans droits administrateur
+   Version empaquetée : 1.1.0
+✅ Prérequis réunis — poursuite de la construction.
+
+
+> garageflow@1.1.0 build
+> prisma generate && prisma generate --schema prisma/server/schema.prisma && node scripts/next-build.cjs
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 564ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to react to database changes in your app as they happen? Discover how with Pulse: https://pris.ly/tip-1-pulse
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\server\schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to .\src\generated\server-client in 597ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+
+   ▲ Next.js 15.5.28
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 81s
+   Linting and checking validity of types ...
+   Collecting page data ...
+[2026-10-23T04:23:18.433Z] [INFO] AUTH {"step":"AUTH_STEP_0_ROUTE_LOADED","result":"ok"}
+   Generating static pages (0/18) ...
+   Generating static pages (4/18) 
+   Generating static pages (8/18) 
+   Generating static pages (13/18) 
+ ✓ Generating static pages (18/18)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                         Size  First Load JS
+┌ ○ /                                             122 kB         337 kB
+├ ○ /_not-found                                     1 kB         104 kB
+├ ○ /admin/licenses                              12.7 kB         128 kB
+├ ƒ /api/admin/backups                             516 B         104 kB
+├ ƒ /api/admin/backups/[id]/download               516 B         104 kB
+├ ƒ /api/admin/backups/[id]/restore                516 B         104 kB
+├ ƒ /api/admin/backups/[id]/verify                 516 B         104 kB
+├ ƒ /api/admin/diagnostics                         516 B         104 kB
+├ ƒ /api/admin/licenses                            516 B         104 kB
+├ ƒ /api/admin/licenses/[id]                       516 B         104 kB
+├ ƒ /api/admin/licenses/[id]/devices               516 B         104 kB
+├ ƒ /api/admin/licenses/[id]/devices/[deviceId]    516 B         104 kB
+├ ƒ /api/admin/licenses/create                     516 B         104 kB
+├ ƒ /api/admin/licenses/generate                   516 B         104 kB
+├ ƒ /api/admin/licenses/revoke-by-key              516 B         104 kB
+├ ƒ /api/admin/monitoring                          516 B         104 kB
+├ ƒ /api/admin/updates                             516 B         104 kB
+├ ƒ /api/admin/updates/file/[name]                 516 B         104 kB
+├ ƒ /api/adresse/recherche                         516 B         104 kB
+├ ƒ /api/analytics/health                          516 B         104 kB
+├ ƒ /api/appointments                              516 B         104 kB
+├ ƒ /api/appointments/[id]                         516 B         104 kB
+├ ƒ /api/auth/[...nextauth]                        516 B         104 kB
+├ ƒ /api/catalog                                   516 B         104 kB
+├ ƒ /api/clients                                   516 B         104 kB
+├ ƒ /api/clients/[id]                              516 B         104 kB
+├ ƒ /api/clients/[id]/portal-access                516 B         104 kB
+├ ƒ /api/copilot                                   516 B         104 kB
+├ ƒ /api/copilot/report                            516 B         104 kB
+├ ƒ /api/copilot/reports                           516 B         104 kB
+├ ƒ /api/copilot/reports/[id]/export               516 B         104 kB
+├ ƒ /api/dashboard                                 516 B         104 kB
+├ ƒ /api/diagnostic                                516 B         104 kB
+├ ƒ /api/einvoicing/connection                     516 B         104 kB
+├ ƒ /api/einvoicing/connection/test                516 B         104 kB
+├ ƒ /api/einvoicing/invoices/[id]/submit           516 B         104 kB
+├ ƒ /api/einvoicing/status                         516 B         104 kB
+├ ƒ /api/einvoicing/webhooks/[providerId]          516 B         104 kB
+├ ƒ /api/email                                     516 B         104 kB
+├ ƒ /api/estimate                                  516 B         104 kB
+├ ƒ /api/export/fec                                516 B         104 kB
+├ ƒ /api/finance                                   516 B         104 kB
+├ ƒ /api/forecast                                  516 B         104 kB
+├ ƒ /api/forgotten-parts                           516 B         104 kB
+├ ƒ /api/garages                                   516 B         104 kB
+├ ƒ /api/health                                    516 B         104 kB
+├ ƒ /api/inspections                               516 B         104 kB
+├ ƒ /api/inspections/[id]                          516 B         104 kB
+├ ƒ /api/inspections/prefill                       516 B         104 kB
+├ ƒ /api/internal/backup                           516 B         104 kB
+├ ƒ /api/internal/einvoicing/queue                 516 B         104 kB
+├ ƒ /api/internal/export                           516 B         104 kB
+├ ƒ /api/internal/license-status                   516 B         104 kB
+├ ƒ /api/internal/migrate                          516 B         104 kB
+├ ƒ /api/invoices                                  516 B         104 kB
+├ ƒ /api/invoices/[id]                             516 B         104 kB
+├ ƒ /api/jobs                                      516 B         104 kB
+├ ƒ /api/jobs/[id]                                 516 B         104 kB
+├ ƒ /api/jobs/[id]/parts                           516 B         104 kB
+├ ƒ /api/jobs/[id]/photos                          516 B         104 kB
+├ ƒ /api/jobs/[id]/timer                           516 B         104 kB
+├ ƒ /api/jobs/pulse                                516 B         104 kB
+├ ƒ /api/keygen/licenses                           516 B         104 kB
+├ ƒ /api/keygen/licenses/[lid]/hwid                516 B         104 kB
+├ ƒ /api/keygen/licenses/[lid]/status              516 B         104 kB
+├ ƒ /api/labor-operations                          516 B         104 kB
+├ ƒ /api/labor-operations/[id]                     516 B         104 kB
+├ ƒ /api/labor-operations/bulk-import              516 B         104 kB
+├ ƒ /api/license/activate                          516 B         104 kB
+├ ƒ /api/license/check                             516 B         104 kB
+├ ƒ /api/license/deactivate                        516 B         104 kB
+├ ƒ /api/license/devices                           516 B         104 kB
+├ ƒ /api/license/status                            516 B         104 kB
+├ ƒ /api/license/type                              516 B         104 kB
+├ ƒ /api/loaner-reservations                       516 B         104 kB
+├ ƒ /api/loaner-reservations/[id]                  516 B         104 kB
+├ ƒ /api/loaner-vehicles                           516 B         104 kB
+├ ƒ /api/loaner-vehicles/[id]                      516 B         104 kB
+├ ƒ /api/mechanic-licenses                         516 B         104 kB
+├ ƒ /api/mechanic-licenses/[lid]/assign            516 B         104 kB
+├ ƒ /api/mechanic-licenses/[lid]/disconnect        516 B         104 kB
+├ ƒ /api/mechanic-licenses/[lid]/status            516 B         104 kB
+├ ƒ /api/mechanic-licenses/[lid]/token             516 B         104 kB
+├ ƒ /api/mechanic/jobs/[id]                        516 B         104 kB
+├ ƒ /api/mechanic/jobs/[id]/checklist/[itemId]     516 B         104 kB
+├ ƒ /api/mechanic/jobs/[id]/notes                  516 B         104 kB
+├ ƒ /api/mechanic/jobs/[id]/photos                 516 B         104 kB
+├ ƒ /api/mechanic/jobs/[id]/timer                  516 B         104 kB
+├ ƒ /api/mechanic/logout                           516 B         104 kB
+├ ƒ /api/mechanic/me                               516 B         104 kB
+├ ƒ /api/mechanic/photos/[...path]                 516 B         104 kB
+├ ƒ /api/mechanic/schedule                         516 B         104 kB
+├ ƒ /api/mechanics                                 516 B         104 kB
+├ ƒ /api/mechanics/[id]                            516 B         104 kB
+├ ƒ /api/mechanics/[id]/avatar                     516 B         104 kB
+├ ƒ /api/notifications/dispatch                    516 B         104 kB
+├ ƒ /api/ocr                                       516 B         104 kB
+├ ƒ /api/parts                                     516 B         104 kB
+├ ƒ /api/parts/[id]                                516 B         104 kB
+├ ƒ /api/parts/low-stock                           516 B         104 kB
+├ ƒ /api/parts/search                              516 B         104 kB
+├ ƒ /api/photos/[...path]                          516 B         104 kB
+├ ƒ /api/ping                                      516 B         104 kB
+├ ƒ /api/plate-lookup                              516 B         104 kB
+├ ƒ /api/plate-ocr                                 516 B         104 kB
+├ ƒ /api/portal/[token]                            516 B         104 kB
+├ ƒ /api/portal/appointments                       516 B         104 kB
+├ ƒ /api/portal/appointments/[id]                  516 B         104 kB
+├ ƒ /api/portal/auth/2fa/disable                   516 B         104 kB
+├ ƒ /api/portal/auth/2fa/enable                    516 B         104 kB
+├ ƒ /api/portal/auth/2fa/setup                     516 B         104 kB
+├ ƒ /api/portal/auth/2fa/verify                    516 B         104 kB
+├ ƒ /api/portal/auth/devices                       516 B         104 kB
+├ ƒ /api/portal/auth/email                         516 B         104 kB
+├ ƒ /api/portal/auth/login                         516 B         104 kB
+├ ƒ /api/portal/auth/logout                        516 B         104 kB
+├ ƒ /api/portal/auth/me                            516 B         104 kB
+├ ƒ /api/portal/auth/password                      516 B         104 kB
+├ ƒ /api/portal/auth/register                      516 B         104 kB
+├ ƒ /api/portal/auth/verify-email                  516 B         104 kB
+├ ƒ /api/portal/generate                           516 B         104 kB
+├ ƒ /api/portal/me/dashboard                       516 B         104 kB
+├ ƒ /api/portal/quote/[token]                      516 B         104 kB
+├ ƒ /api/portal/tickets                            516 B         104 kB
+├ ƒ /api/portal/tickets/[id]                       516 B         104 kB
+├ ƒ /api/portal/tickets/[id]/close                 516 B         104 kB
+├ ƒ /api/profitability                             516 B         104 kB
+├ ƒ /api/purchase-orders                           516 B         104 kB
+├ ƒ /api/purchase-orders/[id]                      516 B         104 kB
+├ ƒ /api/purchase-orders/[id]/receive              516 B         104 kB
+├ ƒ /api/quotes                                    516 B         104 kB
+├ ƒ /api/quotes/[id]                               516 B         104 kB
+├ ƒ /api/quotes/[id]/convert                       516 B         104 kB
+├ ƒ /api/quotes/[id]/signature-token               516 B         104 kB
+├ ƒ /api/quotes/generate                           516 B         104 kB
+├ ƒ /api/reminders                                 516 B         104 kB
+├ ƒ /api/reminders/send                            516 B         104 kB
+├ ƒ /api/reminders/suggestions                     516 B         104 kB
+├ ƒ /api/reports                                   516 B         104 kB
+├ ƒ /api/signatures                                516 B         104 kB
+├ ƒ /api/stats                                     516 B         104 kB
+├ ƒ /api/stock-forecast                            516 B         104 kB
+├ ƒ /api/suggestions                               516 B         104 kB
+├ ƒ /api/suppliers                                 516 B         104 kB
+├ ƒ /api/sync/appointments                         516 B         104 kB
+├ ƒ /api/sync/einvoicing                           516 B         104 kB
+├ ƒ /api/sync/invoice                              516 B         104 kB
+├ ƒ /api/sync/job-photo                            516 B         104 kB
+├ ƒ /api/sync/jobs                                 516 B         104 kB
+├ ƒ /api/sync/mechanic-assignment                  516 B         104 kB
+├ ƒ /api/sync/mechanic-avatar                      516 B         104 kB
+├ ƒ /api/sync/mechanic-status                      516 B         104 kB
+├ ƒ /api/sync/portal                               516 B         104 kB
+├ ƒ /api/sync/portal-account                       516 B         104 kB
+├ ƒ /api/sync/quote                                516 B         104 kB
+├ ƒ /api/sync/quote-return                         516 B         104 kB
+├ ƒ /api/sync/tickets                              516 B         104 kB
+├ ƒ /api/tickets                                   516 B         104 kB
+├ ƒ /api/tickets/[id]                              516 B         104 kB
+├ ƒ /api/users                                     516 B         104 kB
+├ ƒ /api/vehicles                                  516 B         104 kB
+├ ƒ /api/vehicles/[id]                             516 B         104 kB
+├ ƒ /api/vehicles/[id]/timeline                    516 B         104 kB
+├ ƒ /api/vehicles/ct-alerts                        516 B         104 kB
+├ ƒ /api/version                                   516 B         104 kB
+├ ƒ /api/vin                                       516 B         104 kB
+├ ƒ /api/warranties                                516 B         104 kB
+├ ƒ /api/warranties/[id]                           516 B         104 kB
+├ ƒ /api/warranties/alerts                         516 B         104 kB
+├ ƒ /api/work-orders                               516 B         104 kB
+├ ƒ /api/work-orders/[id]                          516 B         104 kB
+├ ƒ /api/work-orders/[id]/sign                     516 B         104 kB
+├ ƒ /clients/[token]                             4.04 kB         108 kB
+├ ○ /clients/account                             10.8 kB         125 kB
+├ ○ /clients/appointments                        6.16 kB         120 kB
+├ ○ /clients/login                               5.17 kB         119 kB
+├ ○ /clients/messages                            6.32 kB         120 kB
+├ ○ /clients/password                            2.94 kB         106 kB
+├ ƒ /clients/quote/[token]                        3.9 kB         108 kB
+├ ○ /clients/register                            4.47 kB         118 kB
+├ ○ /copilot                                     7.39 kB         123 kB
+├ ○ /license                                     6.21 kB         117 kB
+├ ○ /login                                        5.9 kB         129 kB
+├ ƒ /mechanic                                    5.64 kB         118 kB
+├ ƒ /mechanic/jobs/[id]                          4.72 kB         110 kB
+├ ○ /monitoring                                  4.38 kB         115 kB
+└ ○ /register                                    5.98 kB         129 kB
++ First Load JS shared by all                     103 kB
+  ├ chunks/1255-60d8dc7c8c9309a1.js              46.3 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js          54.2 kB
+  └ other shared chunks (total)                   2.6 kB
+
+
+ƒ Middleware                                     59.7 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> garageflow@1.1.0 postbuild
+> node scripts/post-build.js
+
+
+🔧 GarageFlows post-build
+
+  ✅ server.js found        (6.6 KB) → .next/standalone/server.js
+  ✅ static assets copied   (246 files) → .next/standalone/.next/static
+  ✅ public dir copied       (10 files) → .next/standalone/public
+  ✅ Prisma client copied   (14 files) → standalone node_modules/.prisma
+  ✅ secrets retirés du package : .env (jamais distribués)
+  ✅ Prisma schema + empty release template copied
+  ✅ public.pem copied      → standalone/keys
+  ✅ aucune clé privée dans standalone (0 purgée(s))
+  ✅ icon.ico found
+✅ release-manifest.json généré : 1.1.0+0a00c6429.dirty
+  ✅ release-manifest.json généré + inclus → standalone (artefact rattachable)
+
+🎉 Post-build complete — ready for electron-builder
+
+(node:18092) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> garageflow@1.1.0 verify:standalone
+> node scripts/verify-standalone-build.cjs
+
+🔎 Sortie autonome : .next\standalone
+✅ Sortie autonome complète (4 éléments vérifiés) — prête à être empaquetée.
+   Étape suivante : `npm run dist` (installeur Windows).
+  • electron-builder  version=26.15.3 os=10.0.19045
+  • loaded configuration  file=package.json ("build" field)
+  • executing @electron/rebuild  electronVersion=44.9.3 arch=x64 buildFromSource=false workspaceRoot=C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2 projectDir=./ appDir=./
+  • installing native dependencies  arch=x64
+  • completed installing native dependencies
+  • packaging       platform=win32 arch=x64 electron=44.9.3 appOutDir=dist\win-unpacked
+  • downloaded      label=electron progress=100%
+  • downloaded electron zip extracted successfully  output=C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\dist\win-unpacked
+  • searching for node modules  pm=npm searchDir=C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2
+  • duplicate dependency references  dependencies=["react@18.3.1","@dnd-kit/utilities@3.2.2","react-dom@18.3.1","react@18.3.1","@dnd-kit/core@6.3.1","@dnd-kit/utilities@3.2.2","react@18.3.1","react@18.3.1","@emnapi/runtime@1.11.3","prisma@5.22.0","@types/node@22.20.5","react-dom@18.3.1","react@18.3.1","utrie@1.0.2","html2canvas@1.4.1","react@18.3.1","next@15.5.28","react-dom@18.3.1","react@18.3.1","react-dom@18.3.1","react@18.3.1","react@18.3.1","@prisma/get-platform@5.22.0","string-width@4.2.3","string-width@4.2.3","strip-ansi@6.0.1","strip-ansi@6.0.1","react@18.3.1","loose-envify@1.4.0","react-dom@18.3.1","react@18.3.1","loose-envify@1.4.0","react@18.3.1","react@18.3.1"]
+  • updating asar integrity executable resource  executablePath=dist\win-unpacked\GarageFlows.exe
+  ✓ Standalone production modules projected outside ASAR: next, react, react-dom, @prisma/client | source: next-traced-closure
+  ✓ Electron Fuses appliqués (RunAsNode off, --inspect off, OnlyLoadAppFromAsar, …)
+  ✓ Manifeste d'intégrité : 540 fichier(s) critique(s) signé(s) → integrity.manifest.json
+  • signing with signtool.exe  path=dist\win-unpacked\GarageFlows.exe
+  • signing with signtool.exe  path=dist\win-unpacked\resources\app.asar.unpacked\node_modules\@prisma\engines\schema-engine-windows.exe
+  • building        target=nsis file=dist\GarageFlows-Setup.exe archs=x64 oneClick=false perMachine=false
+  • signing with signtool.exe  path=dist\win-unpacked\resources\elevate.exe
+  • signing with signtool.exe  path=dist\GarageFlows-Setup.__uninstaller.exe
+  • signing with signtool.exe  path=dist\GarageFlows-Setup.exe
+  • building block map  blockMapFile=dist\GarageFlows-Setup.exe.blockmap
+
+> garageflow@1.1.0 check:artifact-secrets
+> node scripts/check-artifact-secrets.mjs
+
+🔎 check:artifact-secrets — 1 valeur(s) secrète(s) traquée(s)
+  ✓ dossier inspecté : win-unpacked (2885 fichiers)
+  ✓ installateur inspecté : GarageFlows-Setup.exe
+
+✅ check:artifact-secrets — aucune clé privée, aucune valeur de secret dans l’artefact.
+
+> garageflow@1.1.0 check:artifact-fuses
+> node scripts/check-artifact-fuses.mjs
+
+🔎 check:artifact-fuses — dist\win-unpacked\GarageFlows.exe
+✅ 9 fusible(s) conformes au plan : RunAsNode=false, EnableCookieEncryption=true, EnableNodeOptionsEnvironmentVariable=false, EnableNodeCliInspectArguments=false, EnableEmbeddedAsarIntegrityValidation=true, OnlyLoadAppFromAsar=true, LoadBrowserProcessSpecificV8Snapshot=false, GrantFileProtocolExtraPrivileges=true, WasmTrapHandlers=true
+
+> garageflow@1.1.0 verify:installer
+> node scripts/verify-installer.cjs
+
+
+📦 Artefact vérifié
+   dist\GarageFlows-Setup.exe
+   Taille : 239.5 Mo
+   SHA-256 : 9df16d285d5306c5d334619914ec78bb9ff188b488cba7b93db1aceec843865c
+   Version : 1.1.0 (source : package.json)
+
+(node:12596) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+WINDOWS_DELIVERY_RECEIPT {"schema":1,"file":"release/GarageFlows-Setup.exe","version":"1.1.0","commit":"0a00c64296846ae48285bec6b6f0c691ad592f78","dirty":true,"size":251180038,"sha256":"9df16d285d5306c5d334619914ec78bb9ff188b488cba7b93db1aceec843865c","platform":"win32","arch":"x64","payloadFiles":3069,"payloadVerified":true,"offlinePayloadEmbedded":true,"extractionMode":"embedded-7z-sfx","authenticodeVerified":false,"cleanMachineLicensedBusinessWorkflowVerified":false}
+✅ Installeur complet vérifié et copié seul dans release/. Étape suivante :
+   npm run release:sign -- --file "release/GarageFlows-Setup.exe" --version 1.1.0 --download-url <URL_HTTPS_PUBLIQUE>
+
+EXIT=0

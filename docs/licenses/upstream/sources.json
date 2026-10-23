@@ -1,0 +1,49 @@
+{
+  "$comment": [
+    "Magasin LOCAL de textes de licence pour les paquets de production qui n'embarquent",
+    "AUCUN fichier de licence dans leur tarball publié et dont aucun paquet frère du même",
+    "dépôt/version ne peut servir de source (les deux chemins déjà couverts par",
+    "scripts/gen-third-party-notices.mjs).",
+    "",
+    "Règles :",
+    "  · aucun texte n'est rédigé à la main — chaque entrée est RÉCUPÉRÉE depuis une",
+    "    source faisant foi, et verrouillée par son SHA-256 ;",
+    "  · la génération des notices reste DÉTERMINISTE et HORS-LIGNE : elle lit ce",
+    "    magasin, jamais le réseau ;",
+    "  · le rafraîchissement est explicite et séparé : scripts/refresh-upstream-licenses.mjs ;",
+    "  · `holderDeclared: false` signale que l'éditeur ne publie AUCUNE ligne de copyright :",
+    "    le texte retenu est alors le texte de référence SPDX de l'identifiant qu'il déclare,",
+    "    présenté comme tel, jamais comme une notice de l'éditeur. Ces entrées sont listées",
+    "    dans PRODUCTION_DELIVERY/ACTIONS_MANUELLES_RESTANTES.md pour validation juridique."
+  ],
+  "entries": [
+    {
+      "package": "next-auth",
+      "version": "4.24.15",
+      "license": "ISC",
+      "file": "next-auth@4.24.15.LICENSE.txt",
+      "sourceKind": "upstream-repository-at-release-tag",
+      "sourceUrl": "https://raw.githubusercontent.com/nextauthjs/next-auth/next-auth%404.24.15/LICENSE",
+      "sourceRef": "refs/tags/next-auth@4.24.15",
+      "sourceCommit": "d857eec560fb99c8b18d3b22a2693b849a62d1c3",
+      "holderDeclared": true,
+      "rationale": "Le tarball npm 4.24.15 ne contient aucun fichier LICENSE ; le dépôt amont déclaré dans son package.json en fournit un au tag exact de cette publication.",
+      "sha256": "cf5c8f6c5d858d6b0f356ee78e1796639e8cfd4c48db4f18c21ea21a973887ae",
+      "retrievedAt": "2026-10-22"
+    },
+    {
+      "package": "client-only",
+      "version": "0.0.1",
+      "license": "MIT",
+      "file": "client-only@0.0.1.MIT.spdx.txt",
+      "sourceKind": "spdx-license-list-reference-text",
+      "sourceUrl": "https://spdx.org/licenses/MIT.txt",
+      "sourceRef": "SPDX License List — identifiant MIT",
+      "sourceCommit": null,
+      "holderDeclared": false,
+      "rationale": "Le tarball npm 0.0.1 ne contient aucun fichier de licence, le paquet ne déclare AUCUN dépôt amont (champ repository absent dans la publication) et aucun paquet frère ne partage dépôt+version. Seul le champ \"license\": \"MIT\" de son package.json constitue la concession de licence de l'éditeur (mainteneur npm : sebmarkbage ; homepage : https://reactjs.org/). Le texte retenu est donc le texte de référence SPDX de l'identifiant MIT, reproduit SANS inventer de titulaire de droits.",
+      "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0",
+      "retrievedAt": "2026-10-22"
+    }
+  ]
+}

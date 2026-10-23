@@ -1,19 +1,19 @@
 {
-  "generatedAt": "2026-10-19T17:39:30.690Z",
+  "generatedAt": "2026-10-22T20:24:20.651Z",
   "environnement": {
-    "node": "v22.22.3",
-    "plateforme": "linux-x64",
-    "vitest": "4.1.11",
+    "node": "v22.23.2",
+    "plateforme": "win32-x64",
+    "vitest": "4.1.12",
     "moteurPrisma": "indisponible (aucun binaire natif) — suites à base réelle NON exécutées"
   },
   "methode": "Un seul run Vitest sur l’union des fichiers non dépendants d’une base ; agrégation par parcours. Les suites d’intégration à base réelle sont listées séparément et ne comptent pas comme vertes.",
   "total": {
     "fichiers": 76,
-    "tests": 897,
-    "passes": 890,
+    "tests": 905,
+    "passes": 899,
     "echoues": 0,
-    "ignores": 7,
-    "dureeMs": 20351,
+    "ignores": 6,
+    "dureeMs": 13973,
     "codeSortieVitest": 0
   },
   "parcours": [
@@ -25,7 +25,7 @@
       "passes": 78,
       "echoues": 0,
       "ignores": 0,
-      "dureeMs": 68.537109375,
+      "dureeMs": 345.0400390625,
       "fichiersExecutes": 6,
       "suitesBaseNonExecutees": 3,
       "suitesBase": [
@@ -58,7 +58,7 @@
       "passes": 63,
       "echoues": 0,
       "ignores": 0,
-      "dureeMs": 45.573486328125,
+      "dureeMs": 145.03515625,
       "fichiersExecutes": 4,
       "suitesBaseNonExecutees": 1,
       "suitesBase": [
@@ -81,7 +81,7 @@
       "passes": 66,
       "echoues": 0,
       "ignores": 0,
-      "dureeMs": 58.065185546875,
+      "dureeMs": 181.138427734375,
       "fichiersExecutes": 6,
       "suitesBaseNonExecutees": 3,
       "suitesBase": [
@@ -114,7 +114,7 @@
       "passes": 50,
       "echoues": 0,
       "ignores": 0,
-      "dureeMs": 95.94140625,
+      "dureeMs": 381.128173828125,
       "fichiersExecutes": 6,
       "suitesBaseNonExecutees": 3,
       "suitesBase": [
@@ -147,7 +147,7 @@
       "passes": 70,
       "echoues": 0,
       "ignores": 0,
-      "dureeMs": 83.063232421875,
+      "dureeMs": 274.046142578125,
       "fichiersExecutes": 8,
       "suitesBaseNonExecutees": 3,
       "suitesBase": [
@@ -180,7 +180,7 @@
       "passes": 206,
       "echoues": 0,
       "ignores": 0,
-      "dureeMs": 310.406005859375,
+      "dureeMs": 1139.94970703125,
       "fichiersExecutes": 14,
       "suitesBaseNonExecutees": 2,
       "suitesBase": [
@@ -204,11 +204,11 @@
       "id": "licence",
       "titre": "Licence — signature, HWID, activation, révocation",
       "fichiers": 14,
-      "tests": 149,
-      "passes": 142,
+      "tests": 156,
+      "passes": 150,
       "echoues": 0,
-      "ignores": 7,
-      "dureeMs": 417.105224609375,
+      "ignores": 6,
+      "dureeMs": 4846.15771484375,
       "fichiersExecutes": 14,
       "suitesBaseNonExecutees": 2,
       "suitesBase": [
@@ -229,9 +229,9 @@
           "fichier": "src/lib/__tests__/license-devices-unit.test.ts",
           "assertionsPasses": 16,
           "assertionsEchouees": null,
-          "codeSortie": 1,
-          "erreurEnvironnementale": "PrismaClientInitializationError (moteur natif absent)",
-          "verdict": "ASSERTIONS_VERTES_ERREUR_ENV"
+          "codeSortie": 0,
+          "erreurEnvironnementale": null,
+          "verdict": "ASSERTIONS_VERTES_ARRET_PROPRE"
         }
       ],
       "constat": null,
@@ -246,7 +246,7 @@
       "passes": 24,
       "echoues": 0,
       "ignores": 0,
-      "dureeMs": 30.1025390625,
+      "dureeMs": 78.4833984375,
       "fichiersExecutes": 2,
       "suitesBaseNonExecutees": 0,
       "suitesBase": [],
@@ -263,7 +263,7 @@
       "passes": 48,
       "echoues": 0,
       "ignores": 0,
-      "dureeMs": 334.45556640625,
+      "dureeMs": 1368.62841796875,
       "fichiersExecutes": 6,
       "suitesBaseNonExecutees": 2,
       "suitesBase": [
@@ -287,11 +287,11 @@
       "id": "installation-windows",
       "titre": "Installation Windows — installateur, raccourcis, mises à jour, fuses",
       "fichiers": 13,
-      "tests": 176,
-      "passes": 176,
+      "tests": 177,
+      "passes": 177,
       "echoues": 0,
       "ignores": 0,
-      "dureeMs": 1262.749267578125,
+      "dureeMs": 6741.20166015625,
       "fichiersExecutes": 13,
       "suitesBaseNonExecutees": 0,
       "suitesBase": [],

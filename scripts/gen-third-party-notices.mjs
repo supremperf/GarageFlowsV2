@@ -12,9 +12,21 @@
  *
  * Usage : node scripts/gen-third-party-notices.mjs [--sbom <chemin>] [--out <chemin>] [--product <nom>]
  * Déterministe (tri par nom) ; n'accède qu'au disque local.
+ *
+ * Ordre de recherche du texte, du plus fort au plus faible :
+ *   1. fichier LICENSE* du paquet lui-même ;
+ *   2. section « Licensing » de son README ;
+ *   3. paquet frère de MÊME dépôt amont, MÊME version et MÊME licence ;
+ *   4. magasin local docs/licenses/upstream/ — textes RÉCUPÉRÉS en amont par
+ *      scripts/refresh-upstream-licenses.mjs et verrouillés par SHA-256. Une
+ *      empreinte qui ne correspond plus fait ÉCHOUER la génération : un texte
+ *      de licence altéré ne doit jamais partir dans un produit distribué.
+ * Au-delà, la notice indique explicitement l'absence de texte — aucun texte
+ * n'est jamais rédigé ni deviné ici.
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import crypto from 'node:crypto'
 
 const args = process.argv.slice(2)
 const opt = (name, def) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : def }
@@ -67,6 +79,33 @@ function repositoryOf(component) {
   return url?.replace(/^git\+/, '').replace(/\/$/, '').replace(/\.git$/, '')
 }
 
+/**
+ * Magasin local des textes récupérés en amont (étape 4). Chargé une seule fois,
+ * strictement depuis le disque. Chaque texte est vérifié contre l'empreinte
+ * enregistrée : sans cette vérification, le magasin serait un endroit commode
+ * pour glisser un texte de licence arbitraire dans le produit distribué.
+ */
+const upstreamStore = (() => {
+  const dir = path.resolve(ROOT, 'docs/licenses/upstream')
+  const manifestPath = path.join(dir, 'sources.json')
+  if (!fs.existsSync(manifestPath)) return new Map()
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+  const store = new Map()
+  for (const entry of manifest.entries || []) {
+    if (/[\\\\/]/.test(entry.file) || entry.file.startsWith('.')) {
+      throw new Error(`Magasin de licences : nom de fichier invalide « ${entry.file} »`)
+    }
+    const file = path.join(dir, entry.file)
+    const bytes = fs.readFileSync(file)
+    const digest = crypto.createHash('sha256').update(bytes).digest('hex')
+    if (digest !== entry.sha256) {
+      throw new Error(`Magasin de licences : empreinte invalide pour ${entry.package}@${entry.version}`)
+    }
+    store.set(`${entry.package}@${entry.version}`, { ...entry, text: bytes.toString('utf8').trim() })
+  }
+  return store
+})()
+
 /** Cherche un texte local, puis une notice amont de même dépôt/version/licence. */
 function licenseText(component, components) {
   const dir = packageDirectory(component)
@@ -97,6 +136,20 @@ function licenseText(component, components) {
     return `Source : ${candidate.name}@${candidate.version}/${source.file}, même dépôt amont, version et licence ; le paquet ne contient pas son propre fichier de licence.\n\n${source.text}`
   }
   return null
+}
+
+/** Étape 4 — texte récupéré en amont, avec sa provenance exacte. */
+function upstreamText(component) {
+  const entry = upstreamStore.get(`${component.name}@${component.version}`)
+  if (!entry) return null
+  if (entry.license !== licenseOf(component)) {
+    throw new Error(`Magasin de licences : licence déclarée divergente pour ${component.name}@${component.version}`)
+  }
+  const reference = entry.sourceCommit ? `${entry.sourceRef} (${entry.sourceCommit})` : entry.sourceRef
+  const header = entry.holderDeclared
+    ? `Source : ${entry.sourceUrl}\nRéférence : ${reference}\nSHA-256 du texte : ${entry.sha256}\nLe paquet publié ne contient pas son propre fichier de licence.`
+    : `Texte de RÉFÉRENCE SPDX de l'identifiant « ${entry.license} » déclaré par l'éditeur dans son package.json.\nL'éditeur ne publie AUCUNE ligne de copyright : aucun titulaire de droits n'est donc affirmé ici.\nSource : ${entry.sourceUrl}\nRéférence : ${reference}\nSHA-256 du texte : ${entry.sha256}`
+  return `${header}\n\n${entry.text}`
 }
 
 const comps = (sbom.components || [])
@@ -132,7 +185,7 @@ lines.push('')
 lines.push('## Textes de licence')
 lines.push('')
 for (const c of comps) {
-  const text = licenseText(c, comps)
+  const text = licenseText(c, comps) ?? upstreamText(c)
   lines.push(`### ${c.name}@${c.version || ''} — ${licenseOf(c)}`)
   lines.push('')
   if (text) {

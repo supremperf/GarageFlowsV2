@@ -1,0 +1,35 @@
+=== VÉRIFICATION DE L'INTÉGRATION ===
+date_utc=2026-10-23T12:05:22Z
+
+--- 1. aucune altération des fichiers AMONT que je n'ai pas corrigés ---
+les 9 fichiers convertis CRLF->LF par l'instantané sont-ils revenus à l'amont ?
+  MASTER4_EVIDENCE/logs/33-final-consistency-and-hygiene.txt     IDENTIQUE à l'amont
+  scripts/reset-garageflow.ps1                                   IDENTIQUE à l'amont
+  scripts/configurer-api-garageflow.ps1                          IDENTIQUE à l'amont
+  CONFIGURER-GARAGEFLOW.cmd                                      IDENTIQUE à l'amont
+
+--- 2. bits exécutables préservés ---
+  capt.sh                                              amont=100755 index=100755 OK
+  masque.sh                                            amont=100755 index=100755 OK
+
+--- 3. les 231 journaux d'audit amont ---
+  suivis : 231
+  modifiés : 0  (0 attendu)
+
+--- 4. mon apport est-il bien présent ? ---
+  MASTER5_EVIDENCE/SHA256SUMS                              présent
+  PRODUCTION_DELIVERY/PRODUCTION_FINAL_VERDICT.md          présent
+  PRODUCTION_DELIVERY_MASTER6/MASTER6_ECC_KEY_REPORT.md    présent
+  scripts/reconcile-windows-artifact-sbom.mjs              présent
+  scripts/generate-master5-sums.mjs                        présent
+  docs/licenses/upstream/sources.json                      présent
+  .env.example                                             présent
+
+--- 5. MASTER4_EVIDENCE intact (empreintes d'origine) ---
+  OK=69/69  FAILED=0
+
+--- 6. aucun secret ajouté ---
+  .env                     non indexé
+  .env.local               non indexé
+  keys/private.pem         non indexé
+  keys/licenses_db.json    non indexé

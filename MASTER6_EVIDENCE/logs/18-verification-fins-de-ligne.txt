@@ -1,0 +1,31 @@
+fichiers signalés modifiés : 30
+
+── Différence de FINS DE LIGNE uniquement : 9 ──
+  CONFIGURER-GARAGEFLOW.cmd   (CRLF amont=31, chez moi=0)
+  MASTER4_EVIDENCE/logs/33-final-consistency-and-hygiene.txt   (CRLF amont=621, chez moi=0)
+  artifacts/verification/production-readiness-2026-10-22/09-prisma-fetch-internals.txt   (CRLF amont=1, chez moi=0)
+  artifacts/verification/production-readiness-2026-10-22/18-official-and-partial-build.txt   (CRLF amont=3, chez moi=0)
+  artifacts/verification/production-readiness-2026-10-22/31-standalone-smoke.txt   (CRLF amont=7, chez moi=0)
+  scripts/RESET-GARAGEFLOW-V185.cmd   (CRLF amont=6, chez moi=0)
+  scripts/RESET-GARAGEFLOW.cmd   (CRLF amont=54, chez moi=0)
+  scripts/configurer-api-garageflow.ps1   (CRLF amont=2368, chez moi=0)
+  scripts/reset-garageflow.ps1   (CRLF amont=3443, chez moi=0)
+
+── VRAI écart de contenu : 15 ──
+  .gitignore
+  .vercelignore
+  THIRD_PARTY_NOTICES.md
+  artifacts/verification/baseline.json
+  artifacts/verification/parcours-metier-10.json
+  artifacts/verification/production-readiness.json
+  docs/audit/FINAL_VERIFICATION_BASELINE.md
+  docs/sbom/sbom-garageflowsv2.cdx.json
+  e2e/audit.mjs
+  scripts/gen-production-sbom.mjs
+  scripts/gen-third-party-notices.mjs
+  scripts/rapport-10-parcours.mjs
+  scripts/reproduce-keygen-roundtrip.mjs
+  src/integration/purchase-order-receive-returned.test.ts
+  tests/gitleaks-ci.test.cjs
+
+CONVERSION_EOL_SUBIE=true

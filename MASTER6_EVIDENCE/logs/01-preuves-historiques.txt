@@ -1,0 +1,11 @@
+=== Vérification des preuves historiques — début MASTER 6 ===
+date_utc=2026-10-23T09:12:16Z
+
+--- MASTER 4 ---
+OK=69/69  FAILED=0
+
+--- MASTER 5 ---
+[preuves] 48/48 empreintes vérifiées — manifeste conforme.
+
+--- aucune preuve historique modifiée par MASTER 6 ---
+  (vide = intactes)

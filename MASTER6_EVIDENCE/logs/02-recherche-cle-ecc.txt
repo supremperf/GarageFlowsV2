@@ -1,0 +1,33 @@
+=== Recherche de la clé privée de licence de production ===
+empreinte publique CIBLE : b16d2e1bf6b9662f9748e009c0cf88770ab602233ee546895ac352f808bc3d9d
+
+--- 1. Variables d'environnement locales ---
+  0/6 variable(s) de signature définie(s) dans l'environnement
+
+--- 2. Emplacements de clés utilisés par le projet ---
+  ~\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\keys\private.pem : absent
+  ~\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\keys\private-key.pem : absent
+  ~\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\keys\licence-private.pem : absent
+  ~\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\keys\signing.pem : absent
+  ~\.garageflows-publisher : répertoire — recherche de *.pem/*.key/*.p8
+      1 fichier(s) de clé examiné(s)
+  ~\.garageflow : absent
+  ~\AppData\Roaming\GarageFlow : répertoire — recherche de *.pem/*.key/*.p8
+      4 fichier(s) de clé examiné(s)
+  ~\Desktop\garageflows : répertoire — recherche de *.pem/*.key/*.p8
+      2 fichier(s) de clé examiné(s)
+  ~\Desktop\garageflows.fr : répertoire — recherche de *.pem/*.key/*.p8
+      0 fichier(s) de clé examiné(s)
+  ~\Desktop\garageflows : répertoire — recherche de *.pem/*.key/*.p8
+      2 fichier(s) de clé examiné(s)
+
+--- 3. Candidats évalués ---
+  ne correspond pas  ~\.garageflows-publisher\update-signing.pem
+      type=ed25519 courbe=undefined empreinte_publique=8e74a7a577da7d403f25420a04fa1cf794cae24d02c0a095be993a48b9f7b80c
+  ne correspond pas  ~\Desktop\garageflows\API générées\2026-08-10_22-13-18\nouvelle-paire-licence\private.pem
+      type=ec courbe=prime256v1 empreinte_publique=78e2626bbb5d76da7ab4a6eaecc9d8e94726882fbc7c21d400aa3ebcbb0c7924
+  ne correspond pas  ~\Desktop\garageflows\API générées\2026-08-10_22-13-18\nouvelle-paire-licence\private.pem
+      type=ec courbe=prime256v1 empreinte_publique=78e2626bbb5d76da7ab4a6eaecc9d8e94726882fbc7c21d400aa3ebcbb0c7924
+
+RESULTAT=CLE_INTROUVABLE
+AUCUNE_MATIERE_DE_CLE_AFFICHEE=true

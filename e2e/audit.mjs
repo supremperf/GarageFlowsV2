@@ -93,9 +93,19 @@ async function shot(page, vp, screen) {
 
 async function run() {
   const gfSession = await mintLicenseCookie()
-  const browser = await chromium.launch({
-    executablePath: process.env.CHROME_PATH || '/opt/pw-browsers/chromium',
-  })
+  // Navigateur : `CHROME_PATH` si l'opérateur impose un binaire, sinon le
+  // Chromium que Playwright a lui-même installé (`npx playwright install
+  // chromium`) — c'est `chromium.launch()` sans `executablePath` qui le résout.
+  //
+  // Le chemin `/opt/pw-browsers/chromium` codé en dur ici auparavant était celui
+  // d'une image CI Linux : sur tout autre poste — dont Windows, la plateforme
+  // CIBLE du produit — l'audit s'arrêtait sur « Failed to launch chromium
+  // because executable doesn't exist », avant la moindre mesure. On le conserve
+  // comme repli explicite, mais seulement s'il existe vraiment.
+  const imposed = process.env.CHROME_PATH
+  const ciImage = '/opt/pw-browsers/chromium'
+  const executablePath = imposed || (fs.existsSync(ciImage) ? ciImage : undefined)
+  const browser = await chromium.launch(executablePath ? { executablePath } : {})
   for (const vp of VIEWPORTS) {
     const context = await browser.newContext({
       viewport: { width: vp.width, height: vp.height },

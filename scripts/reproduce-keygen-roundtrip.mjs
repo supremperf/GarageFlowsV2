@@ -10,9 +10,36 @@ import { fileURLToPath } from 'node:url'
 import { diagnoseToken } from './diagnose-license.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+/**
+ * Délai maximal d'un appel Python. C'est un garde-fou contre un BLOCAGE, pas une
+ * mesure de performance : le franchir doit signifier « Python ne répond plus ».
+ *
+ * Les 10 s d'origine le trahissaient. Lancé seul, ce scénario tient en ~5 s ;
+ * lancé avec les 365 fichiers de la suite Vitest en parallèle, le PREMIER
+ * démarrage de l'interpréteur (alias d'exécution Windows Store + import de
+ * `cryptography`) dépassait 10 s et faisait échouer tout le FICHIER de tests —
+ * `spawnSync python3 ETIMEDOUT`, aucun test exécuté, de façon NON déterministe.
+ * Même cause et même correctif que le `hookTimeout: 30_000` de vitest.config.mts.
+ *
+ * Un vrai blocage reste détecté : la limite est franche, simplement compatible
+ * avec une machine chargée.
+ */
+const PYTHON_TIMEOUT_MS = 60_000
+
 export function reproduce(onCoherentToken) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-keygen-fixture-'))
-  const python = fs.existsSync(path.join(ROOT, '.venv/bin/python')) ? path.join(ROOT, '.venv/bin/python') : 'python3'
+  // Interpréteur Python : venv du dépôt d'abord (POSIX puis Windows), sinon ce
+  // que le poste expose. `python3` n'existe pas sur toutes les installations
+  // Windows ; `python` et le lanceur `py -3` sont les formes usuelles.
+  const python = [
+    path.join(ROOT, '.venv/bin/python'),
+    path.join(ROOT, '.venv/Scripts/python.exe'),
+  ].find(candidate => fs.existsSync(candidate))
+    ?? ['python3', 'python'].find(candidate => {
+      const probe = spawnSync(candidate, ['-c', 'pass'], { timeout: PYTHON_TIMEOUT_MS })
+      return !probe.error && probe.status === 0
+    })
+    ?? 'python3'
   const steps = []
   try {
     for (const f of ['scripts/keygen_core.py', 'scripts/keygen_trust.py', 'scripts/keygen_ui.py']) {
@@ -32,7 +59,7 @@ export function reproduce(onCoherentToken) {
     write('keys/public.pem', pub)
     write('src/lib/license/public-key.ts', array('_LINES', pub))
     write('electron/main.js', array('_PK', pub))
-    const runPython = code => execFileSync(python, ['-c', code], { cwd: dir, encoding: 'utf8', timeout: 10000 }).trim()
+    const runPython = code => execFileSync(python, ['-c', code], { cwd: dir, encoding: 'utf8', timeout: PYTHON_TIMEOUT_MS }).trim()
     const prelude = "import sys,json; sys.path.insert(0,'scripts'); import keygen_core as k; p=k.load_checked_private_key(); "
     const token = runPython(prelude + "print(k.make_license(p,'FIXTURE-ÉTÉ-NOT-ISSUED','premium',label='Garage été')['token'])")
     // Optional in-memory test hook; never used by the CLI or persisted in its report.
@@ -42,7 +69,7 @@ export function reproduce(onCoherentToken) {
       const report = diagnoseToken(input, { publicKeyPem })
       record(name, expected, report.code)
     }
-    const cli = spawnSync(python, ['scripts/keygen_ui.py', '--verify-key-match'], { cwd: dir, encoding: 'utf8', timeout: 10000 })
+    const cli = spawnSync(python, ['scripts/keygen_ui.py', '--verify-key-match'], { cwd: dir, encoding: 'utf8', timeout: PYTHON_TIMEOUT_MS })
     record('headless GUI diagnostic: coherent private/PEM/PWA/Electron', 0, cli.status)
     record('headless diagnostic exposes no private key', false, (cli.stdout + cli.stderr).includes('PRIVATE KEY'))
     check('actual checked Python garage generator -> actual verify.ts (Unicode, DER)', token, 'VERIFIED')

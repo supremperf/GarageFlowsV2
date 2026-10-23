@@ -1,0 +1,47 @@
+﻿=== Signature de code et test d'installation Windows — constat MASTER 5 ===
+date_utc=2026-10-23T04:23:10Z
+
+--- 1. SIGNATURE AUTHENTICODE ---
+dist\GarageFlows-Setup.exe                   (absent au moment du relevé)
+dist\win-unpacked\GarageFlows.exe            (absent au moment du relevé)
+release\GarageFlows-Setup.exe                (absent au moment du relevé)
+
+Aucun certificat de signature de code n'est configure dans le bloc build de
+package.json, et aucun n'est present sur ce poste. Les lignes << signing with
+signtool.exe >> du journal electron-builder sont des TENTATIVES sans certificat.
+WINDOWS_SIGNATURE=BLOCKED (certificat OV ou EV requis)
+
+--- 2. TEST D'INSTALLATION / DESINSTALLATION ---
+scripts/test-windows-setup.ps1 est la procedure complete du projet. Elle refuse
+de s'executer hors d'un runner Windows jetable approuve, et refuse si un profil
+utilisateur existe deja. Les deux motifs de refus sont reunis sur ce poste :
+
+installation existante     : C:\Users\Mathys\AppData\Local\Programs\GarageFlows  -> True
+profil de donnees reel     : C:\Users\Mathys\AppData\Roaming\GarageFlow  -> 411 fichiers / 285501418 octets
+base metier                : 1241088 octets, 2026-10-17 19:15:29, sha256=7CAF2ADB0A82BE6FC0600BDA106D791091E348E71D85AC0CBE5BDD82B76E4DCF
+entree de desinstallation  : GarageFlows 1.1.0 1.1.0
+entree de desinstallation  : GarageFlows Contract Generator 1.0.1 1.0.1
+
+L'entree de desinstallation etant partagee (meme appId com.garageflow.app),
+installer ici risquerait de rendre l'installation de l'utilisateur non
+desinstallable proprement, avec un build NON SIGNE. REFUSE.
+
+Isolation du userData : IMPOSSIBLE sur ce poste. electron/user-data-path.js
+epingle userData sur app.getPath('appData') + GarageFlow, et Electron resout
+appData par le DOSSIER CONNU Windows, pas par la variable APPDATA. Rediriger
+APPDATA n'a eu aucun effet (mesure : seuls des caches Chromium ont ete crees
+dans le dossier jetable).
+
+DEJA PROUVE sans rien installer (journal 32-packaged-app-launch.txt) :
+  . demarrage de l'executable EMPAQUETE, PATH reduit a Windows, CWD vide
+  . integrite ASAR validee a l'execution : 540 fichiers critiques
+  . ecran d'ACTIVATION affiche (porte de licence fail-closed)
+  . sauvegarde pre-migration automatique creee
+  . arret propre deux fois de suite, 0 processus residuel
+  . base metier de l'utilisateur INCHANGEE (meme SHA-256 avant/apres)
+
+NON EXECUTE : installeur NSIS, raccourcis, entree de desinstallation, mise a
+niveau d'une installation precedente, desinstallation avec conservation des
+donnees, et parcours metier licencie sur poste vierge.
+WINDOWS_INSTALL_LAUNCH_PERSIST_UNINSTALL=BLOCKED (environnement jetable requis)
+WINDOWS_UPGRADE_HWID_OFFLINE_RESTORE=BLOCKED (environnement jetable + licence signee requis)

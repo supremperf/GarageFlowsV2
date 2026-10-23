@@ -139,7 +139,11 @@ describe('la réception est atteignable depuis le produit', () => {
     expect(src).toMatch(/\/api\/purchase-orders\/\$\{[^}]+\}\/receive/)
     expect(src).toContain("method: 'POST'")
     // La liste des bons existants est chargée, sinon il n'y a rien à réceptionner.
-    expect(src).toContain("fetch('/api/purchase-orders')")
+    // Assertion sur l'APPEL, pas sur sa forme littérale : le chargement passe un
+    // AbortSignal (annulation au démontage), donc `fetch('/api/purchase-orders',
+    // { signal })`. Exiger la chaîne exacte sans argument faisait échouer le test
+    // sur du code CORRECT, et aurait poussé à retirer l'annulation pour verdir.
+    expect(src).toMatch(/fetch\('\/api\/purchase-orders'\s*(?:,|\))/)
     // Un refus du serveur est affiché, jamais avalé.
     expect(src).toMatch(/setErreurReception\(/)
   })

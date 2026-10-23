@@ -13,7 +13,20 @@ function exercise(status, report, extra = {}) {
     assert.equal(options.stdio[1], 'pipe')
     const dest = args[args.indexOf('--report-path') + 1]
     temporary = require('node:path').dirname(dest)
-    assert.equal(fs.statSync(temporary).mode & 0o777, 0o700)
+    // Le dossier de travail doit être PRIVÉ. Le mécanisme diffère selon la
+    // plateforme, l'exigence non :
+    //   · POSIX — `chmod 0700` est vérifiable sur les bits de mode ;
+    //   · Windows — NTFS n'a PAS de bits POSIX. `fs.chmodSync(dir, 0o700)` n'y
+    //     change que l'attribut « lecture seule » et `statSync().mode & 0o777`
+    //     renvoie 0o666 : exiger 0o700 faisait échouer ce test sur la
+    //     plateforme CIBLE du produit, sur du code correct. La confidentialité
+    //     y repose sur l'ACL par défaut de %TEMP% (propriétaire seul), héritée
+    //     par le dossier — à vérifier par ACL, pas par bits de mode.
+    // Même convention que les deux tests de setup-dev-permissions.test.cjs
+    // explicitement ignorés sous win32 (« POSIX permission bits are not NTFS ACLs »).
+    const stat = fs.statSync(temporary)
+    assert.equal(stat.isDirectory(), true)
+    if (process.platform !== 'win32') assert.equal(stat.mode & 0o777, 0o700)
     if (report !== undefined) fs.writeFileSync(dest, typeof report === 'string' ? report : JSON.stringify(report))
     return { status, stdout: extra.sensitive, stderr: extra.sensitive, ...extra }
   } })

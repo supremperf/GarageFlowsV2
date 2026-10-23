@@ -1,0 +1,11 @@
+prisma                  : 5.22.0
+@prisma/client          : 5.22.0
+Computed binaryTarget   : windows
+Operating System        : win32
+Architecture            : x64
+Node.js                 : v22.23.2
+Query Engine (Node-API) : libquery-engine 605197351a3c8bdd595af2d2a9bc3025bca48ea2 (at node_modules\@prisma\engines\query_engine-windows.dll.node)
+Schema Engine           : schema-engine-cli 605197351a3c8bdd595af2d2a9bc3025bca48ea2 (at node_modules\@prisma\engines\schema-engine-windows.exe)
+Schema Wasm             : @prisma/prisma-schema-wasm 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
+Default Engines Hash    : 605197351a3c8bdd595af2d2a9bc3025bca48ea2
+Studio                  : 0.503.0

@@ -1,0 +1,2594 @@
+
+ RUN  v4.1.12 C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2
+
+ ❯ src/lib/__tests__/secrets-jamais-distribues.test.ts (7 tests | 1 failed) 3709ms
+     ✓ le corpus de composants clients est non vide  310ms
+     ✓ aucun `process.env.<secret>` dans un composant client 17ms
+     × analyse tout le texte versionné, les sources critiques et les liens en moins de 5 secondes 3363ms
+     ✓ détecte une vraie clé privée, y compris encapsulée dans du JSON 11ms
+     ✓ ne confond pas un marqueur de documentation et une ligne Base64 légitime avec une clé privée 1ms
+     ✓ `keys/*.pem` reste ignoré par git 2ms
+     ✓ aucune affectation ne contient de valeur d’apparence réelle 1ms
+ ✓ src/integration/purchase-order-receive-returned.test.ts (7 tests) 13605ms
+ ❯ src/lib/__tests__/keygen-activation-roundtrip.test.ts (10 tests | 10 skipped) 12560ms
+   ↓ reproducible script exercises actual checked Python signing and actual TypeScript verification (19 positive/negative steps)
+   ↓ every real GUI issuance branch uses the checked loader before signing/persistence
+   ↓ activation logs signature stage with correlation but no token/payload in production
+   ↓ activation logs signature stage with correlation but no token/payload in development
+   ↓ production keeps FORMAT_INVALID internal rather than exposing a verification oracle
+   ↓ production keeps HEADER_UNSUPPORTED internal rather than exposing a verification oracle
+   ↓ production keeps SIGNATURE_INVALID internal rather than exposing a verification oracle
+   ↓ development distinguishes unrecognized format without returning the input
+   ↓ a real checked Python token crosses the actual activation crypto barrier and reaches DB, without pretending DB activation succeeded
+   ↓ unusable trust anchor stays a technical configuration failure, not an invalid license
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > l’accès est PUBLIÉ vers le service qui sert le portail > ouvrir un accès le publie, avec le haché — jamais le mot de passe en clair
+[portal/access] accès ouvert { client: 'cmvjyz5s300028ny9n5vcgspt' }
+
+stdout | src/lib/einvoicing/__tests__/desktop-bridge.test.ts > le poste dit la vérité sur ce qui s’est passé > réseau absent : 503, et la facture reste enregistrée
+[einvoicing/pont] service en ligne injoignable { action: 'invoice.submit' }
+
+stdout | src/lib/einvoicing/__tests__/desktop-bridge.test.ts > le poste dit la vérité sur ce qui s’est passé > délai dépassé : 503 également
+[einvoicing/pont] service en ligne injoignable { action: 'invoice.submit' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > l’accès est PUBLIÉ vers le service qui sert le portail > l’identité vient de la LICENCE, jamais du corps
+[portal/access] accès ouvert { client: 'cmvjyz67n00068ny98modszrz' }
+
+stdout | src/lib/einvoicing/__tests__/desktop-bridge.test.ts > un drapeau LOCAL ne doit jamais barrer la route au service > service injoignable : on le DIT, on ne prétend pas que c’est désactivé
+[einvoicing/pont] drapeaux du service indisponibles { code: 'NETWORK' }
+
+ ✓ src/lib/einvoicing/__tests__/desktop-bridge.test.ts (20 tests) 15119ms
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > l’accès est PUBLIÉ vers le service qui sert le portail > publié : l’accès est annoncé prêt, et le client est prévenu
+[portal/access] accès ouvert { client: 'cmvjyz6ls000a8ny9nlsbml5c' }
+
+stdout | src/integration/client-email-garage-portail.test.ts > le garage modifie l'adresse (§20) > la fiche ET l'identifiant de connexion changent ensemble
+[clients] identifiant portail modifié par le garage { client: 'cmvjyz79l0002gf39t45a2d3i' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > hors ligne, rien n’est annoncé au client > la réponse dit que l’accès n’est PAS en ligne, et pourquoi
+[portal/access] accès ouvert { client: 'cmvjyz71c000e8ny94g32snnu' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > hors ligne, rien n’est annoncé au client > la réponse dit que l’accès n’est PAS en ligne, et pourquoi
+[portal/publication] service en ligne injoignable
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > le mot de passe provisoire ferme bien le portail > la connexion réussit, mais annonce que le mot de passe doit être défini
+[portal/access] accès ouvert { client: 'cmvjyz74y0002s53j8gkux7zh' }
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > le mot de passe provisoire ferme bien le portail > la connexion réussit, mais annonce que le mot de passe doit être défini
+[portal/publication] aucune licence garage : accès non publié
+
+stdout | src/integration/client-email-garage-portail.test.ts > le garage modifie l'adresse (§20) > la preuve de vérification ne suit PAS la nouvelle adresse (§23)
+[clients] identifiant portail modifié par le garage { client: 'cmvjyz7g50008gf39fwhlyzbg' }
+
+stdout | src/integration/tenant-isolation-matrix.test.ts > Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B > jobs : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+prisma:error 
+Invalid `prisma.job.update()` invocation in
+C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/app/api/jobs/[id]/route.ts:118:36
+
+  115   if (f in parsed.data) data[f] = (parsed.data as Record<string, unknown>)[f]
+  116 }
+  117 
+→ 118 const updated = await prisma.job.update(
+An operation failed because it depends on one or more records that were required but not found. Record to update not found.
+
+stdout | src/integration/tenant-isolation-matrix.test.ts > Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B > jobs : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+prisma:error 
+Invalid `prisma.job.update()` invocation in
+C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/app/api/jobs/[id]/route.ts:78:36
+
+  75 }
+  76 
+  77 // garageId in WHERE prevents cross-tenant writes
+→ 78 const updated = await prisma.job.update(
+An operation failed because it depends on one or more records that were required but not found. Record to update not found.
+
+stdout | src/integration/client-email-garage-portail.test.ts > le garage modifie l'adresse (§20) > un lien de confirmation part sur la NOUVELLE adresse, et il fonctionne
+[clients] identifiant portail modifié par le garage { client: 'cmvjyz7nt000egf39seft09bk' }
+
+ ✓ src/integration/mechanic-scope-realtime.test.ts (14 tests) 16371ms
+stdout | src/integration/tenant-isolation-matrix.test.ts > Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B > inspections : tous les verbes exportés sur la ressource de B échouent et laissent B intact
+prisma:error 
+Invalid `prisma.inspection.delete()` invocation in
+C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/app/api/inspections/[id]/route.ts:94:27
+
+  91 // DELETE /api/inspections/[id]
+  92 export const DELETE = withAuth(async (_req, { params }) => {
+  93   const session = await requireSession()
+→ 94   await prisma.inspection.delete(
+An operation failed because it depends on one or more records that were required but not found. Record to delete does not exist.
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > hors ligne, rien n’est annoncé au client > aucun e-mail n’est envoyé : il porterait un lien vers un refus
+[portal/access] accès ouvert { client: 'cmvjyz7ga000i8ny98pbfbzif' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > hors ligne, rien n’est annoncé au client > aucun e-mail n’est envoyé : il porterait un lien vers un refus
+[portal/publication] service en ligne injoignable
+
+stdout | src/integration/client-email-garage-portail.test.ts > le garage modifie l'adresse (§20) > les sessions ouvertes tombent — l'identifiant a changé (§21)
+[clients] identifiant portail modifié par le garage { client: 'cmvjyz7tm000kgf395121yxry' }
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > curseurs indépendants (GF-030) > une photo ANCIENNE ne retient plus le curseur des commentaires
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'poussee',
+  pushed: 1,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > curseurs indépendants (GF-030) > un commentaire RÉCENT ne fait pas sauter des photos
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > curseurs indépendants (GF-030) > un garage neuf ne demande AUCUN curseur (tout depuis l’origine)
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/integration/client-email-garage-portail.test.ts > le garage modifie l'adresse (§20) > le mot de passe n'est pas touché : seul l'identifiant change
+[clients] identifiant portail modifié par le garage { client: 'cmvjyz7ys000qgf39al9elncf' }
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > curseurs indépendants (GF-030) > `since` reste envoyé pour un serveur pas encore à jour
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+ ✓ src/integration/stock-tracabilite-et-suppression.test.ts (10 tests) 16734ms
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > hors ligne, rien n’est annoncé au client > sans licence garage : dit LICENCE_ABSENTE, sans appel réseau
+[portal/access] accès ouvert { client: 'cmvjyz7w8000m8ny99qdce3ri' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > hors ligne, rien n’est annoncé au client > sans licence garage : dit LICENCE_ABSENTE, sans appel réseau
+[portal/publication] aucune licence garage : accès non publié
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > le mot de passe provisoire ferme bien le portail > toute route du portail refuse avec un code exploitable par l'interface
+[portal/access] accès ouvert { client: 'cmvjyz7xx0009s53j4ajhc7nr' }
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > le mot de passe provisoire ferme bien le portail > toute route du portail refuse avec un code exploitable par l'interface
+[portal/publication] aucune licence garage : accès non publié
+
+
+  ✗ Domaine « cdn.exemple.test » absent de la liste blanche des postes.
+    Autorisés : api.garageflows.fr, garageflows.fr, app.garageflows.fr
+    (voir ALLOWED_DOWNLOAD_HOSTS dans electron/update-verify.js)
+
+stdout | src/integration/invoice-stock-sync.test.ts > TEST 1 — validation d’une facture : décrément réel > stock 10, facture de 2 → stock 8, un mouvement SALE de −2
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz8cs000eu0smkbtwue47',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+
+  ✗ --download-url doit être en HTTPS.
+
+stdout | src/integration/invoice-stock-sync.test.ts > TESTS 2 & 3 — modification : SEUL le delta est appliqué > 2 → 3 retire 1 de plus (stock 8 → 7), pas 3 à nouveau
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz8hi000tu0smrjhavgi8',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+
+  ✗ Version non SemVer : derniere
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > hors ligne, rien n’est annoncé au client > adresse déjà prise en ligne : le motif est rendu tel quel
+[portal/access] accès ouvert { client: 'cmvjyz89k000q8ny9wmlsthjv' }
+
+stdout | src/integration/invoice-stock-sync.test.ts > TESTS 2 & 3 — modification : SEUL le delta est appliqué > 3 → 1 restitue 2 (stock 7 → 9)
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz8m5001au0sm7fz7hfbf',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+stderr | src/integration/business-workflow-e2e.test.ts > parcours métier complet — garage → facture payée → portail > 9. numérotation contiguë : 2e devis converti → FAC-…-002
+[sync/jobs:push] aucune licence garage rattachée — remontée impossible { garage: 'cmvjyz86…', code: 'NO_GARAGE_LICENSE' }
+
+
+  ✗ Clé privée de signature absente.
+    Renseignez GF_UPDATE_SIGNING_KEY (PEM PKCS#8) ou GF_UPDATE_SIGNING_KEY_FILE.
+    Pour créer une paire : node scripts/sign-release-manifest.mjs --gen-key --key-id <id>
+
+stdout | src/integration/invoice-stock-sync.test.ts > TESTS 2 & 3 — modification : SEUL le delta est appliqué > suppression de la ligne restitue tout
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz8qj001ru0smamtbahjw',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+ ✓ src/integration/business-workflow-e2e.test.ts (15 tests) 17343ms
+ ✓ src/lib/__tests__/release-signing-chain.test.ts (20 tests) 2822ms
+     ✓ signature tronquée ou vide → refus  480ms
+stdout | src/integration/invoice-stock-sync.test.ts > TESTS 2 & 3 — modification : SEUL le delta est appliqué > l’API REFUSE de modifier les lignes d’une facture émise (règle légale préservée)
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz8v20028u0sm4vnoaryd',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+stdout | src/integration/client-email-garage-portail.test.ts > collision d'adresses (§22) > la même adresse dans un AUTRE garage n'est pas un conflit
+[clients] identifiant portail modifié par le garage { client: 'cmvjyz8s5001qgf39qsv4iasx' }
+
+stdout | src/integration/invoice-stock-sync.test.ts > TEST 4 — annulation : restitution intégrale > facture annulée → stock revenu à 10, mouvement CANCEL de +2
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz8yg002nu0sm6kcebz26',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+stdout | src/integration/invoice-stock-sync.test.ts > TEST 4 — annulation : restitution intégrale > facture annulée → stock revenu à 10, mouvement CANCEL de +2
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz8yg002nu0sm6kcebz26',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'cancelled',
+  inventoryMovements: 1
+}
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > hors ligne, rien n’est annoncé au client > l’accès reste créé LOCALEMENT : c’est lui qu’une republication renverra
+[portal/access] accès ouvert { client: 'cmvjyz8nr000u8ny9bkyflfpq' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > hors ligne, rien n’est annoncé au client > l’accès reste créé LOCALEMENT : c’est lui qu’une republication renverra
+[portal/publication] service en ligne injoignable
+
+stdout | src/integration/invoice-stock-sync.test.ts > TEST 4 — annulation : restitution intégrale > annuler DEUX fois ne restitue pas deux fois
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz9320035u0smzrmad09o',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > définir son mot de passe rouvre tout le portail
+[portal/access] accès ouvert { client: 'cmvjyz8u9000gs53j0i0cnxhi' }
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > définir son mot de passe rouvre tout le portail
+[portal/publication] aucune licence garage : accès non publié
+
+stderr | src/integration/tenant-isolation-matrix.test.ts > Scoping des listes — les collections de A excluent les ressources de B > quotes : la liste de A contient l'objet de A et jamais celui de B
+[sync/jobs:push] aucune licence garage rattachée — remontée impossible { garage: 'cmvjyz7b…', code: 'NO_GARAGE_LICENSE' }
+
+stdout | src/integration/client-email-garage-portail.test.ts > conflit entre les deux sens (§25) > une demande du client encore en attente est ANNULÉE par la correction du garage
+[clients] identifiant portail modifié par le garage { client: 'cmvjyz8z4001zgf39zjul8k13' }
+
+stdout | src/integration/invoice-stock-sync.test.ts > TEST 4 — annulation : restitution intégrale > annuler DEUX fois ne restitue pas deux fois
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz9320035u0smzrmad09o',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'cancelled',
+  inventoryMovements: 1
+}
+
+stdout | src/integration/invoice-stock-sync.test.ts > TEST 4 — annulation : restitution intégrale > « cancelled » est TERMINAL : impossible de réactiver pour re-décrémenter
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz9da003pu0smdbarpnvo',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+stdout | src/integration/invoice-stock-sync.test.ts > TEST 4 — annulation : restitution intégrale > « cancelled » est TERMINAL : impossible de réactiver pour re-décrémenter
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz9da003pu0smdbarpnvo',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'cancelled',
+  inventoryMovements: 1
+}
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > une réinitialisation republie ET coupe les sessions en ligne
+[portal/access] accès ouvert { client: 'cmvjyz930000y8ny9pn59hvdz' }
+
+ ✓ src/integration/tenant-isolation-matrix.test.ts (42 tests) 18672ms
+     ✓ invoices : la liste de A contient l'objet de A et jamais celui de B  1424ms
+stdout | src/integration/client-email-garage-portail.test.ts > conflit entre les deux sens (§25) > le journal d'audit dit ce qui a été annulé (§26)
+[clients] identifiant portail modifié par le garage { client: 'cmvjyz9a40025gf39evx5kz9l' }
+
+stdout | src/integration/invoice-stock-sync.test.ts > TEST 5 — concurrence : une seule vente peut consommer la dernière unité > stock 1, deux factures de 1 validées simultanément → une seule réussit
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz9io004du0sm3zkmjpd3',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+ ✓ src/integration/invoice-document-integrity-p3.test.ts (15 tests) 5812ms
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > une réinitialisation republie ET coupe les sessions en ligne
+[portal/access] accès réinitialisé { client: 'cmvjyz930000y8ny9pn59hvdz' }
+
+stderr | src/integration/synchro-voie-de-retour.test.ts > photo stockée sur DISQUE : elle redescend (GF-030) > ni colonne ni fichier : refus explicite, sans détail technique
+[sync/job-photo] octets introuvables { garage: 'cmvjyz7y…', stockage: 'fichier' }
+
+stdout | src/integration/invoice-stock-sync.test.ts > TESTS 6 & 7 — main-d’œuvre et lignes libres n’impactent pas l’inventaire > facture mixte : seule la ligne de stock bouge
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyz9xu005yu0smc0wf6ljr',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 2
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > GF-031 — le décalage d’horloge compte AUSSI à la descente > un poste EN AVANCE réapplique quand même le travail du mécanicien
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'poussee',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 1,
+  resteAPuiser: false
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > GF-031 — le décalage d’horloge compte AUSSI à la descente > un poste EN RETARD n’écrase plus ses propres saisies avec un miroir périmé
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > GF-031 — le décalage d’horloge compte AUSSI à la descente > sans `syncedAt`, le comportement reste EXACTEMENT celui d’avant
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 1,
+  resteAPuiser: false
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > GF-032 — la fenêtre entière n’est plus redemandée à chaque passage > le premier passage demande tout, le suivant seulement le nouveau
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'poussee',
+  pushed: 1,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > GF-032 — la fenêtre entière n’est plus redemandée à chaque passage > le premier passage demande tout, le suivant seulement le nouveau
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > GF-032 — la fenêtre entière n’est plus redemandée à chaque passage > le curseur des interventions ne contamine pas le repli `since`
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > GF-032 — la fenêtre entière n’est plus redemandée à chaque passage > le curseur des interventions ne contamine pas le repli `since`
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > écoulement de l’arriéré (GF-030) > une réponse tronquée demande un nouveau passage
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'poussee',
+  pushed: 1,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 1,
+  resteAPuiser: true
+}
+
+stdout | src/integration/synchro-voie-de-retour.test.ts > écoulement de l’arriéré (GF-030) > sans PROGRÈS, on ne repasse pas — pas de boucle sur un cloud bloqué
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyz7y…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: true
+}
+
+ ✓ src/integration/synchro-voie-de-retour.test.ts (24 tests) 3279ms
+     ✓ au plafond, le serveur l’ANNONCE — sinon le poste croit avoir tout reçu  1832ms
+     ✓ la passerelle SERT une photo stockée en fichier  403ms
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > une réinitialisation rattrape une ouverture faite hors ligne
+[portal/access] accès ouvert { client: 'cmvjyz9xi00128ny9wduq8q20' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > une réinitialisation rattrape une ouverture faite hors ligne
+[portal/publication] service en ligne injoignable
+
+ ✓ src/integration/client-email-garage-portail.test.ts (16 tests) 19014ms
+     ✓ une demande du client encore en attente est ANNULÉE par la correction du garage  387ms
+     ✓ le journal d'audit dit ce qui a été annulé (§26)  409ms
+     ✓ la confirmation du client remonte toujours à la fiche du garage  393ms
+stdout | src/integration/invoice-stock-sync.test.ts > TESTS 8 & 9 — devis puis conversion : un SEUL mouvement définitif > devis → facture → validation : le stock ne bouge QU’UNE fois
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyzacj007du0sm6eggclyv',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+stdout | src/integration/invoice-stock-sync.test.ts > TEST 10 — isolation inter-garage > valider une facture du garage A ne touche pas la pièce homonyme du garage B
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyzak1007su0smo1yg7k9r',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > une réinitialisation rattrape une ouverture faite hors ligne
+[portal/access] accès réinitialisé { client: 'cmvjyz9xi00128ny9wduq8q20' }
+
+stdout | src/integration/invoice-stock-sync.test.ts > double-clic / rejeu — idempotence > deux « Valider » simultanés ne décrémentent qu’une fois
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyzas7008pu0smlfajz3l1',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > définir son mot de passe rouvre tout le portail
+[portal/password] mot de passe défini { user: 'cmvjyz97b000is53jx3mcseo0' }
+
+ ✓ src/integration/rendez-vous-client-garage.test.ts (16 tests) 19692ms
+     ✓ la confirmation du garage est visible par le client  315ms
+     ✓ déplacer un créneau CONFIRMÉ le remet en attente  347ms
+     ✓ le nouveau créneau est validé comme le premier  364ms
+     ✓ un rendez-vous terminé ne se déplace ni ne s'annule plus  370ms
+     ✓ on ne clôt pas une demande jamais confirmée  383ms
+     ✓ un mécanicien ne s'engage pas à la place du comptoir  424ms
+stdout | src/integration/invoice-stock-sync.test.ts > double-clic / rejeu — idempotence > valider puis passer « payée » ne re-décrémente pas
+[stock] invoice.stock-synced {
+  invoiceId: 'cmvjyzaw80096u0sm8v8ckcz3',
+  garageId: 'cmvjyz89p0000u0smhzodpolk',
+  status: 'sent',
+  inventoryMovements: 1
+}
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > désactiver coupe aussi les sessions en ligne
+[portal/access] accès ouvert { client: 'cmvjyzatc00168ny9a7mx19oj' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > désactiver coupe aussi les sessions en ligne
+[portal/access] accès désactivé { client: 'cmvjyzatc00168ny9a7mx19oj' }
+
+stderr | src/integration/portail-2fa-cycle.test.ts > rétrogradation du format — la porte que le repli laissait ouverte > un secret remis EN CLAIR dans la colonne ne valide plus rien
+[portal/2fa] secret TOTP illisible — vérifiez GF_TOTP_ENC_KEY / _OLD { user: 'cmvjyzb0v001yh9vdv6tvf5f8' }
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > le nouveau mot de passe est celui qui sert désormais à se connecter
+[portal/access] accès ouvert { client: 'cmvjyzb1t000ns53jf549rn3o' }
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > le nouveau mot de passe est celui qui sert désormais à se connecter
+[portal/publication] aucune licence garage : accès non publié
+
+stderr | src/integration/portail-2fa-cycle.test.ts > rétrogradation du format — la porte que le repli laissait ouverte > un chiffré ALTÉRÉ ne valide rien non plus
+[portal/2fa] secret TOTP illisible — vérifiez GF_TOTP_ENC_KEY / _OLD { user: 'cmvjyzbdo0022h9vddvnedqgk' }
+
+ ✓ src/integration/invoice-stock-sync.test.ts (29 tests) 21416ms
+     ✓ annuler DEUX fois ne restitue pas deux fois  363ms
+     ✓ devis → facture → validation : le stock ne bouge QU’UNE fois  302ms
+ ✓ src/integration/mechanic-avatar-archive.test.ts (19 tests) 1966ms
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > une désactivation qui n’atteint pas le service ne coupe RIEN, et le dit
+[portal/access] accès ouvert { client: 'cmvjyzbak001a8ny9fgs61vqq' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > une désactivation qui n’atteint pas le service ne coupe RIEN, et le dit
+[portal/access] accès désactivé { client: 'cmvjyzbak001a8ny9fgs61vqq' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > une désactivation qui n’atteint pas le service ne coupe RIEN, et le dit
+[portal/publication] service en ligne injoignable
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > l’inventaire appartient au POSTE > publier une facture ne crée AUCUN mouvement de stock
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > l’inventaire appartient au POSTE > publier une facture ne décrémente AUCUNE pièce
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > l’inventaire appartient au POSTE > la ligne ne garde AUCUN lien vers une pièce non publiée
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > l’inventaire appartient au POSTE > l’engagement du stock est recopié tel quel — c’est un fait daté
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stderr | src/integration/portail-2fa-cycle.test.ts > rétrogradation du format — la porte que le repli laissait ouverte > mais le compte n'est PAS enfermé : le code de secours fonctionne encore
+[portal/2fa] secret TOTP illisible — vérifiez GF_TOTP_ENC_KEY / _OLD { user: 'cmvjyzbp90026h9vd8dmimfjk' }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > écriture et montants > crée la facture sous l’identifiant du poste
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+ ✓ src/integration/statistiques-au-centime.test.ts (9 tests) 4820ms
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > écriture et montants > recopie les montants ENTIERS sans les recalculer
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > idempotence > republier NE CRÉE PAS une seconde facture
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > idempotence > republier NE CRÉE PAS une seconde facture
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > idempotence > une ligne SUPPRIMÉE sur le poste disparaît de la facture publiée
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+ ✓ src/integration/messagerie-client-garage.test.ts (16 tests) 6636ms
+     ✓ la réponse du garage revient au client, et le statut change de camp  352ms
+     ✓ une relance du client remet la balle chez le garage  330ms
+     ✓ le garage clôt ; le client ne peut plus écrire, mais peut rouvrir  376ms
+     ✓ le client clôt de son côté ; le garage peut rouvrir  355ms
+     ✓ un autre client du MÊME garage n'atteint pas ce fil  426ms
+     ✓ un mécanicien ne lit ni ne répond à une conversation  331ms
+     ✓ le comptoir, lui, y a bien accès  352ms
+     ✓ un sujet ou un message vide est refusé  302ms
+     ✓ une catégorie inconnue retombe sur « general » plutôt que de passer telle quelle  337ms
+stdout | src/integration/devis-signature-depuis-un-poste.test.ts > signature de devis — depuis un POSTE installé (GF-003) > sans licence garage active : refuse explicitement, sans rien laisser fuir
+[quotes/signature] poste sans licence garage active { quote: 'cmvjyzc8d00027xvuwqgrxex2' }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > idempotence > une ligne SUPPRIMÉE sur le poste disparaît de la facture publiée
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > réactiver ne coupe pas de sessions
+[portal/access] accès ouvert { client: 'cmvjyzbs1001e8ny9e5lhll40' }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > réactiver ne coupe pas de sessions
+[portal/access] accès désactivé { client: 'cmvjyzbs1001e8ny9e5lhll40' }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > refus > une facture d’un AUTRE garage n’est jamais écrasée
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stderr | src/app/api/sync/__tests__/invoice-publication.test.ts > refus > une facture d’un AUTRE garage n’est jamais écrasée
+[sync/invoice] refus — facture d’un autre garage { invoice: 'facture-' }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > refus > une facture d’un AUTRE garage n’est jamais écrasée
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 0, refusees: 1 }
+
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > réinitialiser et désactiver doivent atteindre le service > réactiver ne coupe pas de sessions
+[portal/access] accès réactivé { client: 'cmvjyzbs1001e8ny9e5lhll40' }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > refus > un numéro déjà pris par une AUTRE facture est refusé explicitement
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > refus > un numéro déjà pris par une AUTRE facture est refusé explicitement
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 0, refusees: 1 }
+
+stdout | src/integration/devis-signature-depuis-un-poste.test.ts > signature de devis — depuis un POSTE installé (GF-003) > cloud injoignable : 503, aucun courriel, devis intact
+[quotes/signature] publication cloud refusée { quote: 'cmvjyzcd6000b7xvud7hm8f8u', code: 'NETWORK' }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > refus > un refus n’empêche pas les AUTRES factures du lot de passer
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 1 }
+
+stdout | src/integration/devis-signature-depuis-un-poste.test.ts > signature de devis — depuis un POSTE installé (GF-003) > publication refusée par le cloud : 409, aucun faux succès
+[quotes/signature] publication cloud refusée { quote: 'cmvjyzcew000e7xvumd5qzpjj', code: 'QUOTE_NUMBER_TAKEN' }
+
+stdout | src/app/api/sync/__tests__/invoice-publication.test.ts > refus > le garageId vient de la LICENCE, jamais du corps
+[sync/invoice] factures publiées { garage: 'cmvjyzbo', appliquees: 1, refusees: 0 }
+
+stdout | src/integration/devis-signature-depuis-un-poste.test.ts > signature de devis — depuis un POSTE installé (GF-003) > ne fait PAS basculer le devis en « envoyé »
+[quotes/signature] poste sans licence garage active { quote: 'cmvjyzcg2000h7xvulrd54p9a' }
+
+stderr | src/app/api/sync/__tests__/invoice-publication.test.ts > refus > une licence refusée ne laisse rien s’écrire
+[sync/invoice] refus auth { code: 'LICENSE_REVOKED' }
+
+stdout | src/integration/devis-signature-depuis-un-poste.test.ts > signature de devis — depuis un POSTE installé (GF-003) > n’envoie AUCUN courriel
+[quotes/signature] poste sans licence garage active { quote: 'cmvjyzcgz000k7xvu7x6v5blt' }
+
+ ✓ src/app/api/sync/__tests__/invoice-publication.test.ts (13 tests) 1836ms
+ ✓ src/integration/quote-acceptance-proof.test.ts (10 tests) 3499ms
+ ✓ src/integration/portail-2fa-cycle.test.ts (20 tests) 21897ms
+     ✓ la colonne ne contient PAS le secret en clair  406ms
+     ✓ le secret EN ATTENTE est protégé lui aussi  348ms
+     ✓ un enrôlement abandonné ne protège PAS faussement le compte  439ms
+     ✓ le mot de passe seul ne crée AUCUNE session  375ms
+     ✓ le bon code ouvre la session  410ms
+     ✓ un mauvais code, un challenge inventé ou absent sont refusés  425ms
+     ✓ un code d'une fenêtre trop ancienne est refusé  489ms
+     ✓ un code de secours ouvre la session, et ne resert JAMAIS  563ms
+     ✓ exige le mot de passe — une session ne suffit pas  406ms
+     ✓ efface le secret ET les codes de secours  679ms
+     ✓ un secret remis EN CLAIR dans la colonne ne valide plus rien  465ms
+     ✓ un chiffré ALTÉRÉ ne valide rien non plus  423ms
+     ✓ mais le compte n'est PAS enfermé : le code de secours fonctionne encore  485ms
+     ✓ le secret d'un compte ne valide pas la connexion d'un autre  570ms
+ ✓ src/integration/devis-signature-depuis-un-poste.test.ts (9 tests) 1742ms
+stdout | src/app/api/clients/__tests__/portal-access-publication.test.ts > le lien de connexion désigne le garage > l’e-mail porte ?garage=<slug>
+[portal/access] accès ouvert { client: 'cmvjyzccb001i8ny93pbdrrrx' }
+
+ ✓ src/app/api/clients/__tests__/portal-access-publication.test.ts (14 tests) 22899ms
+     ✓ ouvrir un accès le publie, avec le haché — jamais le mot de passe en clair  544ms
+     ✓ l’identité vient de la LICENCE, jamais du corps  513ms
+     ✓ publié : l’accès est annoncé prêt, et le client est prévenu  557ms
+     ✓ la réponse dit que l’accès n’est PAS en ligne, et pourquoi  518ms
+     ✓ aucun e-mail n’est envoyé : il porterait un lien vers un refus  600ms
+     ✓ sans licence garage : dit LICENCE_ABSENTE, sans appel réseau  481ms
+     ✓ adresse déjà prise en ligne : le motif est rendu tel quel  512ms
+     ✓ l’accès reste créé LOCALEMENT : c’est lui qu’une republication renverra  544ms
+     ✓ une réinitialisation republie ET coupe les sessions en ligne  1093ms
+     ✓ une réinitialisation rattrape une ouverture faite hors ligne  1154ms
+     ✓ désactiver coupe aussi les sessions en ligne  605ms
+     ✓ une désactivation qui n’atteint pas le service ne coupe RIEN, et le dit  628ms
+     ✓ réactiver ne coupe pas de sessions  738ms
+     ✓ l’e-mail porte ?garage=<slug>  505ms
+ ✓ src/integration/scenario-maitre.test.ts (8 tests) 5439ms
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > le nouveau mot de passe est celui qui sert désormais à se connecter
+[portal/password] mot de passe défini { user: 'cmvjyzbgr000ps53jie3t6s60' }
+
+ ✓ src/integration/portail-2fa-idor.test.ts (11 tests) 22489ms
+     ✓ setup : A ne déclenche pas d'enrôlement pour B  717ms
+     ✓ enable : aucun code, ni de A ni de B, n'active quoi que ce soit chez B  984ms
+     ✓ disable : A ne désactive pas le 2FA de B, même avec SON propre mot de passe  613ms
+     ✓ recovery : un code de secours de B ne sert pas à A, et reste intact  634ms
+     ✓ le secret de A ne valide pas le challenge de B  772ms
+     ✓ aucune route 2FA ne lit d'identifiant d'utilisateur fourni par le client  573ms
+     ✓ la vérification du second facteur part du challenge SIGNÉ, pas d'un identifiant  465ms
+     ✓ deux requêtes simultanées avec le MÊME code : une seule ouvre une session  1014ms
+     ✓ deux codes DIFFÉRENTS simultanés : les deux ouvrent, et aucun ne ressuscite  1597ms
+     ✓ compte les comptes enrôlés et ceux devenus illisibles  583ms
+     ✓ ne compte pas les comptes NON enrôlés  636ms
+ ✓ src/integration/loaner-availability.test.ts (41 tests) 4989ms
+ ✓ src/integration/intervention-rattache-client-vehicule.test.ts (8 tests) 3773ms
+stdout | src/integration/portal-password-enforcement.test.ts > mot de passe TEMPORAIRE — aucune donnée servie avant changement > la route de CHANGEMENT reste accessible — sinon la contrainte serait indépassable
+[portal/password] mot de passe défini { user: 'cmvjyzcqt00025hyqno1iiaqb' }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — écriture > crée le devis avec l’IDENTIFIANT DU POSTE et rend un lien
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — écriture > recopie les montants ENTIERS sans les recalculer
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — écriture > ne publie NI client NI véhicule : les clés étrangères restent nulles
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — idempotence > republier NE CRÉE PAS un second devis
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — idempotence > republier NE CRÉE PAS un second devis
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — idempotence > republier MET À JOUR le devis existant
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — idempotence > republier MET À JOUR le devis existant
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — idempotence > une ligne SUPPRIMÉE sur le poste disparaît du devis publié
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 2 }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — idempotence > une ligne SUPPRIMÉE sur le poste disparaît du devis publié
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — refus > un devis appartenant à un AUTRE garage n’est jamais écrasé
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stderr | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — refus > un devis appartenant à un AUTRE garage n’est jamais écrasé
+[sync/quote] refus — devis d’un autre garage { quote: 'devis-po' }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — refus > un numéro déjà pris par un AUTRE devis est refusé explicitement
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stdout | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — refus > le garageId vient de la LICENCE, jamais du corps de la requête
+[sync/quote] devis publié { garage: 'cmvjyzdl', quote: 'devis-po', lignes: 1 }
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > le mot de passe actuel reste exigé, même provisoire
+[portal/access] accès ouvert { client: 'cmvjyzdp3000ws53jmzl4r3ng' }
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > le mot de passe actuel reste exigé, même provisoire
+[portal/publication] aucune licence garage : accès non publié
+
+stderr | src/app/api/sync/__tests__/quote-publication.test.ts > publication d’un devis — refus > une licence refusée ne laisse rien s’écrire
+[sync/quote] refus auth { code: 'LICENSE_REVOKED' }
+
+ ✓ src/app/api/sync/__tests__/quote-publication.test.ts (11 tests) 1545ms
+stdout | src/integration/portal-password-enforcement.test.ts > mot de passe TEMPORAIRE — aucune donnée servie avant changement > une fois le mot de passe défini, les données sont servies
+[portal/password] mot de passe défini { user: 'cmvjyzcqt00025hyqno1iiaqb' }
+
+stdout | src/integration/portal-access-lifecycle.test.ts > ouverture de l'accès par le garage > crée l'accès et rend le mot de passe temporaire UNE fois
+[portal/access] accès ouvert { client: 'cmvjyzduu0003e2wi76uumbtu' }
+
+stdout | src/integration/portal-email-sync.test.ts > demande de changement > un échec d'envoi est DIT, pas masqué
+[portal/email] confirmation non envoyée { motif: 'SMTP_NOT_CONFIGURED' }
+
+stdout | src/integration/portal-access-lifecycle.test.ts > ouverture de l'accès par le garage > crée l'accès et rend le mot de passe temporaire UNE fois
+[portal/publication] aucune licence garage : accès non publié
+
+stdout | src/lib/sync/__tests__/mechanic-rattrapage.test.ts > une révocation faite hors ligne est rattrapée > le rattrapage rejoue le STATUT, pas seulement les attributions
+[sync/mechanic-status:push] confirmé { key: 'mec-1…', status: 'revoked' }
+
+stdout | src/lib/sync/__tests__/mechanic-rattrapage.test.ts > une révocation faite hors ligne est rattrapée > une suspension aussi
+[sync/mechanic-status:push] confirmé { key: 'mec-2…', status: 'suspended' }
+
+stderr | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > MAC absent → publication refusée sans créer un instantané
+[sync/portal] refus auth { code: 'LICENSE_TAMPERED', garage: 'cmvjyze8…' }
+
+stdout | src/lib/sync/__tests__/mechanic-rattrapage.test.ts > une révocation faite hors ligne est rattrapée > confirmée par le cloud, elle cesse d’être en attente
+[sync/mechanic-status:push] confirmé { key: 'mec-3…', status: 'revoked' }
+
+stderr | src/lib/sync/__tests__/mechanic-rattrapage.test.ts > une révocation faite hors ligne est rattrapée > refusée par le cloud, elle RESTE en attente
+[sync/mechanic-status:push] non confirmé { key: 'mec-4…', status: 'revoked', code: 'NETWORK' }
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > publication simple : le lien est lisible
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.328Z'
+}
+
+stderr | src/integration/portal-password-enforcement.test.ts > changement de mot de passe — garanties > exige le mot de passe ACTUEL, même quand il est temporaire
+[portal/password] mot de passe actuel invalide { user: 'cmvjyzcqt00025hyqno1iiaqb' }
+
+stdout | src/lib/sync/__tests__/mechanic-rattrapage.test.ts > retirer un accès prime sur en accorder un > la clé révoquée passe avant la clé active quand le plafond est de 1
+[sync/mechanic-status:push] confirmé { key: 'mec-revo…', status: 'revoked' }
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > DEUX publications concurrentes (QR + lien « copier ») : les DEUX jetons restent lisibles
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.379Z'
+}
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > DEUX publications concurrentes (QR + lien « copier ») : les DEUX jetons restent lisibles
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.379Z'
+}
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > republication séquentielle : le lien déjà distribué survit
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.427Z'
+}
+
+stdout | src/lib/sync/__tests__/mechanic-rattrapage.test.ts > une clé attribuée mais jamais confirmée reste rattrapée > le canal ATTRIBUTION est utilisé pour une clé active
+[sync/mechanic:push] confirmée {
+  key: 'mec-5…',
+  garage: 'cmvjyze5…',
+  mechanic: 'cmvjyze5…',
+  idempotent: false
+}
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > republication séquentielle : le lien déjà distribué survit
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.446Z'
+}
+
+stderr | src/app/api/sync/__tests__/einvoicing-tunnel.test.ts > l’identité vient de la LICENCE, jamais du poste > une licence refusée ne déclenche AUCUN travail
+[sync/einvoicing] refus auth { code: 'LICENSE_REVOKED' }
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > une seule publication VIVANTE par intervention (pas d’accumulation sans borne)
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.482Z'
+}
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > une seule publication VIVANTE par intervention (pas d’accumulation sans borne)
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.503Z'
+}
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > une seule publication VIVANTE par intervention (pas d’accumulation sans borne)
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.525Z'
+}
+
+stdout | src/lib/sync/__tests__/mechanic-rattrapage.test.ts > l’état poussé est celui de la base, jamais une supposition > pushMechanicStatus confirme en base ce que le cloud a accepté
+[sync/mechanic-status:push] confirmé { key: 'mec-7…', status: 'suspended' }
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > la rétractation fonctionne : le contenu retiré disparaît AUSSI de l’ancien lien
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 375,
+  expiresAt: '2026-10-29T20:04:38.562Z'
+}
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > la rétractation fonctionne : le contenu retiré disparaît AUSSI de l’ancien lien
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.602Z'
+}
+
+stdout | src/lib/sync/__tests__/mechanic-rattrapage.test.ts > la ROUTE marque elle-même la clé « à rattraper » > révoquer une clé DÉJÀ synchronisée la remet en attente
+prisma:error 
+Invalid `prisma.mechanicActionAudit.create()` invocation in
+C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/app/api/mechanic-licenses/[lid]/status/route.ts:94:36
+
+  91   await revokeDevices(license.licenseId, 'license_revoked')
+  92 }
+  93 
+→ 94 await prisma.mechanicActionAudit.create(
+Foreign key constraint violated: `foreign key`
+
+stderr | src/lib/sync/__tests__/mechanic-rattrapage.test.ts > la ROUTE marque elle-même la clé « à rattraper » > révoquer une clé DÉJÀ synchronisée la remet en attente
+[sync/mechanic-status:push] non confirmé { key: 'mec-rout…', status: 'revoked', code: 'NETWORK' }
+
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > un instantané périmé reste refusé
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.644Z'
+}
+
+stdout | src/lib/sync/__tests__/mechanic-rattrapage.test.ts > la ROUTE marque elle-même la clé « à rattraper » > révoquer une clé DÉJÀ synchronisée la remet en attente
+[sync/mechanic-status:push] confirmé { key: 'mec-rout…', status: 'revoked' }
+
+ ✓ src/lib/sync/__tests__/mechanic-rattrapage.test.ts (9 tests) 1169ms
+stdout | src/integration/portail-lien-revoque-a-la-republication.test.ts > portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) > l’instantané d’un autre garage n’est jamais servi
+[sync/portal] instantané publié {
+  garage: 'cmvjyze8…',
+  job: 'job-qui-…',
+  bytes: 341,
+  expiresAt: '2026-10-29T20:04:38.688Z'
+}
+
+stdout | src/integration/portal-email-sync.test.ts > confirmation — c'est là que tout bascule > une collision survenue ENTRE la demande et la confirmation ne casse rien
+prisma:error 
+Invalid `prisma.portalUser.update()` invocation in
+C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/app/api/portal/auth/verify-email/route.ts:45:27
+
+  42 const nouvelle = user.pendingEmail
+  43 try {
+  44   await prisma.$transaction([
+→ 45     prisma.portalUser.update(
+Unique constraint failed on the fields: (`garageId`,`email`)
+prisma:error Unique constraint failed on the fields: (`garageId`,`email`)
+
+ ✓ src/integration/portail-lien-revoque-a-la-republication.test.ts (8 tests) 1458ms
+ ✓ src/integration/stock-suppression-et-entrees.test.ts (8 tests) 3015ms
+ ✓ src/app/api/sync/__tests__/einvoicing-tunnel.test.ts (13 tests) 1003ms
+ ✓ src/integration/portal-email-sync.test.ts (12 tests) 2598ms
+stderr | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > le mot de passe actuel reste exigé, même provisoire
+[portal/password] mot de passe actuel invalide { user: 'cmvjyze1p000ys53jjvxbiodd' }
+
+ ✓ src/integration/part-inventory-adjustment.test.ts (13 tests) 2579ms
+ ✓ src/lib/__tests__/env-manifest-drift.test.ts (8 tests) 491ms
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > reprendre le mot de passe provisoire ne définit rien
+[portal/access] accès ouvert { client: 'cmvjyzers0013s53j4r50y1fq' }
+
+stdout | src/integration/portail-mot-de-passe-provisoire.test.ts > la sortie existe et fonctionne > reprendre le mot de passe provisoire ne définit rien
+[portal/publication] aucune licence garage : accès non publié
+
+stdout | src/lib/sync/__tests__/job-tombstones.test.ts > GF31-AUD-044 — la suppression laisse une trace explicite > la trace part avec la remontée, INDÉPENDAMMENT de la fenêtre
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzf0…',
+  mode: 'poussee',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/lib/sync/__tests__/job-tombstones.test.ts > GF31-AUD-044 — la suppression laisse une trace explicite > la trace n’est effacée QUE sur accusé de réception
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzf0…',
+  mode: 'poussee',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/lib/sync/__tests__/job-tombstones.test.ts > GF31-AUD-044 — la suppression laisse une trace explicite > la trace n’est effacée QUE sur accusé de réception
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzf0…',
+  mode: 'poussee',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stderr | src/lib/sync/__tests__/job-tombstones.test.ts > GF31-AUD-044 — la suppression laisse une trace explicite > une remontée en échec réseau ne perd pas la trace
+[sync/jobs:push] non confirmée { garage: 'cmvjyzf0…', code: 'NETWORK', status: 0 }
+
+stdout | src/lib/sync/__tests__/job-tombstones.test.ts > GF31-AUD-044 — la suppression laisse une trace explicite > n’accuse que ce que le cloud a réellement listé
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzf0…',
+  mode: 'poussee',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+ ✓ src/lib/sync/__tests__/job-tombstones.test.ts (6 tests) 2606ms
+(node:4688) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | src/integration/portal-access-lifecycle.test.ts > ouverture de l'accès par le garage > deux ouvertures CONCURRENTES ne créent qu'un seul accès
+[portal/access] accès ouvert { client: 'cmvjyzemh000be2wiaidfzytk' }
+
+stdout | src/integration/portal-password-enforcement.test.ts > changement de mot de passe — garanties > révoque les AUTRES sessions mais conserve la sienne
+[portal/password] mot de passe défini { user: 'cmvjyzcqt00025hyqno1iiaqb' }
+
+stdout | src/lib/sync/__tests__/quote-return.test.ts > rapatriement de l’accord client > enregistre la preuve ET fait avancer le devis
+[sync/quote-return] accords rapatriés {
+  garage: 'cmvjyzfi',
+  appliquees: 1,
+  statutsAvances: 1,
+  resteAPuiser: false
+}
+
+stdout | src/lib/sync/__tests__/quote-return.test.ts > rapatriement de l’accord client > un refus client est appliqué comme une acceptation
+[sync/quote-return] accords rapatriés {
+  garage: 'cmvjyzfi',
+  appliquees: 1,
+  statutsAvances: 1,
+  resteAPuiser: false
+}
+
+stdout | src/integration/portal-access-lifecycle.test.ts > ouverture de l'accès par le garage > deux ouvertures CONCURRENTES ne créent qu'un seul accès
+[portal/publication] aucune licence garage : accès non publié
+
+stdout | src/lib/sync/__tests__/quote-return.test.ts > rapatriement de l’accord client > rejouer le passage n’empile AUCUN doublon
+[sync/quote-return] accords rapatriés {
+  garage: 'cmvjyzfi',
+  appliquees: 1,
+  statutsAvances: 1,
+  resteAPuiser: false
+}
+
+stdout | src/integration/portal-access-lifecycle.test.ts > ouverture de l'accès par le garage > deux ouvertures CONCURRENTES ne créent qu'un seul accès
+prisma:error 
+Invalid `prisma.portalUser.create()` invocation in
+C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/app/api/clients/[id]/portal-access/route.ts:159:36
+
+  156 
+  157 let cree
+  158 try {
+→ 159   cree = await prisma.portalUser.create(
+Unique constraint failed on the fields: (`garageId`,`email`)
+
+stdout | src/lib/sync/__tests__/quote-return.test.ts > rapatriement de l’accord client > rejouer le passage n’empile AUCUN doublon
+[sync/quote-return] accords rapatriés {
+  garage: 'cmvjyzfi',
+  appliquees: 1,
+  statutsAvances: 0,
+  resteAPuiser: false
+}
+
+stdout | src/integration/portal-access-lifecycle.test.ts > ouverture de l'accès par le garage > deux ouvertures CONCURRENTES ne créent qu'un seul accès
+prisma:error 
+Invalid `prisma.portalUser.create()` invocation in
+C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/app/api/clients/[id]/portal-access/route.ts:159:36
+
+  156 
+  157 let cree
+  158 try {
+→ 159   cree = await prisma.portalUser.create(
+Unique constraint failed on the fields: (`garageId`,`email`)
+
+stdout | src/lib/sync/__tests__/quote-return.test.ts > rapatriement de l’accord client > rejouer le passage n’empile AUCUN doublon
+[sync/quote-return] accords rapatriés {
+  garage: 'cmvjyzfi',
+  appliquees: 1,
+  statutsAvances: 0,
+  resteAPuiser: false
+}
+
+stdout | src/lib/sync/__tests__/quote-return.test.ts > non-régression du statut > un devis déjà CONVERTI garde son statut, mais reçoit la preuve
+[sync/quote-return] accords rapatriés {
+  garage: 'cmvjyzfi',
+  appliquees: 1,
+  statutsAvances: 0,
+  resteAPuiser: false
+}
+
+ ✓ src/integration/portal-password-enforcement.test.ts (10 tests) 4829ms
+     ✓ la route de CHANGEMENT reste accessible — sinon la contrainte serait indépassable  842ms
+     ✓ une fois le mot de passe défini, les données sont servies  808ms
+     ✓ refuse de réutiliser le mot de passe temporaire  358ms
+     ✓ révoque les AUTRES sessions mais conserve la sienne  829ms
+stdout | src/lib/sync/__tests__/quote-return.test.ts > curseur > passages suivants : curseur RECULÉ d’une minute sur la dernière preuve
+[sync/quote-return] accords rapatriés {
+  garage: 'cmvjyzfi',
+  appliquees: 1,
+  statutsAvances: 1,
+  resteAPuiser: false
+}
+
+stdout | src/app/api/internal/__tests__/backup-coherent.test.ts > la sauvegarde produite est réellement restaurable > le fichier écrit passe le contrôle d’intégrité et contient les données
+[internal/backup] instantané cohérent écrit { octets: 851968 }
+
+stdout | src/lib/sync/__tests__/quote-return.test.ts > curseur > remonte l’arriéré annoncé par le cloud
+[sync/quote-return] accords rapatriés {
+  garage: 'cmvjyzfi',
+  appliquees: 1,
+  statutsAvances: 1,
+  resteAPuiser: true
+}
+
+ ✓ src/lib/sync/__tests__/quote-return.test.ts (10 tests) 803ms
+stdout | src/app/api/internal/__tests__/backup-coherent.test.ts > la sauvegarde produite est réellement restaurable > reste cohérente quand des écritures ont lieu PENDANT la sauvegarde
+[internal/backup] instantané cohérent écrit { octets: 851968 }
+
+stdout | src/integration/portal-access-lifecycle.test.ts > réinitialisation > remet un mot de passe temporaire DIFFÉRENT et coupe les sessions
+[portal/access] accès réinitialisé { client: 'cmvjyzduu0003e2wi76uumbtu' }
+
+stdout | src/integration/portal-access-lifecycle.test.ts > réinitialisation > remet un mot de passe temporaire DIFFÉRENT et coupe les sessions
+[portal/publication] aucune licence garage : accès non publié
+
+ ✓ src/integration/portail-mot-de-passe-provisoire.test.ts (6 tests) 26433ms
+     ✓ la connexion réussit, mais annonce que le mot de passe doit être défini  1049ms
+     ✓ toute route du portail refuse avec un code exploitable par l'interface  1159ms
+     ✓ définir son mot de passe rouvre tout le portail  2831ms
+     ✓ le nouveau mot de passe est celui qui sert désormais à se connecter  3445ms
+     ✓ le mot de passe actuel reste exigé, même provisoire  1414ms
+     ✓ reprendre le mot de passe provisoire ne définit rien  1789ms
+stderr | src/app/api/internal/__tests__/backup-coherent.test.ts > la destination ne peut pas désigner autre chose que le dossier de sauvegarde > refuse une remontée de dossier
+[internal/backup] destination hors du dossier de sauvegarde, refusée
+
+stderr | src/app/api/internal/__tests__/backup-coherent.test.ts > la destination ne peut pas désigner autre chose que le dossier de sauvegarde > refuse un chemin absolu ailleurs
+[internal/backup] destination hors du dossier de sauvegarde, refusée
+
+stdout | src/app/api/internal/__tests__/backup-coherent.test.ts > la destination ne peut pas désigner autre chose que le dossier de sauvegarde > n’écrase jamais une sauvegarde existante
+[internal/backup] instantané cohérent écrit { octets: 860160 }
+
+ ✓ src/app/api/internal/__tests__/backup-coherent.test.ts (9 tests) 1098ms
+     ✓ reste cohérente quand des écritures ont lieu PENDANT la sauvegarde  358ms
+stdout | src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts > les demandes du client arrivent enfin sur le poste > une demande inconnue est créée localement
+[sync/rendez-vous] demandes rapatriées { recus: 1, appliques: 1 }
+
+ ✓ src/integration/suppliers.test.ts (21 tests) 1485ms
+stdout | src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts > les demandes du client arrivent enfin sur le poste > aucun lien pendant vers une fiche client non publiée
+[sync/rendez-vous] demandes rapatriées { recus: 1, appliques: 1 }
+
+ ✓ src/lib/planning/__tests__/bornes-partout.test.ts (4 tests) 796ms
+     ✓ tout APPEL passe explicitement les bornes  353ms
+     ✓ `runAIEngine` reçoit toujours des bornes  430ms
+stdout | src/integration/portal-access-lifecycle.test.ts > réinitialisation > débloque un compte verrouillé par des échecs de connexion
+[portal/access] accès réinitialisé { client: 'cmvjyzduu0003e2wi76uumbtu' }
+
+stdout | src/integration/portal-access-lifecycle.test.ts > réinitialisation > débloque un compte verrouillé par des échecs de connexion
+[portal/publication] aucune licence garage : accès non publié
+
+stdout | src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts > les demandes du client arrivent enfin sur le poste > rejouer le même passage ne crée pas de doublon
+[sync/rendez-vous] demandes rapatriées { recus: 1, appliques: 1 }
+
+stdout | src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts > les demandes du client arrivent enfin sur le poste > rejouer le même passage ne crée pas de doublon
+[sync/rendez-vous] demandes rapatriées { recus: 1, appliques: 1 }
+
+stdout | src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts > les demandes du client arrivent enfin sur le poste > le curseur repart de ce que le poste détient RÉELLEMENT
+[sync/rendez-vous] demandes rapatriées { recus: 1, appliques: 1 }
+
+stdout | src/integration/portal-access-lifecycle.test.ts > désactivation et réactivation > désactiver coupe l'accès ET les sessions ouvertes
+[portal/access] accès désactivé { client: 'cmvjyzduu0003e2wi76uumbtu' }
+
+stdout | src/integration/portal-access-lifecycle.test.ts > désactivation et réactivation > désactiver coupe l'accès ET les sessions ouvertes
+[portal/publication] aucune licence garage : accès non publié
+
+ ✓ src/integration/copilot-portee-et-porte-financiere.test.ts (18 tests) 2391ms
+stdout | src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts > le poste fait autorité sur la RÉPONSE > une confirmation locale n’est pas effacée par un rapatriement
+[sync/rendez-vous] demandes rapatriées { recus: 1, appliques: 1 }
+
+stdout | src/integration/portal-access-lifecycle.test.ts > désactivation et réactivation > réactiver rend l'accès sans ressusciter les anciennes sessions
+[portal/access] accès réactivé { client: 'cmvjyzduu0003e2wi76uumbtu' }
+
+stdout | src/integration/portal-access-lifecycle.test.ts > désactivation et réactivation > réactiver rend l'accès sans ressusciter les anciennes sessions
+[portal/publication] aucune licence garage : accès non publié
+
+stdout | src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts > le poste fait autorité sur la RÉPONSE > mais le texte de la demande, lui, est mis à jour
+[sync/rendez-vous] demandes rapatriées { recus: 1, appliques: 1 }
+
+stdout | src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts > le poste fait autorité sur la RÉPONSE > une demande encore « requested » localement suit le cloud
+[sync/rendez-vous] demandes rapatriées { recus: 1, appliques: 1 }
+
+stderr | src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts > la décision du garage remonte au client > hors ligne : la remontée échoue et le DIT
+[sync/rendez-vous] décision non remontée { code: 'NETWORK', statut: 0 }
+
+ ✓ src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts (10 tests) 674ms
+ ✓ src/integration/invoice-authz.test.ts (7 tests) 4586ms
+stdout | src/integration/portal-access-lifecycle.test.ts > isolation entre garages et permissions > le garage A ne peut ni lire, ni réinitialiser, ni désactiver l'accès d'un client du garage B
+[portal/access] accès ouvert { client: 'cmvjyzdv80007e2wiwfac4gei' }
+
+stdout | src/integration/portal-access-lifecycle.test.ts > isolation entre garages et permissions > le garage A ne peut ni lire, ni réinitialiser, ni désactiver l'accès d'un client du garage B
+[portal/publication] aucune licence garage : accès non publié
+
+ ✓ src/integration/portal-access-lifecycle.test.ts (15 tests) 4721ms
+     ✓ crée l'accès et rend le mot de passe temporaire UNE fois  943ms
+     ✓ deux ouvertures CONCURRENTES ne créent qu'un seul accès  1379ms
+     ✓ remet un mot de passe temporaire DIFFÉRENT et coupe les sessions  469ms
+     ✓ débloque un compte verrouillé par des échecs de connexion  434ms
+     ✓ le garage A ne peut ni lire, ni réinitialiser, ni désactiver l'accès d'un client du garage B  454ms
+stdout | src/lib/sync/__tests__/messages-voie-de-retour.test.ts > les messages des clients arrivent enfin sur le poste > la conversation et ses messages sont créés localement
+[sync/messages] conversations rapatriées { appliques: 1 }
+
+stdout | src/lib/sync/__tests__/messages-voie-de-retour.test.ts > les messages des clients arrivent enfin sur le poste > rejouer un passage ne duplique ni la conversation ni les messages
+[sync/messages] conversations rapatriées { appliques: 1 }
+
+stdout | src/lib/sync/__tests__/messages-voie-de-retour.test.ts > les messages des clients arrivent enfin sur le poste > rejouer un passage ne duplique ni la conversation ni les messages
+[sync/messages] conversations rapatriées { appliques: 1 }
+
+ ✓ src/lib/__tests__/input-contrast.test.ts (23 tests) 5298ms
+stdout | src/lib/sync/__tests__/messages-voie-de-retour.test.ts > les messages des clients arrivent enfin sur le poste > une réponse du garage venue du cloud s’ajoute à la conversation
+[sync/messages] conversations rapatriées { appliques: 1 }
+
+stdout | src/lib/sync/__tests__/messages-voie-de-retour.test.ts > les messages des clients arrivent enfin sur le poste > une réponse du garage venue du cloud s’ajoute à la conversation
+[sync/messages] conversations rapatriées { appliques: 1 }
+
+stdout | src/lib/sync/__tests__/messages-voie-de-retour.test.ts > le compte « ombre » ne peut pas servir à s’authentifier > l’auteur inconnu est créé avec un haché VIDE
+[sync/messages] conversations rapatriées { appliques: 1 }
+
+stdout | src/lib/sync/__tests__/messages-voie-de-retour.test.ts > le compte « ombre » ne peut pas servir à s’authentifier > un compte local EXISTANT n’est jamais écrasé
+[sync/messages] conversations rapatriées { appliques: 1 }
+
+stderr | src/lib/sync/__tests__/messages-voie-de-retour.test.ts > répondre atteint réellement le client > hors ligne : la remontée échoue et le DIT
+[sync/messages] réponse non remontée { code: 'NETWORK', statut: 0 }
+
+ ✓ src/lib/sync/__tests__/messages-voie-de-retour.test.ts (9 tests) 1042ms
+ ✓ src/integration/stock-money-p3.test.ts (11 tests) 3198ms
+ ✓ src/lib/__tests__/themes-surfaces-couvertes.test.ts (4 tests) 1665ms
+     ✓ le détecteur trouve bien des fonds à couvrir (auto-contrôle)  1014ms
+     ✓ aucun fond sombre n’échappe aux thèmes  611ms
+ ✓ src/__tests__/integrity-diagnostics.test.ts (12 tests) 2929ms
+     ✓ G — build fraîchement généré (dist/win-unpacked réel) → aucun échec  1841ms
+ ✓ src/integration/robustness-v15.test.ts (4 tests) 4474ms
+     ✓ confirm + cancel concurrents : aucune mise à jour perdue, état final cohérent  1514ms
+ ✓ src/integration/reglages-logo-et-cout-achat.test.ts (14 tests) 3202ms
+ ✓ src/lib/__tests__/portail-lien-unique.test.ts (5 tests) 645ms
+     ✓ un seul appel à /api/portal/generate dans tout le code client  621ms
+ ✓ src/integration/copilot-financial-authz-v15.test.ts (6 tests) 6886ms
+ ✓ src/integration/pwa-fenetre-et-photos.test.ts (13 tests) 2018ms
+ ✓ src/lib/license/__tests__/license-keygen-e2e.test.ts (11 tests) 3318ms
+ ✓ src/integration/reglages-enfin-lus.test.ts (8 tests) 5860ms
+ ✓ src/integration/rbac-enforcement-e2e.test.ts (5 tests) 4197ms
+     ✓ users POST → succès + persistance  495ms
+ ✓ src/lib/__tests__/record-mac-admin-routes.test.ts (7 tests) 2025ms
+ ✓ src/integration/copilot-conversation.test.ts (9 tests) 4179ms
+ ✓ src/app/api/sync/__tests__/mechanic-assignment.test.ts (14 tests) 806ms
+stdout | src/integration/portal-rbac-p3.test.ts > GF31-AUD-060 — l’inscription ne révèle plus l’existence d’un compte > deux inscriptions sur la même adresse rendent la MÊME réponse
+[portal/register] tentative sur une adresse déjà inscrite { garageId: 'cmvjyzk0p0000108faemiyie4' }
+
+ ✓ src/integration/copilot-cout-achat.test.ts (5 tests) 4234ms
+stdout | src/integration/portal-rbac-p3.test.ts > GF31-AUD-060 — l’inscription ne révèle plus l’existence d’un compte > aucun second compte n’est créé, et le titulaire légitime est prévenu
+[portal/register] tentative sur une adresse déjà inscrite { garageId: 'cmvjyzk0p0000108faemiyie4' }
+
+stderr | src/app/api/sync/__tests__/portal-account-publication.test.ts > l’identité vient de la licence > une licence refusée n’écrit rien
+[sync/portal-account] refus auth { code: 'LICENSE_REVOKED' }
+
+stdout | src/integration/portal-rbac-p3.test.ts > GF31-AUD-060 — l’inscription ne révèle plus l’existence d’un compte > le mot de passe existant n’est jamais réécrit par une seconde tentative
+[portal/register] tentative sur une adresse déjà inscrite { garageId: 'cmvjyzk0p0000108faemiyie4' }
+
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > l’identité vient de la licence > le garage du compte créé est celui de la LICENCE
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > l’identité vient de la licence > la fiche client n’est pas publiée : aucun lien pendant
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+ ✓ src/integration/portal-rbac-p3.test.ts (15 tests) 4325ms
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > une adresse déjà prise n’est pas volée > la même adresse dans un AUTRE garage ne gêne pas
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > republier mène au même état, pas à un doublon > deux publications successives ne créent qu’un compte
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > republier mène au même état, pas à un doublon > deux publications successives ne créent qu’un compte
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > republier mène au même état, pas à un doublon > le verrouillage par échecs de connexion est levé à la republication
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > republier mène au même état, pas à un doublon > le verrouillage par échecs de connexion est levé à la republication
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+ ✓ src/lib/recherche/__tests__/normalisation.test.ts (11 tests) 552ms
+     ✓ plus aucun code ne lit ni n’écrit la clé `gf_clients`  527ms
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > couper les sessions en ligne > `revoquerAppareils` révoque les appareils encore actifs
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > couper les sessions en ligne > `revoquerAppareils` révoque les appareils encore actifs
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+ ✓ src/integration/document-integrity-v15.test.ts (3 tests) 2958ms
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > couper les sessions en ligne > sans le drapeau, les sessions restent ouvertes
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+stdout | src/app/api/sync/__tests__/portal-account-publication.test.ts > couper les sessions en ligne > sans le drapeau, les sessions restent ouvertes
+[sync/portal-account] accès publié { garage: 'cmvjyzkp', compte: 'compte-p' }
+
+ ✓ src/app/api/sync/__tests__/portal-account-publication.test.ts (9 tests) 1414ms
+ ✓ src/lib/__tests__/pwa-trois-publics.test.ts (12 tests) 524ms
+     ✓ si des raccourcis reviennent, leur destination doit être LUE quelque part  496ms
+ ✓ src/lib/__tests__/signature-release-coherence.test.ts (9 tests) 2326ms
+     ✓ `--help` explique l’usage et sort proprement  460ms
+     ✓ REFUSE une version qui diverge de package.json  329ms
+stderr | src/lib/backup/__tests__/restore-roundtrip.test.ts > Sauvegarde → restauration réelle > détecte une sauvegarde altérée (intégrité)
+[backup] verify failed: {
+  name: 'Error',
+  message: 'Unsupported state or unable to authenticate data',
+  stack: 'Error: Unsupported state or unable to authenticate data\n' +
+    '    at Decipheriv.final (node:internal/crypto/cipher:184:29)\n' +
+    '    at decrypt (C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/lib/backup/crypto.ts:55:82)\n' +
+    '    at decryptEnvelope (C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/lib/backup/service.ts:46:10)\n' +
+    '    at verifyBackup (C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/lib/backup/service.ts:118:23)\n' +
+    '    at C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/lib/backup/__tests__/restore-roundtrip.test.ts:135:15\n' +
+    '    at async file:///C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20'
+}
+
+stderr | src/lib/backup/__tests__/restore-roundtrip.test.ts > Sauvegarde → restauration réelle > détecte une sauvegarde altérée (intégrité)
+[backup] restore decrypt failed: {
+  name: 'Error',
+  message: 'Unsupported state or unable to authenticate data',
+  stack: 'Error: Unsupported state or unable to authenticate data\n' +
+    '    at Decipheriv.final (node:internal/crypto/cipher:184:29)\n' +
+    '    at decrypt (C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/lib/backup/crypto.ts:55:82)\n' +
+    '    at decryptEnvelope (C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/lib/backup/service.ts:46:10)\n' +
+    '    at restoreBackup (C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/lib/backup/service.ts:148:23)\n' +
+    '    at C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/lib/backup/__tests__/restore-roundtrip.test.ts:137:17\n' +
+    '    at async file:///C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20'
+}
+
+ ✓ src/lib/backup/__tests__/restore-roundtrip.test.ts (6 tests) 866ms
+ ✓ src/integration/status-mass-assignment-v15.test.ts (3 tests) 2719ms
+ ✓ src/integration/planning-journee-complete.test.ts (5 tests) 3010ms
+ ✓ src/lib/__tests__/composants-atteignables.test.ts (12 tests) 639ms
+     ✓ `RepairTypePart` n’est plus AFFICHÉ, faute de quoi que ce soit qui l’écrive  426ms
+ ✓ src/integration/publication-mise-a-jour.test.ts (11 tests) 2588ms
+ ✓ src/lib/license/__tests__/hwid-v1.test.ts (7 tests) 3744ms
+     ✓ Python produit exactement les mêmes HWID que Node/attendu  3724ms
+ ✓ src/lib/mechanics/__tests__/avatar-contrat-affichage.test.ts (7 tests) 537ms
+     ✓ plus aucun `photoUrl` orphelin dans le code  490ms
+ ✓ src/__tests__/docs-consistency-ignored-residue.test.ts (5 tests) 2525ms
+     ✓ un worktree oublié sous .claude/ ne compte plus comme seconde source canonique  619ms
+     ✓ mais un VRAI doublon, lui, est toujours refusé  597ms
+     ✓ un doublon tout juste écrit, pas encore `git add`, est vu lui aussi  696ms
+ ✓ src/integration/part-deletion-history.test.ts (3 tests) 2934ms
+ ✓ src/__tests__/docs-consistency-guard.test.ts (9 tests) 2449ms
+     ✓ compte de tests courant contradictoire → FAIL  338ms
+     ✓ compte ancien dans un doc HISTORIQUE ou JOURNAL → PAS de flag  494ms
+ ✓ src/integration/fec-injection-v15.test.ts (3 tests) 2390ms
+ ✓ src/lib/__tests__/stock-double-deduction.int.test.ts (6 tests) 1375ms
+     ✓ DIX validations concurrentes de la même facture ne débitent qu’une unité  485ms
+ ✓ src/integration/quotes-generate.test.ts (7 tests) 5632ms
+ ✓ src/lib/__tests__/depouillement-commentaires.test.ts (5 tests) 685ms
+     ✓ les blocs ne sont jamais retirés avant les lignes de commentaire  647ms
+ ✓ src/test-utils/__tests__/prepare-test-db.test.ts (4 tests) 368ms
+ ✓ src/integration/mechanic-avatar-sync.test.ts (11 tests) 1041ms
+ ✓ src/integration/finance-margin.test.ts (1 test) 4054ms
+ ✓ src/integration/pulse-boucle-de-synchronisation.test.ts (6 tests) 2816ms
+stderr | src/integration/portal-account-takeover-v15.test.ts > Portail — anti-prise de contrôle de compte (V15 P1) > l'inscription avec l'email d'un client existant NE lie PAS le compte au Client
+[portal/register] lien de vérification non envoyé {
+  garageId: 'cmvjyzo1u000011kynnr19b6c',
+  reason: 'SMTP_NOT_CONFIGURED'
+}
+
+ ✓ src/integration/portal-account-takeover-v15.test.ts (2 tests) 1258ms
+ ✓ src/lib/portal/__tests__/garage-slug.test.ts (22 tests) 287ms
+ ✓ src/app/api/mechanic-licenses/__tests__/register-adopt-route.test.ts (9 tests) 735ms
+ ✓ src/integration/tenant-idor-patch.test.ts (4 tests) 1615ms
+ ✓ src/integration/supplier-linkage.test.ts (6 tests) 1360ms
+ ✓ src/integration/reglages-appliques.test.ts (5 tests) 2708ms
+ ✓ src/lib/__tests__/issuer-fixture-roundtrip.test.ts (5 tests) 1463ms
+   ✓ the actual Python keygen signs a transient fixture accepted by the actual Node verifiers  1369ms
+stderr | src/app/api/sync/__tests__/appointments-sync.test.ts > la lecture est bornée au garage de la licence > une licence refusée ne lit rien
+[sync/appointments] refus auth { code: 'LICENSE_REVOKED' }
+
+stdout | src/app/api/sync/__tests__/appointments-sync.test.ts > la machine à états décide, pas le poste > confirmer une demande en attente aboutit
+[sync/appointments] décision appliquée { garage: 'cmvjyzow', action: 'confirm' }
+
+ ✓ src/app/api/portal/auth/__tests__/register-verification-email.test.ts (5 tests) 1332ms
+ ✓ src/app/api/parts/__tests__/parts-pagination.test.ts (4 tests) 1188ms
+ ✓ src/lib/__tests__/electron-integrity.test.ts (17 tests) 677ms
+stderr | src/app/api/sync/__tests__/tickets-sync.test.ts > la lecture est bornée au garage, et ne fait sortir aucun secret > une licence refusée ne lit rien
+[sync/tickets] refus auth { code: 'LICENSE_REVOKED' }
+
+ ✓ src/app/api/sync/__tests__/appointments-sync.test.ts (6 tests) 1449ms
+ ✓ src/integration/catalog.test.ts (9 tests) 1803ms
+stdout | src/app/api/sync/__tests__/tickets-sync.test.ts > répondre passe par la machine à états > une réponse est enregistrée et fait avancer la conversation
+[sync/tickets] réponse du garage appliquée { garage: 'cmvjyzot' }
+
+ ✓ src/lib/sync/__tests__/cloud-response-contract.test.ts (14 tests) 833ms
+stderr | src/integration/copilot-ecusson-verifie.test.ts > l’écusson disparaît quand il n’y a aucune donnée à ancrer > une panne de lecture n’est pas une réponse vérifiée
+[copilot] resolver failed { resolver: 'revenue_today' }
+
+ ✓ src/app/api/sync/__tests__/tickets-sync.test.ts (9 tests) 2291ms
+ ✓ src/integration/copilot-ecusson-verifie.test.ts (9 tests) 1058ms
+ ✓ src/lib/__tests__/routes-exports-autorises.test.ts (3 tests) 187ms
+ ✓ src/app/api/sync/__tests__/portal-snapshot.test.ts (9 tests) 554ms
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > la première remontée pousse, la seconde passe en LECTURE SEULE
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'poussee',
+  pushed: 1,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+ ✓ src/integration/portail-instantane-borne.test.ts (5 tests) 2576ms
+     ✓ une photo de mécanicien LOURDE n’envoie plus un instantané refusable  428ms
+     ✓ vingt-quatre photos moyennes tiennent encore dans le plafond  1224ms
+     ✓ des photos LÉGÈRES passent toutes — la borne ne bride pas le cas normal  343ms
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > la première remontée pousse, la seconde passe en LECTURE SEULE
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+ ✓ src/lib/__tests__/tenant-isolation.test.ts (7 tests) 942ms
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > une MODIFICATION locale fait repartir une vraie poussée
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'poussee',
+  pushed: 1,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > une MODIFICATION locale fait repartir une vraie poussée
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+ ✓ src/integration/ocr.test.ts (7 tests) 1182ms
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > une MODIFICATION locale fait repartir une vraie poussée
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'poussee',
+  pushed: 1,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > une intervention AJOUTÉE fait repartir une vraie poussée
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'poussee',
+  pushed: 1,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+ ✓ src/lib/__tests__/electron-secret.test.ts (9 tests) 143ms
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > une intervention AJOUTÉE fait repartir une vraie poussée
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'poussee',
+  pushed: 2,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > une suppression en attente interdit la lecture seule
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'poussee',
+  pushed: 1,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > une suppression en attente interdit la lecture seule
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > une suppression en attente interdit la lecture seule
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'poussee',
+  pushed: 1,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > la voie de retour continue d’être demandée en lecture seule
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'poussee',
+  pushed: 1,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+ ✓ src/lib/backup/__tests__/crypto.test.ts (10 tests) 736ms
+stdout | src/lib/sync/__tests__/passe-lecture-seule.test.ts > une fenêtre inchangée n’est pas republiée > la voie de retour continue d’être demandée en lecture seule
+[sync/jobs:push] confirmée {
+  garage: 'cmvjyzq7…',
+  mode: 'lecture-seule',
+  pushed: 0,
+  applied: 0,
+  deleted: 0,
+  executionKept: 0,
+  appliedBack: 0,
+  resteAPuiser: false
+}
+
+ ✓ src/lib/sync/__tests__/passe-lecture-seule.test.ts (5 tests) 1014ms
+ ✓ src/lib/__tests__/verify-rotation.test.ts (8 tests) 632ms
+ ✓ src/lib/__tests__/contrats-parametres-api.test.ts (4 tests) 569ms
+     ✓ aucun appel client n’envoie un paramètre que sa route ignore  552ms
+ ✓ src/lib/__tests__/smtp-cipher-key-electron.test.ts (8 tests) 139ms
+ ✓ src/lib/license/__tests__/keygen-api-contract.test.ts (16 tests) 66ms
+ ✓ src/app/api/sync/__tests__/mechanic-status.test.ts (7 tests) 429ms
+ ✓ src/integration/portal-token-isolation.test.ts (5 tests) 771ms
+stderr | src/integration/licence-admin-durcissement.test.ts > revoke-by-key : retiré, aucun état DB ne peut changer > refuse toute transition depuis active, même avec clé partagée
+[admin-security] endpoint retiré {
+  requestId: '6ebe1f48-bf06-484d-92b0-1d67f4f07394',
+  ip: 'unverified',
+  userAgent: '',
+  actor: 'unauthenticated',
+  timestamp: '2026-10-22T20:04:55.019Z',
+  action: 'revoke-by-key.denied',
+  outcome: 'disabled'
+}
+
+stderr | src/integration/licence-admin-durcissement.test.ts > revoke-by-key : retiré, aucun état DB ne peut changer > refuse toute transition depuis active, même avec clé partagée
+[admin-security] endpoint retiré {
+  requestId: '69fa0da8-c2c1-443c-99c8-976b86187ef3',
+  ip: 'unverified',
+  userAgent: '',
+  actor: 'unauthenticated',
+  timestamp: '2026-10-22T20:04:55.047Z',
+  action: 'revoke-by-key.denied',
+  outcome: 'disabled'
+}
+
+stderr | src/integration/licence-admin-durcissement.test.ts > revoke-by-key : retiré, aucun état DB ne peut changer > refuse toute transition depuis active, même avec clé partagée
+[admin-security] endpoint retiré {
+  requestId: '7d5e1a8f-09a3-4db6-a797-45e9d90bb13c',
+  ip: 'unverified',
+  userAgent: '',
+  actor: 'unauthenticated',
+  timestamp: '2026-10-22T20:04:55.059Z',
+  action: 'revoke-by-key.denied',
+  outcome: 'disabled'
+}
+
+stderr | src/integration/licence-admin-durcissement.test.ts > revoke-by-key : retiré, aucun état DB ne peut changer > refuse toute transition depuis revoked, même avec clé partagée
+[admin-security] endpoint retiré {
+  requestId: 'c2603d1e-fee2-4f08-8b14-bd2f2bd170cf',
+  ip: 'unverified',
+  userAgent: '',
+  actor: 'unauthenticated',
+  timestamp: '2026-10-22T20:04:55.094Z',
+  action: 'revoke-by-key.denied',
+  outcome: 'disabled'
+}
+
+stderr | src/integration/licence-admin-durcissement.test.ts > revoke-by-key : retiré, aucun état DB ne peut changer > refuse toute transition depuis revoked, même avec clé partagée
+[admin-security] endpoint retiré {
+  requestId: '6f80fceb-48c0-451d-999a-970856e5638d',
+  ip: 'unverified',
+  userAgent: '',
+  actor: 'unauthenticated',
+  timestamp: '2026-10-22T20:04:55.105Z',
+  action: 'revoke-by-key.denied',
+  outcome: 'disabled'
+}
+
+stderr | src/integration/licence-admin-durcissement.test.ts > revoke-by-key : retiré, aucun état DB ne peut changer > refuse toute transition depuis revoked, même avec clé partagée
+[admin-security] endpoint retiré {
+  requestId: '38030dcc-88ba-4fc1-9b8e-27a73e48cf2b',
+  ip: 'unverified',
+  userAgent: '',
+  actor: 'unauthenticated',
+  timestamp: '2026-10-22T20:04:55.119Z',
+  action: 'revoke-by-key.denied',
+  outcome: 'disabled'
+}
+
+stderr | src/integration/licence-admin-durcissement.test.ts > revoke-by-key : retiré, aucun état DB ne peut changer > refuse toute transition depuis suspended, même avec clé partagée
+[admin-security] endpoint retiré {
+  requestId: 'bddef281-0f98-4596-92aa-22d5068553a8',
+  ip: 'unverified',
+  userAgent: '',
+  actor: 'unauthenticated',
+  timestamp: '2026-10-22T20:04:55.140Z',
+  action: 'revoke-by-key.denied',
+  outcome: 'disabled'
+}
+
+stderr | src/integration/licence-admin-durcissement.test.ts > revoke-by-key : retiré, aucun état DB ne peut changer > refuse toute transition depuis suspended, même avec clé partagée
+[admin-security] endpoint retiré {
+  requestId: '758b652d-8c46-4c3a-9173-076caaee775e',
+  ip: 'unverified',
+  userAgent: '',
+  actor: 'unauthenticated',
+  timestamp: '2026-10-22T20:04:55.150Z',
+  action: 'revoke-by-key.denied',
+  outcome: 'disabled'
+}
+
+stderr | src/integration/licence-admin-durcissement.test.ts > revoke-by-key : retiré, aucun état DB ne peut changer > refuse toute transition depuis suspended, même avec clé partagée
+[admin-security] endpoint retiré {
+  requestId: 'd545325c-b913-4de0-98c3-7e24cd8a36c5',
+  ip: 'unverified',
+  userAgent: '',
+  actor: 'unauthenticated',
+  timestamp: '2026-10-22T20:04:55.159Z',
+  action: 'revoke-by-key.denied',
+  outcome: 'disabled'
+}
+
+ ✓ src/integration/licence-admin-durcissement.test.ts (3 tests) 539ms
+ ✓ src/lib/__tests__/packaging-sans-sauvegarde.test.ts (5 tests) 353ms
+     ✓ aucune sauvegarde ne traîne dans les autres arbres du dépôt  322ms
+ ✓ src/app/api/plate-ocr/__tests__/plate-ocr-route.test.ts (12 tests) 536ms
+ ✓ src/__tests__/integrity-io-retry.test.ts (9 tests) 740ms
+ ✓ src/lib/__tests__/gcm-tag-length.test.ts (54 tests) 152ms
+ ✓ src/lib/stock/__tests__/invoice-stock-entrelacement.test.ts (3 tests) 122ms
+ ✓ src/lib/copilot/__tests__/planning-execution.test.ts (44 tests) 322ms
+ ✓ src/integration/dashboard.test.ts (3 tests) 979ms
+ ✓ src/lib/__tests__/pre-migration-backup.test.ts (6 tests) 180ms
+ ✓ src/lib/copilot/__tests__/semantic.test.ts (40 tests) 342ms
+ ✓ src/lib/__tests__/poste-windows.test.ts (28 tests) 62ms
+ ✓ src/app/api/mechanic-licenses/__tests__/token-route.test.ts (4 tests) 377ms
+ ✓ src/lib/__tests__/incident-safety.test.ts (23 tests) 174ms
+ ✓ src/lib/__tests__/boucle-mecanicien-robustesse.test.ts (7 tests) 210ms
+ ✓ src/lib/__tests__/photo-store-traversal.test.ts (20 tests) 177ms
+ ✓ src/lib/__tests__/restore-script.test.ts (10 tests) 212ms
+ ✓ src/integration/copilot.test.ts (7 tests) 1310ms
+ ✓ src/__tests__/release-gate-idempotent.test.ts (6 tests) 101ms
+ ✓ src/lib/__tests__/ui-lossless-compaction.test.ts (2 tests) 499ms
+     ✓ retains all fourteen languages for every UI entry and merged translation  484ms
+ ✓ src/lib/sync/__tests__/garage-claim-isolation.test.ts (9 tests) 80ms
+stderr | src/lib/__tests__/env.test.ts > env — validation & fail-fast > assertEnv NE lève PAS en développement (avertit seulement)
+[env] Configuration incomplète (dev) : DATABASE_URL (absente ou vide), NEXTAUTH_SECRET (absente, trop courte ou générique)
+
+ ✓ src/lib/__tests__/env.test.ts (24 tests) 56ms
+ ✓ src/lib/portal/__tests__/portal-line-contract.test.ts (12 tests) 292ms
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > identifiants absents → null (sans toucher la BD)
+AUTH {
+  rid: '61b3e654',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 1
+}
+AUTH {
+  rid: '61b3e654',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'missing_fields',
+  ms: 5
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > identifiants absents → null (sans toucher la BD)
+AUTH {
+  rid: '321ffceb',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '321ffceb',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'missing_fields',
+  ms: 1
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur inexistant → null
+AUTH {
+  rid: '8d7a449f',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '8d7a449f',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '8d7a449f',
+  step: 'AUTH_STEP_4_DATABASE_STARTED',
+  result: 'ok',
+  ms: 1
+}
+
+ ✓ src/lib/einvoicing/__tests__/submit-replay.test.ts (12 tests) 161ms
+ ✓ src/lib/copilot-llm/__tests__/provider.test.ts (15 tests) 181ms
+ ✓ src/lib/__tests__/license-activate.test.ts (25 tests) 150ms
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/appointments : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '1c9ac348-6b57-4273-a2dd-055317c58b5a'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/appointments : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '05cfefc5-1a24-439b-8178-679984b660e2'
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur inexistant → null
+AUTH {
+  rid: '8d7a449f',
+  step: 'AUTH_STEP_5_USER_LOOKUP_COMPLETED',
+  result: 'user_not_found',
+  ms: 92
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/appointments : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/appointments] refus auth { code: 'LICENSE_INVALID' }
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > mauvais mot de passe → null
+AUTH {
+  rid: '94f1676a',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '94f1676a',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'ok',
+  ms: 2
+}
+AUTH {
+  rid: '94f1676a',
+  step: 'AUTH_STEP_4_DATABASE_STARTED',
+  result: 'ok',
+  ms: 3
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/appointments : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/appointments] refus auth { code: 'LICENSE_TAMPERED' }
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > mauvais mot de passe → null
+AUTH {
+  rid: '94f1676a',
+  step: 'AUTH_STEP_5_USER_LOOKUP_COMPLETED',
+  result: 'user_found',
+  ms: 6
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > mauvais mot de passe → null
+AUTH {
+  rid: '94f1676a',
+  step: 'AUTH_STEP_6_PASSWORD_CHECK_COMPLETED',
+  result: 'invalid_password',
+  ms: 9
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur sans garage rattaché → null (garde défensive, pas de crash)
+AUTH {
+  rid: '10fc7b91',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '10fc7b91',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'ok',
+  ms: 1
+}
+AUTH {
+  rid: '10fc7b91',
+  step: 'AUTH_STEP_4_DATABASE_STARTED',
+  result: 'ok',
+  ms: 1
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur sans garage rattaché → null (garde défensive, pas de crash)
+AUTH {
+  rid: '10fc7b91',
+  step: 'AUTH_STEP_5_USER_LOOKUP_COMPLETED',
+  result: 'user_found',
+  ms: 2
+}
+
+stderr | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur sans garage rattaché → null (garde défensive, pas de crash)
+[auth] utilisateur sans garage rattaché pendant authorize
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > utilisateur sans garage rattaché → null (garde défensive, pas de crash)
+AUTH {
+  rid: '10fc7b91',
+  step: 'AUTH_STEP_6_PASSWORD_CHECK_COMPLETED',
+  result: 'ok',
+  ms: 5
+}
+AUTH {
+  rid: '10fc7b91',
+  step: 'AUTH_STEP_7_GARAGE_CHECK_COMPLETED',
+  result: 'no_garage',
+  ms: 6,
+  userId: 'u1'
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > erreur BD (indisponibilité) → RELEVÉE, non masquée en identifiants invalides
+AUTH {
+  rid: '7c282b3b',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '7c282b3b',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'ok',
+  ms: 1
+}
+AUTH {
+  rid: '7c282b3b',
+  step: 'AUTH_STEP_4_DATABASE_STARTED',
+  result: 'ok',
+  ms: 1
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/einvoicing : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '31629132-bacc-49fb-bafd-8c4e02c28de6'
+}
+
+stderr | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > erreur BD (indisponibilité) → RELEVÉE, non masquée en identifiants invalides
+[auth] échec accès base pendant authorize {
+  name: 'Error',
+  message: 'ECONNREFUSED',
+  stack: 'Error: ECONNREFUSED\n' +
+    '    at C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/src/lib/__tests__/auth-authorize.test.ts:72:34\n' +
+    '    at file:///C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n' +
+    '    at file:///C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n' +
+    '    at file:///C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n' +
+    '    at new Promise (<anonymous>)\n' +
+    '    at runWithCancel (file:///C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n' +
+    '    at file:///C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n' +
+    '    at new Promise (<anonymous>)\n' +
+    '    at runWithTimeout (file:///C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n' +
+    '    at file:///C:/Users/<user>/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/einvoicing : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: 'e2f35852-7708-44ee-916b-89f41e9f8035'
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — chemins d'échec (jamais de 500, jamais de session indue) > erreur BD (indisponibilité) → RELEVÉE, non masquée en identifiants invalides
+AUTH {
+  rid: '7c282b3b',
+  step: 'AUTH_STEP_5_USER_LOOKUP_COMPLETED',
+  result: 'db_error',
+  ms: 4,
+  error: 'Error'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/einvoicing : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/einvoicing] refus auth { code: 'LICENSE_INVALID' }
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — succès > identifiants valides → objet utilisateur (id, role, garage*), email en minuscules
+AUTH {
+  rid: '9f01d0a6',
+  step: 'AUTH_STEP_1_AUTHORIZE_ENTERED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '9f01d0a6',
+  step: 'AUTH_STEP_2_INPUT_VALIDATED',
+  result: 'ok',
+  ms: 0
+}
+AUTH {
+  rid: '9f01d0a6',
+  step: 'AUTH_STEP_4_DATABASE_STARTED',
+  result: 'ok',
+  ms: 0
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — succès > identifiants valides → objet utilisateur (id, role, garage*), email en minuscules
+AUTH {
+  rid: '9f01d0a6',
+  step: 'AUTH_STEP_5_USER_LOOKUP_COMPLETED',
+  result: 'user_found',
+  ms: 1
+}
+
+stdout | src/lib/__tests__/auth-authorize.test.ts > authorize() — succès > identifiants valides → objet utilisateur (id, role, garage*), email en minuscules
+AUTH {
+  rid: '9f01d0a6',
+  step: 'AUTH_STEP_6_PASSWORD_CHECK_COMPLETED',
+  result: 'ok',
+  ms: 5
+}
+AUTH {
+  rid: '9f01d0a6',
+  step: 'AUTH_STEP_7_GARAGE_CHECK_COMPLETED',
+  result: 'ok',
+  ms: 6
+}
+AUTH {
+  rid: '9f01d0a6',
+  step: 'AUTH_STEP_9_AUTH_RESULT_CREATED',
+  result: 'ok',
+  ms: 6
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/einvoicing : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/einvoicing] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/invoice : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '7e82db46-7d6d-4e9b-9c30-fc882c73e247'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/invoice : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '4b9305cf-7c06-4591-a65d-69ea7227aa40'
+}
+
+ ✓ src/lib/__tests__/auth-authorize.test.ts (6 tests) 176ms
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/invoice : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/invoice] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/invoice : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/invoice] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobPhoto : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '548a5754-fc7a-438c-8a3d-13d5efc66991'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobPhoto : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '7b67687b-731a-486d-b051-15fa962979a4'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobPhoto : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/job-photo] refus auth { code: 'LICENSE_INVALID', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobPhoto : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/job-photo] refus auth { code: 'LICENSE_TAMPERED', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobs : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '200cdf4e-ad5f-49f1-8288-7905652395c6'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobs : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '9fa8b4db-96ef-4336-9649-e175f0151040'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobs : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/jobs] refus auth { code: 'LICENSE_INVALID', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/jobs : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/jobs] refus auth { code: 'LICENSE_TAMPERED', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAssignment : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '130234d4-8977-43b5-8fb9-53478bed3180'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAssignment : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '7ee3f57c-a2f8-4a95-88de-9348f09b29ed'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAssignment : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/mechanic] refus auth { code: 'LICENSE_INVALID', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAssignment : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/mechanic] refus auth { code: 'LICENSE_TAMPERED', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAvatar : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'd9a1ffcb-328f-4cd0-85cb-99d5b7184c05'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAvatar : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '7945b837-3ebf-43fd-b1ec-0bf93359d730'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAvatar : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/mechanic-avatar] refus auth { code: 'LICENSE_INVALID', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicAvatar : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/mechanic-avatar] refus auth { code: 'LICENSE_TAMPERED', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicStatus : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '896470ae-5b4a-4a1d-922f-ffe30728e97e'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicStatus : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: 'a5069651-42f7-4e68-8de7-50ecabaf5657'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicStatus : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/mechanic-status] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/mechanicStatus : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/mechanic-status] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portalAccount : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '30a57824-ec16-437f-805b-675918c8230f'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portalAccount : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '6ba29388-dd01-4370-9418-3ee2fcdc1537'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portalAccount : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/portal-account] refus auth { code: 'LICENSE_INVALID' }
+
+ ✓ src/lib/sync/__tests__/clock-and-truncation.test.ts (14 tests) 37ms
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portalAccount : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/portal-account] refus auth { code: 'LICENSE_TAMPERED' }
+
+ ✓ src/lib/__tests__/sqlite-tx-queue.test.ts (4 tests) 81ms
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portal : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '0c61adfd-09a9-41f5-96af-a49a09ef998b'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portal : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '98fd0425-4213-4dd0-8070-f0c5b3df0c52'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portal : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/portal] refus auth { code: 'LICENSE_INVALID', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/portal : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/portal] refus auth { code: 'LICENSE_TAMPERED', garage: 'syntheti…' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quoteReturn : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'e19acbed-47ab-4cb2-8515-ba6042b84d31'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quoteReturn : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '8c662e24-13d7-4a32-96a4-15c9bde0b292'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quoteReturn : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/quote-return] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quoteReturn : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/quote-return] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quote : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '7427383c-435d-4d5a-a518-2e8fb36abf73'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quote : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '8bf750cc-f5ad-43fa-9106-3e096ad6a96f'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quote : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/quote] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/quote : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/quote] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/tickets : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '711db721-2b1d-437d-b3e0-b9f63734641a'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/tickets : contrat de frontière réelle > exception pendant auth → HTTP/code infra exact
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '2c0e86d8-e2a5-4dd6-a500-ecfb5a006023'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/tickets : contrat de frontière réelle > signature invalide → 403 LICENSE_INVALID
+[sync/tickets] refus auth { code: 'LICENSE_INVALID' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > /api/sync/tickets : contrat de frontière réelle > MAC altéré → 403 LICENSE_TAMPERED
+[sync/tickets] refus auth { code: 'LICENSE_TAMPERED' }
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > tickets : panne DB après auth → DB_UNAVAILABLE aussi
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '8f52d184-58d8-408f-81a2-064068d40052'
+}
+
+ ✓ src/lib/license/__tests__/license-crosslang-format.test.ts (11 tests) 90ms
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > appointments : panne DB après auth → DB_UNAVAILABLE aussi
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'f45f3bd3-e19d-4828-8b55-c457c7c11863'
+}
+
+stderr | src/lib/__tests__/incident-sync-contracts.test.ts > quote-return : panne DB après auth → DB_UNAVAILABLE aussi
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'f0d74576-b6f4-4c72-8c69-0260dab307e2'
+}
+
+ ✓ src/lib/__tests__/incident-sync-contracts.test.ts (68 tests) 277ms
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > token NextAuth invalide (getToken lève) → traité comme non connecté, pas de 500
+[middleware] getToken a échoué
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > absence de NEXTAUTH_SECRET → getToken lève → fail-closed vers /login, pas de 500
+[middleware] getToken a échoué
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > absence de NEXTAUTH_SECRET → vérification gf_session échoue (getAuthSecret lève) → /license
+[middleware] échec vérification gf_session INATTENDU
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > charge utile gf_session sans typ/lid → rejetée → /license
+[middleware] gf_session rejeté (charge utile invalide)
+
+ ✓ src/__tests__/middleware.test.ts (47 tests) 162ms
+ ✓ src/lib/copilot/__tests__/conversation.test.ts (27 tests) 110ms
+ ✓ src/app/api/keygen/__tests__/admin-scope.test.ts (18 tests) 110ms
+ ✓ src/lib/copilot-llm/__tests__/planning-provider.test.ts (6 tests) 135ms
+ ✓ src/lib/__tests__/taux-horaire-main-doeuvre.test.ts (18 tests) 47ms
+ ✓ src/lib/__tests__/vercel-crons.test.ts (8 tests) 31ms
+ ✓ src/lib/__tests__/ui-navigation-et-demarrage.test.ts (15 tests) 70ms
+ ✓ src/lib/einvoicing/__tests__/submit-chain.test.ts (17 tests) 108ms
+ ✓ src/lib/security/__tests__/bounded-json-response.test.ts (14 tests) 116ms
+ ✓ src/lib/einvoicing/__tests__/catalog-provenance.test.ts (12 tests) 117ms
+ ✓ src/__tests__/artifact-fuses-gate.test.ts (7 tests) 41ms
+ ✓ src/lib/sync/__tests__/mechanic-response-confirmation.test.ts (3 tests) 109ms
+ ✓ src/lib/sync/__tests__/redirect-security.test.ts (1 test) 106ms
+(node:18872) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/lib/copilot/__tests__/phase3-security.test.ts (18 tests) 160ms
+ ✓ src/lib/__tests__/devices-overview.test.ts (11 tests) 106ms
+ ✓ src/lib/__tests__/money-schema-migration.test.ts (6 tests) 89ms
+ ✓ src/lib/__tests__/hors-ligne-honnete.test.ts (11 tests) 75ms
+ ✓ src/lib/__tests__/synchronisation-asymetrie.test.ts (11 tests) 24ms
+ ✓ src/lib/catalog/__tests__/catalog.test.ts (28 tests) 97ms
+stderr | src/app/api/mechanics/__tests__/create-route.test.ts > POST /api/mechanics > erreur base de données → 500 (message générique, aucun détail technique)
+[mechanics] création impossible (code P1001)
+
+ ✓ src/lib/__tests__/security-rate-limit.test.ts (18 tests) 77ms
+ ✓ src/lib/__tests__/update-verify.test.ts (28 tests) 68ms
+ ✓ src/app/api/mechanics/__tests__/create-route.test.ts (13 tests) 71ms
+ ✓ src/__tests__/baseline-canonical-guard.test.ts (6 tests) 84ms
+ ✓ src/lib/einvoicing/__tests__/generic-pa-adapter.test.ts (36 tests) 73ms
+ ✓ src/lib/__tests__/portal-access-reachable.test.ts (104 tests) 139ms
+ ✓ src/lib/pdf/__tests__/pdf-print-quality.test.ts (19 tests) 84ms
+ ✓ src/lib/__tests__/temps-reel-garde-fous.test.ts (9 tests) 27ms
+ ✓ src/lib/einvoicing/__tests__/formats.test.ts (29 tests) 62ms
+ ✓ src/app/api/suppliers/__tests__/transition-guards.test.ts (9 tests) 73ms
+ ✓ src/app/api/__tests__/document-immutability.test.ts (6 tests) 53ms
+ ✓ src/lib/__tests__/mechanic-photo.test.ts (9 tests) 88ms
+ ✓ src/lib/__tests__/stock-parts.test.ts (12 tests) 72ms
+ ✓ src/lib/planning/__tests__/mechanic-window.test.ts (31 tests) 89ms
+ ✓ src/app/api/admin/__tests__/diagnostics-route.test.ts (16 tests) 114ms
+ ✓ src/lib/__tests__/authz-full-matrix.test.ts (139 tests) 63ms
+ ✓ src/app/api/mechanic/__tests__/timer-pause-resume.test.ts (8 tests) 65ms
+ ✓ src/lib/portal/__tests__/totp-crypto.test.ts (13 tests) 43ms
+ ✓ src/lib/einvoicing/__tests__/webhook-route.test.ts (11 tests) 70ms
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > activation Electron=1 : DB down → aucune session ni appareil
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '7e83c022-df87-48d6-83e3-5a0b440573ea'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > activation Electron=0 : DB down → aucune session ni appareil
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'b1d4bfa9-7d12-47fc-8f79-1fa537fa0015'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > activation Electron=1 : erreur appareil → aucune session
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '2cc82fb2-4df5-4b96-ab93-5ec6f54a20b6'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > activation Electron=0 : erreur appareil → aucune session
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'ac6fd464-2d17-4172-9da1-e9f37f3ca8f5'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > clé mécanicien Electron=1 : DB down ≠ clé non attribuée
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '715638c8-3b24-4a32-bfdb-d9662c3b2951'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > clé mécanicien Electron=0 : DB down ≠ clé non attribuée
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '562e0492-d205-4f84-8c30-c063f1f81b44'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > secret absent/faible → SERVER_MISCONFIGURED avant toute écriture
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '96ab7fcc-a7cb-44f1-9985-5979b89a0300'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > secret absent/faible → SERVER_MISCONFIGURED avant toute écriture
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '40d46559-8eaa-4fcb-b289-f847349acca3'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > MAC invalide → LICENSE_TAMPERED, jamais LICENSE_INVALID
+[license/activate] DB integrity check FAILED { cause: 'mac-invalide' }
+
+ ✓ src/lib/stock/__tests__/search.test.ts (15 tests) 57ms
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > check/deactivate DB down → 503 sur Electron aussi
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'c0b530e6-3ba4-4c06-ac45-afcc33e79d71'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > check/deactivate DB down → 503 sur Electron aussi
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'a013ba72-5750-475f-8c0a-e515fac2c1b5'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > status/devices : secret absent distinct d’un JWT invalide
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '77b02a45-9f8d-4579-bc6e-1a814f63b108'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > status/devices : secret absent distinct d’un JWT invalide
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: '937aed02-e21d-4bc1-ac35-0d500ba15211'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > status/devices : DB down ≠ révocation
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: '14aa9b28-7190-4cf2-b93d-ae41cde858d2'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > frontière technique : pas de confusion avec un refus métier > status/devices : DB down ≠ révocation
+[license-api] échec technique {
+  code: 'DB_UNAVAILABLE',
+  requestId: 'cab40e4f-7f28-4f8b-9cbf-99eb52f4b1d9'
+}
+
+stderr | src/lib/__tests__/incident-license-infra.test.ts > clé publique mal configurée : route activation → 500 SERVER_MISCONFIGURED
+[license-api] échec technique {
+  code: 'SERVER_MISCONFIGURED',
+  requestId: 'c51db03e-9876-43bb-886b-5d9a125013b6'
+}
+
+stderr | src/app/api/mechanic-licenses/__tests__/status-route.test.ts > §2 — révocation irréversible > active → suspended : autorisé (200)
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+ ✓ src/lib/__tests__/incident-license-infra.test.ts (22 tests) 142ms
+stderr | src/app/api/mechanic-licenses/__tests__/status-route.test.ts > §2 — révocation irréversible > active → revoked : autorisé (200)
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+stderr | src/app/api/mechanic-licenses/__tests__/status-route.test.ts > §6 — audit acteur/cible (jamais de chaîne vide) > action staff → actorUserId/actorRole renseignés, targetMechanicId = mécanicien de la clé
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+stderr | src/app/api/mechanic-licenses/__tests__/status-route.test.ts > §6 — audit acteur/cible (jamais de chaîne vide) > clé non attribuée → targetMechanicId = null (jamais "")
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+ ✓ src/app/api/mechanic-licenses/__tests__/status-route.test.ts (7 tests) 58ms
+ ✓ src/lib/security/__tests__/secret-cipher.test.ts (11 tests) 43ms
+ ✓ src/lib/einvoicing/__tests__/queue.test.ts (17 tests) 91ms
+ ✓ src/lib/__tests__/reset-schema-drift.test.ts (9 tests) 37ms
+ ✓ src/components/__tests__/update-sources-installable.test.ts (11 tests) 36ms
+ ✓ src/lib/copilot-llm/__tests__/copilot-llm.test.ts (25 tests) 57ms
+ ✓ src/lib/__tests__/garage-settings-validation.test.ts (14 tests) 52ms
+ ✓ src/lib/license/__tests__/forgery-resistance.test.ts (10 tests | 4 skipped) 57ms
+ ✓ src/lib/banque/__tests__/iban.test.ts (28 tests) 67ms
+ ✓ src/lib/__tests__/security151-parts-boundary.test.ts (15 tests) 69ms
+ ✓ src/lib/__tests__/licence-p3.test.ts (15 tests) 46ms
+ ✓ src/lib/__tests__/quoted-secret-redaction.test.ts (33 tests) 38ms
+ ✓ src/lib/portal/__tests__/backup-codes-store.test.ts (5 tests) 41ms
+(node:10900) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/lib/__tests__/desktop-schema-migration-parity.test.ts (6 tests) 53ms
+ ✓ src/lib/ocr/__tests__/ocr.test.ts (28 tests) 62ms
+ ✓ src/lib/license/__tests__/issuer-key.test.ts (5 tests) 71ms
+ ✓ src/lib/__tests__/pieces-intervention-atteignables.test.ts (7 tests) 26ms
+ ✓ src/app/api/mechanic/__tests__/timer-route.test.ts (9 tests) 58ms
+ ✓ src/__tests__/security-headers.test.ts (7 tests) 58ms
+ ✓ src/lib/__tests__/control-plane.test.ts (16 tests) 59ms
+ ✓ src/lib/__tests__/sync-parent-en-base.test.ts (18 tests) 39ms
+ ✓ src/lib/vin/__tests__/vin.test.ts (17 tests) 41ms
+ ✓ src/lib/inspection/__tests__/inspection-context.test.ts (13 tests) 51ms
+ ✓ src/lib/copilot-llm/__tests__/paid-block.test.ts (5 tests) 53ms
+ ✓ src/app/api/purchase-orders/__tests__/receive-guards.test.ts (8 tests) 60ms
+ ✓ src/lib/__tests__/check-route-policy.test.ts (8 tests) 58ms
+ ✓ src/lib/__tests__/document-lock-row-locking.test.ts (7 tests) 22ms
+ ✓ src/lib/planning/__tests__/avatar.test.ts (16 tests) 29ms
+ ✓ src/lib/einvoicing/__tests__/dns-deadline.test.ts (4 tests) 44ms
+ ✓ src/lib/__tests__/faux-succes.test.ts (12 tests) 49ms
+stderr | src/lib/__tests__/mechanic-device-lifecycle.test.ts > §2/§3 — effets appareils selon la transition de licence > SUSPEND → n'AUCUNE écriture appareil (siège conservé, restauration instantanée)
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+stderr | src/lib/__tests__/mechanic-device-lifecycle.test.ts > §2/§3 — effets appareils selon la transition de licence > REVOKE → appareils révoqués (permanent)
+[sync/mechanic-status:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+ ✓ src/lib/__tests__/mechanic-device-lifecycle.test.ts (8 tests) 53ms
+ ✓ src/lib/__tests__/money-json.test.ts (16 tests) 49ms
+ ✓ src/lib/__tests__/licence-changement-contrat.test.ts (8 tests) 40ms
+ ✓ src/lib/__tests__/portail-client-parcours.test.ts (11 tests) 27ms
+ ✓ src/lib/planning/__tests__/horaires.test.ts (13 tests) 38ms
+ ✓ src/lib/diagnostic/__tests__/diagnostic.test.ts (10 tests) 47ms
+ ✓ src/lib/einvoicing/__tests__/bridge-response-contract.test.ts (3 tests) 48ms
+ ✓ src/lib/__tests__/rotation-cle-ancrages.test.ts (6 tests) 38ms
+ ✓ src/app/api/__tests__/fec-export.test.ts (7 tests) 40ms
+ ✓ src/app/api/purchase-orders/__tests__/route-guards.test.ts (5 tests) 54ms
+(node:10832) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/lib/__tests__/migrations-unique-index.test.ts (8 tests) 30ms
+ ✓ src/lib/__tests__/license-admin-state-machine.test.ts (17 tests) 111ms
+ ✓ src/lib/__tests__/ux-pwa-derniers-culs-de-sac.test.ts (12 tests) 29ms
+ ✓ src/lib/copilot/__tests__/copilot.test.ts (13 tests) 44ms
+ ✓ src/lib/__tests__/mechanic-session.test.ts (11 tests) 39ms
+ ✓ src/lib/pdf/__tests__/print-html-escaping.test.ts (12 tests) 27ms
+ ✓ src/lib/license/__tests__/attach-license-to-garage.test.ts (11 tests) 50ms
+ ✓ src/lib/__tests__/license-devices-unit.test.ts (16 tests) 47ms
+ ✓ src/lib/__tests__/billing-api-projection.test.ts (5 tests) 19ms
+ ✓ src/lib/__tests__/electron-heartbeat-policy.test.ts (38 tests) 39ms
+ ✓ src/lib/mechanics/__tests__/avatar-client.test.ts (14 tests) 29ms
+ ✓ src/lib/einvoicing/__tests__/einvoicing-foundation.test.ts (20 tests) 89ms
+ ✓ src/lib/__tests__/public-url.test.ts (28 tests) 58ms
+ ✓ src/lib/__tests__/pwa.test.ts (9 tests) 32ms
+ ✓ src/lib/__tests__/einvoicing-platforms-contract.test.ts (4 tests) 36ms
+ ✓ src/lib/analytics/__tests__/analytics.test.ts (17 tests) 46ms
+ ✓ src/lib/scheduling/__tests__/scheduling.test.ts (8 tests) 50ms
+ ✓ src/lib/__tests__/live-sync.test.ts (14 tests) 46ms
+ ✓ src/lib/text/__tests__/apostrophes.test.ts (9 tests) 47ms
+ ✓ src/lib/__tests__/licensed-session.test.ts (13 tests) 61ms
+ ✓ src/lib/__tests__/authz.test.ts (43 tests) 34ms
+ ✓ src/lib/signature/__tests__/signature.test.ts (11 tests) 36ms
+ ✓ src/lib/__tests__/electron-activation-backoff.test.ts (15 tests) 42ms
+ ✓ src/lib/__tests__/schemas-optional-email.test.ts (11 tests) 114ms
+ ✓ src/components/__tests__/electron-bridge-hydration.test.ts (9 tests) 48ms
+ ✓ src/lib/einvoicing/__tests__/ssrf-guard.test.ts (16 tests) 86ms
+ ✓ src/lib/portal/__tests__/session.test.ts (10 tests) 58ms
+ ✓ src/lib/portal/__tests__/auth-core.test.ts (20 tests) 51ms
+ ✓ src/lib/__tests__/filtres-rendez-vous.test.ts (13 tests) 30ms
+ ✓ src/lib/mechanics/__tests__/avatar-image.test.ts (20 tests) 57ms
+ ✓ src/lib/__tests__/isolation-preview.test.ts (11 tests) 36ms
+ ✓ src/lib/__tests__/mechanic-verify.test.ts (5 tests) 51ms
+ ✓ src/lib/__tests__/crash-redaction.test.ts (7 tests) 23ms
+ ✓ src/lib/__tests__/env-contract.test.ts (10 tests) 44ms
+(node:18580) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/lib/__tests__/installer-shortcuts.test.ts (9 tests) 30ms
+ ✓ src/lib/__tests__/migrations-vehicle-ctdate.test.ts (5 tests) 30ms
+ ✓ src/lib/einvoicing/__tests__/webhook-signature.test.ts (16 tests) 32ms
+ ✓ src/lib/__tests__/tenant-matrix-completude.test.ts (5 tests) 64ms
+ ✓ src/lib/__tests__/or-pieces-rattachees.test.ts (10 tests) 38ms
+ ✓ src/app/api/suppliers/__tests__/route-guards.test.ts (4 tests) 39ms
+ ✓ src/lib/__tests__/license-public-key.test.ts (5 tests) 47ms
+ ✓ src/components/__tests__/update-manifest-forwarding.test.ts (5 tests) 19ms
+ ✓ src/lib/license/__tests__/state-machine.test.ts (23 tests) 91ms
+ ✓ src/lib/__tests__/redact.test.ts (11 tests) 41ms
+ ✓ src/lib/__tests__/licence-emission-bornee.test.ts (10 tests) 50ms
+ ✓ src/lib/__tests__/electron-loopback.test.ts (9 tests) 57ms
+ ✓ src/lib/__tests__/ui-sort-resilience.test.ts (7 tests) 47ms
+ ✓ src/lib/__tests__/money-migration.test.ts (18 tests) 53ms
+ ✓ src/lib/__tests__/pagination-cloisonnee.test.ts (6 tests) 35ms
+ ✓ src/lib/einvoicing/__tests__/ssrf-guard-dns.test.ts (9 tests) 42ms
+ ✓ src/lib/__tests__/rotation-caractere-invisible.test.ts (10 tests) 35ms
+ ✓ src/lib/notifications/__tests__/notifications.test.ts (12 tests) 32ms
+ ✓ src/lib/__tests__/document-numbering.test.ts (3 tests) 64ms
+ ✓ src/lib/stock/__tests__/inventory.test.ts (17 tests) 39ms
+ ✓ src/lib/quote-gen/__tests__/quote-gen.test.ts (10 tests) 35ms
+ ✓ src/lib/__tests__/require-session-enforcement.test.ts (5 tests) 48ms
+ ✓ src/lib/dashboard/__tests__/dashboard.test.ts (15 tests) 35ms
+ ✓ src/lib/__tests__/business-logic.test.ts (22 tests) 69ms
+ ✓ src/lib/__tests__/erreur-affichable.test.ts (22 tests) 37ms
+ ✓ src/lib/pricing/__tests__/pricing.test.ts (12 tests) 36ms
+ ✓ src/lib/planning/__tests__/schedule-board-contract.test.ts (17 tests) 35ms
+ ✓ src/lib/__tests__/pagination-routes.test.ts (15 tests) 80ms
+ ✓ src/lib/__tests__/create-license-route.test.ts (11 tests) 70ms
+ ✓ src/lib/__tests__/routes-sans-appelant.test.ts (8 tests) 30ms
+ ✓ src/lib/suppliers/__tests__/suppliers.test.ts (17 tests) 52ms
+ ✓ src/lib/__tests__/hwid-verify.test.ts (16 tests) 33ms
+ ✓ src/lib/stock-forecast/__tests__/stock-forecast.test.ts (10 tests) 35ms
+ ✓ src/lib/__tests__/version-compatibility.test.ts (12 tests) 41ms
+ ✓ src/lib/forecast/__tests__/forecast.test.ts (10 tests) 31ms
+ ✓ src/lib/__tests__/electron-activation-report.test.ts (11 tests) 28ms
+ ✓ src/lib/__tests__/billing-view.test.ts (14 tests) 33ms
+ ✓ src/lib/email/__tests__/smtp-config.test.ts (22 tests) 48ms
+ ✓ src/lib/__tests__/audit-v21-fixes.test.ts (13 tests) 44ms
+ ✓ src/lib/__tests__/verify.test.ts (7 tests) 32ms
+ ✓ src/lib/__tests__/utils.test.ts (32 tests) 48ms
+ ✓ src/lib/profitability/__tests__/profitability.test.ts (10 tests) 34ms
+ ✓ src/lib/__tests__/authz-mechanic-matrix.test.ts (17 tests) 31ms
+(node:836) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/lib/__tests__/fk-indexes.test.ts (8 tests) 30ms
+ ✓ src/lib/__tests__/money.test.ts (16 tests) 32ms
+ ✓ src/lib/portal/__tests__/repair-timeline.test.ts (5 tests) 18ms
+ ✓ src/lib/forgotten-parts/__tests__/forgotten-parts.test.ts (10 tests) 32ms
+ ✓ src/__tests__/server-schema-validate-env.test.ts (7 tests) 21ms
+ ✓ src/lib/__tests__/mechanic-admin.test.ts (6 tests) 29ms
+ ✓ src/lib/__tests__/licence-bloquee-au-chargement.test.ts (2 tests) 35ms
+ ✓ src/lib/__tests__/tenant-guard.test.ts (6 tests) 61ms
+ ✓ src/lib/reports/__tests__/reports.test.ts (9 tests) 32ms
+ ✓ src/lib/monitoring/__tests__/metrics.test.ts (9 tests) 28ms
+ ✓ src/lib/__tests__/tva.test.ts (14 tests) 29ms
+ ✓ src/lib/__tests__/electron-startup-gate.test.ts (17 tests) 38ms
+ ✓ src/lib/copilot/__tests__/copilot-chaine-complete.test.ts (16 tests) 46ms
+ ✓ src/lib/license/__tests__/public-key-consistency.test.ts (5 tests | 2 skipped) 25ms
+ ✓ src/lib/__tests__/sauvegarde-en-souffrance.test.ts (14 tests) 28ms
+ ✓ src/lib/__tests__/secrets.test.ts (9 tests) 30ms
+ ✓ src/lib/__tests__/money-display.test.ts (11 tests) 28ms
+ ✓ src/lib/__tests__/document-status.test.ts (14 tests) 29ms
+ ✓ src/lib/gamification/__tests__/gamification.test.ts (7 tests) 25ms
+ ✓ src/lib/__tests__/incident-record-integrity.test.ts (4 tests) 24ms
+ ✓ src/lib/__tests__/electron-fuses.test.ts (6 tests) 34ms
+ ✓ src/__tests__/toolchain-versions.test.ts (9 tests) 23ms
+ ✓ src/lib/__tests__/plate-format.test.ts (19 tests) 25ms
+ ✓ src/lib/__tests__/grace-hors-ligne.test.ts (12 tests) 32ms
+ ✓ src/lib/portal/__tests__/tickets-appointments.test.ts (11 tests) 24ms
+ ✓ src/lib/__tests__/echeance-export.test.ts (10 tests) 25ms
+ ✓ src/__tests__/baseline-git-identity.test.ts (4 tests) 20ms
+ ✓ src/lib/__tests__/i18n-rtl.test.ts (4 tests) 27ms
+ ✓ src/lib/__tests__/migrations-add-column-guard.test.ts (5 tests) 17ms
+ ✓ src/lib/proactive/__tests__/proactive.test.ts (6 tests) 22ms
+ ✓ src/lib/__tests__/mechanic-record-mac.test.ts (3 tests) 29ms
+ ✓ src/lib/__tests__/auth-secret.test.ts (6 tests) 30ms
+ ✓ src/lib/__tests__/mecanicien-boucle-401.test.ts (6 tests) 24ms
+stderr | src/app/api/mechanic-licenses/__tests__/assign-route.test.ts > assign — première attribution (aucun ancien titulaire) > historise + met à jour la clé, SANS toucher aux appareils
+[sync/mechanic:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+stderr | src/app/api/mechanic-licenses/__tests__/assign-route.test.ts > reassign — révocation TOTALE des appareils de l’ancien titulaire > révoque les appareils actifs ET déconnectés (aucun siège retenu), clôture l’historique, audite reassign
+[sync/mechanic:push] erreur {
+  key: 'L1…',
+  message: '__vite_ssr_import_0__.prisma.licenseKey.findUnique is not a function'
+}
+
+ ✓ src/app/api/mechanic-licenses/__tests__/assign-route.test.ts (6 tests) 73ms
+ ✓ src/lib/__tests__/electron-signed-state.test.ts (7 tests) 24ms
+ ✓ src/lib/__tests__/pwa-cache-et-mise-a-jour.test.ts (10 tests) 22ms
+ ✓ src/lib/pdf/__tests__/poids-pdf.test.ts (4 tests) 15ms
+ ✓ src/components/__tests__/loaner-estimate-formatting.test.ts (7 tests) 21ms
+ ✓ src/lib/__tests__/client-policy.test.ts (8 tests) 24ms
+ ✓ src/lib/memory/__tests__/memory.test.ts (7 tests) 27ms
+ ✓ src/lib/__tests__/inspection-autosave.test.ts (5 tests) 20ms
+ ✓ src/lib/backup/__tests__/snapshot.test.ts (3 tests) 23ms
+ ✓ src/lib/__tests__/reminder-send-honesty.test.ts (7 tests) 22ms
+ ✓ src/lib/__tests__/remac-script-parity.test.ts (4 tests) 21ms
+ ✓ src/lib/__tests__/pagination.test.ts (11 tests) 23ms
+ ✓ src/lib/__tests__/toolchain-node-version.test.ts (3 tests) 46ms
+ ✓ src/lib/__tests__/specialty.test.ts (5 tests) 18ms
+ ✓ src/lib/__tests__/revoke-by-key-route.test.ts (3 tests) 55ms
+ ✓ src/lib/__tests__/stock-missing-part-release.test.ts (2 tests) 17ms
+ ✓ src/lib/__tests__/safe-redirect.test.ts (7 tests) 20ms
+ ✓ src/lib/__tests__/electron-nav-guard.test.ts (5 tests) 20ms
+ ✓ src/lib/__tests__/money-document-consistency.test.ts (3 tests) 14ms
+ ✓ src/lib/__tests__/route-context.test.ts (3 tests) 19ms
+ ✓ src/lib/analytics/__tests__/report-export.test.ts (5 tests) 17ms
+ ✓ src/lib/__tests__/electron-device-activation.test.ts (6 tests) 18ms
+ ✓ src/lib/__tests__/electron-license-endpoint.test.ts (4 tests) 15ms
+ ✓ src/lib/__tests__/user-data-path.test.ts (4 tests) 17ms
+ ↓ src/lib/__tests__/document-numbering.postgres.int.test.ts (1 test | 1 skipped)
+ ↓ src/lib/__tests__/license-devices.postgres.int.test.ts (15 tests | 15 skipped)
+ ↓ src/lib/__tests__/rate-limit-multi-instance.int.test.ts (5 tests | 5 skipped)
+ ↓ src/lib/__tests__/stock-concurrency.postgres.int.test.ts (1 test | 1 skipped)
+ ↓ src/lib/__tests__/licensed-session.postgres.int.test.ts (6 tests | 6 skipped)
+ ✓ src/app/api/__tests__/financial-authz.test.ts (5 tests) 18ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/__tests__/keygen-activation-roundtrip.test.ts [ src/lib/__tests__/keygen-activation-roundtrip.test.ts ]
+Error: Command failed: C:\Program Files\nodejs\node.exe --input-type=module -e import {reproduce} from './scripts/reproduce-keygen-roundtrip.mjs'; let fixture; const report=reproduce(f=>{fixture=f}); console.log(JSON.stringify({report,fixture}))
+node:internal/child_process:1120
+    result.error = new ErrnoException(result.error, 'spawnSync ' + options.file);
+                   ^
+
+<ref *1> Error: spawnSync python3 ETIMEDOUT
+    at Object.spawnSync (node:internal/child_process:1120:20)
+    at spawnSync (node:child_process:902:24)
+    at execFileSync (node:child_process:945:15)
+    at runPython (file:///C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/scripts/reproduce-keygen-roundtrip.mjs:35:31)
+    at reproduce (file:///C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/scripts/reproduce-keygen-roundtrip.mjs:37:19)
+    at file:///C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/[eval1]:1:95
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:282:26)
+    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:278:20)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  errno: -4039,
+  code: 'ETIMEDOUT',
+  syscall: 'spawnSync python3',
+  path: 'python3',
+  spawnargs: [
+    '-c',
+    "import sys,json; sys.path.insert(0,'scripts'); import keygen_core as k; p=k.load_checked_private_key(); print(k.make_license(p,'FIXTURE-ÉTÉ-NOT-ISSUED','premium',label='Garage été')['token'])"
+  ],
+  error: [Circular *1],
+  status: null,
+  signal: 'SIGTERM',
+  output: [ null, '', '' ],
+  pid: 6296,
+  stdout: '',
+  stderr: ''
+}
+
+Node.js v22.23.2
+
+ ❯ runPython scripts/reproduce-keygen-roundtrip.mjs:35:31
+ ❯ reproduce scripts/reproduce-keygen-roundtrip.mjs:37:19
+ ❯ [eval1]:1:95
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/__tests__/secrets-jamais-distribues.test.ts > aucune clé privée dans l’arbre (GF-DUR-044) > analyse tout le texte versionné, les sources critiques et les liens en moins de 5 secondes
+AssertionError: expected [ '.eslintrc.json', …(2861) ] to include '.env.example'
+ ❯ src/lib/__tests__/secrets-jamais-distribues.test.ts:111:31
+    109|     expect(scan.trackedPaths).toContain('prisma/schema.prisma')
+    110|     expect(scan.trackedPaths).toContain('configuation automatique/conf…
+    111|     expect(scan.trackedPaths).toContain('.env.example')
+       |                               ^
+    112|     expect(duree, `scan Git natif: ${duree.toFixed(1)} ms`).toBeLessTh…
+    113|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 358 passed | 5 skipped (365)
+      Tests  1 failed | 4379 passed | 44 skipped (4424)
+   Start at  22:04:11
+   Duration  65.25s (transform 45.24s, setup 0ms, import 129.84s, tests 510.25s, environment 146ms)
+
+JSON report written to C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2/artifacts/verification/test-results.json
+EXIT=1

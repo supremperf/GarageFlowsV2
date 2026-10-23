@@ -1,0 +1,11 @@
+=== Gitleaks — version et périmètre ===
+version is set by build process
+commit HEAD : 7c93676cd904b80793ba642b3b46291354b6ac97
+commits     : 1
+fichiers suivis : 2864
+
+=== SCAN DE L'HISTORIQUE GIT (mode git, tous les commits) ===
+[90m10:39PM[0m [32mINF[0m [1m1 commits scanned.[0m
+[90m10:39PM[0m [32mINF[0m [1mscanned ~124377952 bytes (124.38 MB) in 1m7.3s[0m
+[90m10:39PM[0m [33mWRN[0m [1mleaks found: 6[0m
+EXIT=1

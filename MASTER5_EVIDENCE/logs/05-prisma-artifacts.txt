@@ -1,0 +1,51 @@
+### generated desktop client
+total 39208
+drwxr-xr-x 1 Mathys 197121        0 Oct 22 21:36 .
+drwxr-xr-x 1 Mathys 197121        0 Oct 22 21:36 ..
+-rw-r--r-- 1 Mathys 197121       23 Oct 22 21:36 default.d.ts
+-rw-r--r-- 1 Mathys 197121       36 Oct 22 21:36 default.js
+-rw-r--r-- 1 Mathys 197121       25 Oct 22 21:36 edge.d.ts
+-rw-r--r-- 1 Mathys 197121   277531 Oct 22 21:36 edge.js
+-rw-r--r-- 1 Mathys 197121    24087 Oct 22 21:36 index-browser.js
+-rw-r--r-- 1 Mathys 197121  4042121 Oct 22 21:36 index.d.ts
+-rw-r--r-- 1 Mathys 197121   278434 Oct 22 21:36 index.js
+-rw-r--r-- 1 Mathys 197121 16161048 Oct 22 21:36 libquery_engine-debian-openssl-3.0.x.so.node
+-rw-r--r-- 1 Mathys 197121     2601 Oct 22 21:36 package.json
+-rwxr-xr-x 1 Mathys 197121 19261952 Oct 22 21:36 query_engine-windows.dll.node
+-rw-r--r-- 1 Mathys 197121    58427 Oct 22 21:36 schema.prisma
+-rw-r--r-- 1 Mathys 197121       23 Oct 22 21:36 wasm.d.ts
+-rw-r--r-- 1 Mathys 197121    24087 Oct 22 21:36 wasm.js
+
+### generated server client
+total 55244
+drwxr-xr-x 1 Mathys 197121        0 Oct 22 21:36 .
+drwxr-xr-x 1 Mathys 197121        0 Oct 22 21:36 ..
+-rw-r--r-- 1 Mathys 197121       23 Oct 22 21:36 default.d.ts
+-rw-r--r-- 1 Mathys 197121       36 Oct 22 21:36 default.js
+-rw-r--r-- 1 Mathys 197121       25 Oct 22 21:36 edge.d.ts
+-rw-r--r-- 1 Mathys 197121   292463 Oct 22 21:36 edge.js
+-rw-r--r-- 1 Mathys 197121    25919 Oct 22 21:36 index-browser.js
+-rw-r--r-- 1 Mathys 197121  4254627 Oct 22 21:36 index.d.ts
+-rw-r--r-- 1 Mathys 197121   293592 Oct 22 21:36 index.js
+-rw-r--r-- 1 Mathys 197121 16161048 Oct 22 21:36 libquery_engine-debian-openssl-3.0.x.so.node
+-rw-r--r-- 1 Mathys 197121 16161048 Oct 22 21:36 libquery_engine-rhel-openssl-3.0.x.so.node
+-rw-r--r-- 1 Mathys 197121     2601 Oct 22 21:36 package.json
+-rwxr-xr-x 1 Mathys 197121 19261952 Oct 22 21:36 query_engine-windows.dll.node
+drwxr-xr-x 1 Mathys 197121        0 Oct 22 21:36 runtime
+-rw-r--r-- 1 Mathys 197121    60069 Oct 22 21:36 schema.prisma
+-rw-r--r-- 1 Mathys 197121       23 Oct 22 21:36 wasm.d.ts
+-rw-r--r-- 1 Mathys 197121    25919 Oct 22 21:36 wasm.js
+
+### prisma migrate status (desktop)
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": SQLite database "dev.db" at "file:./dev.db"
+
+2 migrations found in prisma/migrations
+Following migrations have not yet been applied:
+20260424000000_add_record_mac
+20260425000000_add_audit_log_and_indexes
+
+To apply migrations in development run prisma migrate dev.
+To apply migrations in production run prisma migrate deploy.
+EXIT=1

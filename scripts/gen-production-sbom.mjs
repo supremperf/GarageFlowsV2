@@ -32,13 +32,37 @@ const pinnedNpm = packageJson.packageManager?.startsWith('npm@') ? packageJson.p
 const npmCommand = pinnedNpm ? 'npx' : 'npm'
 const npmPrefix = pinnedNpm ? ['--yes', pinnedNpm] : []
 
+/**
+ * Chemin du script JS de npm/npx livré AVEC l'interpréteur courant.
+ *
+ * Sous Windows, `npm`/`npx` ne sont pas des exécutables : ce sont `npm.cmd` /
+ * `npx.cmd`. `spawnSync('npx', …)` y échoue donc en `ENOENT`, et passer
+ * `shell: true` pour contourner le problème ferait traverser une ligne de
+ * commande cmd.exe à des arguments (ici `--omit=dev`, `npm@<version>`) —
+ * inutile et risqué. On invoque directement le script JS avec `process.execPath` :
+ * même binaire npm que celui livré avec ce Node, aucun shell, et le même chemin
+ * de code sur Linux, macOS et Windows.
+ */
+function npmCliScript(command) {
+  const candidate = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', `${command}-cli.js`)
+  return fs.existsSync(candidate) ? candidate : null
+}
+
 function npmJson(npmArgs) {
   const printable = [npmCommand, ...npmPrefix, ...npmArgs].join(' ')
-  const result = spawnSync(npmCommand, [...npmPrefix, ...npmArgs], {
+  const script = npmCliScript(npmCommand)
+  const [executable, baseArgs] = script
+    ? [process.execPath, [script]]
+    : [process.platform === 'win32' ? `${npmCommand}.cmd` : npmCommand, []]
+  const result = spawnSync(executable, [...baseArgs, ...npmPrefix, ...npmArgs], {
     cwd: root,
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
     env: { ...process.env, NPM_CONFIG_UPDATE_NOTIFIER: 'false' },
+    // Sans script JS résolvable, seul le wrapper .cmd reste disponible sous
+    // Windows, et Node refuse de lancer un .cmd hors shell depuis la correction
+    // de CVE-2024-27980. Le shell est alors le seul recours, et uniquement là.
+    shell: !script && process.platform === 'win32',
   })
   if (result.error) throw new Error(`${printable}: ${result.error.message}`)
   if (result.status !== 0) {
@@ -49,6 +73,30 @@ function npmJson(npmArgs) {
   } catch (error) {
     throw new Error(`${printable} did not return JSON: ${error.message}`)
   }
+}
+
+/**
+ * Fixe l'identité de la RACINE sur le package, jamais sur le chemin de travail.
+ *
+ * `npm sbom` renseigne `metadata.component.name` avec le nom du RÉPERTOIRE de
+ * la racine, pas avec le `name` de package.json. La SBOM versionnée portait donc
+ * « GarageFlowsV2 » — le dossier de la machine qui l'avait produite — tandis que
+ * `bom-ref` et `purl` portaient bien « garageflow@1.1.0 ».
+ *
+ * Conséquence mesurée : `npm run sbom:verify` ne pouvait réussir que dans un
+ * dossier nommé EXACTEMENT « GarageFlowsV2 ». Dans toute autre copie de travail
+ * — `GarageFlowsV2-arena-…` sur le poste de build, `/app` dans un conteneur de
+ * vérification — le contrôle s'arrêtait sur « SBOM root component does not match
+ * package metadata », sans qu'aucune dépendance n'ait changé. Un contrôle de
+ * chaîne d'approvisionnement ne doit pas dépendre d'un chemin de fichier.
+ *
+ * On aligne donc `name` sur `purl`/`bom-ref` (le nom npm du paquet), ce qui rend
+ * la SBOM reproductible partout et strictement vérifiable.
+ */
+function normalizeRootIdentity(sbom) {
+  const component = sbom.metadata?.component
+  if (!component) throw new Error('The root CycloneDX metadata component is required')
+  component.name = packageJson.name
 }
 
 function validateInstalledPackages(sbom) {
@@ -115,6 +163,7 @@ const fullSbom = npmJson([
   'application',
 ])
 const expected = filterProductionSbom(fullSbom, productionTree)
+normalizeRootIdentity(expected)
 validateInstalledPackages(expected)
 
 if (!check) {

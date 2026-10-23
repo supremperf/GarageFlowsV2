@@ -8,15 +8,19 @@
  * ─── Ce qu'il mesure, et ce qu'il ne mesure pas ─────────────────────────────
  * · Il n'exécute QUE des tests qui ne réclament pas de base de données. Les
  *   suites d'intégration (`src/integration/*`, sync) construisent une base
- *   SQLite via `prisma db push`, ce qui exige le moteur Prisma natif — absent
- *   de l'environnement de cette session. Elles sont listées comme NON
- *   EXÉCUTÉES, avec leur nombre, jamais comptées comme vertes.
+ *   SQLite via `prisma db push` : elles sortent du périmètre de CE rapport et
+ *   sont listées comme NON EXÉCUTÉES ICI, avec leur nombre, jamais comptées
+ *   comme vertes. Leur exécution réelle relève de la suite Vitest complète
+ *   (`npm test`), qui a besoin du moteur Prisma natif.
  * · Un fichier peut illustrer plusieurs parcours : son résultat est alors
  *   compté dans chacun (le total global reste celui du run unique).
- * · Le fichier `license-devices-unit.test.ts` passe ses assertions mais laisse
- *   échapper une `PrismaClientInitializationError` à l'arrêt (client généré
- *   sans moteur). Il est donc lancé À PART, et le script exige que le motif de
- *   sortie soit exactement celui-là. Toute autre erreur fait échouer le rapport.
+ * · Le fichier `license-devices-unit.test.ts` est lancé À PART. Historiquement,
+ *   sans moteur Prisma natif, il passait ses assertions mais laissait échapper
+ *   une `PrismaClientInitializationError` à l'arrêt. Les deux issues sont
+ *   acceptées — arrêt PROPRE (moteur présent) ou erreur d'environnement — et
+ *   distinguées dans le rapport. Seul un ÉCHEC D'ASSERTION fait échouer le
+ *   rapport : exiger la présence de l'erreur revenait à exiger un
+ *   environnement cassé, et faisait échouer le rapport dès sa réparation.
  *
  * Sortie : artifacts/verification/parcours-metier-10.json
  * Usage  : node scripts/rapport-10-parcours.mjs [--json-only]
@@ -168,7 +172,7 @@ const PARCOURS = [
     horsRun: [
       {
         fichier: 'src/lib/__tests__/license-devices-unit.test.ts',
-        motif: 'assertions vertes, rejet Prisma non capturé (moteur natif absent)',
+        motif: 'lancé seul : arrêt propre si le moteur Prisma natif est présent, sinon rejet Prisma non capturé',
       },
     ],
     complement: 'node scripts/campagne-100-licences.mjs (campagne 100 licences)',
@@ -276,7 +280,7 @@ for (const fichier of rapportVitest.testResults ?? []) {
   })
 }
 
-/** Lancé seul : ses assertions passent, l'arrêt laisse échapper une erreur Prisma. */
+/** Lancé seul : ses assertions doivent passer ; l'arrêt peut être propre ou laisser échapper une erreur Prisma. */
 const horsRun = []
 for (const parcours of PARCOURS) {
   for (const cas of parcours.horsRun ?? []) {
@@ -286,16 +290,19 @@ for (const parcours of PARCOURS) {
     const sortie = `${r.stdout || ''}\n${r.stderr || ''}`.replace(/\u001b\[[0-9;]*m/g, '')
     const mPasses = sortie.match(/Tests\s+(\d+) passed/)
     const mEchoues = sortie.match(/(\d+) failed/)
-    const prismaAttendu = /PrismaClientInitializationError/.test(sortie)
-    const ok = Boolean(mPasses) && !mEchoues && prismaAttendu
+    const prismaEchappe = /PrismaClientInitializationError/.test(sortie)
+    // Ce qui est EXIGÉ : des assertions vertes et aucun échec. L'erreur Prisma
+    // à l'arrêt est un SYMPTÔME d'environnement, pas un critère de réussite —
+    // elle est enregistrée quand elle survient, jamais réclamée.
+    const ok = Boolean(mPasses) && !mEchoues
     horsRun.push({
       parcours: parcours.id,
       fichier: cas.fichier,
       assertionsPasses: mPasses ? Number(mPasses[1]) : 0,
       assertionsEchouees: mEchoues ? Number(mEchoues[1]) : null,
       codeSortie: r.status,
-      erreurEnvironnementale: prismaAttendu ? 'PrismaClientInitializationError (moteur natif absent)' : null,
-      verdict: ok ? 'ASSERTIONS_VERTES_ERREUR_ENV' : 'A_CONTROLER',
+      erreurEnvironnementale: prismaEchappe ? 'PrismaClientInitializationError (moteur natif absent)' : null,
+      verdict: !ok ? 'A_CONTROLER' : (prismaEchappe ? 'ASSERTIONS_VERTES_ERREUR_ENV' : 'ASSERTIONS_VERTES_ARRET_PROPRE'),
     })
     if (!ok) {
       console.error(`✗ ${cas.fichier} : sortie inattendue\n${sortie.slice(-3000)}`)

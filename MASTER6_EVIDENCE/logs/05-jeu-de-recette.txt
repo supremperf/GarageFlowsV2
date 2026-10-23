@@ -1,0 +1,4 @@
+effectif avant : 5 mécanicien(s) actifs dans « Garage Demo »
+mécaniciens créés : 19
+effectif après : 24 (minimum exigé par le scénario : 20)
+PREREQUIS_SATISFAIT=true

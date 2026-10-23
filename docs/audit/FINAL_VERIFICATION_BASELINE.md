@@ -39,29 +39,29 @@ nombre d’assertions échouées. Voir la ventilation nominative de la phase 6.
 
 | Composant | Version résolue | Plage déclarée |
 |---|---|---|
-| Node | v22.22.3 | — |
+| Node | v22.23.2 | — |
 | npm | 10.9.8 | — |
-| Next.js | 15.5.27 | 15.5.27 |
+| Next.js | 15.5.28 | 15.5.28 |
 | React | 18.3.1 | ^18.3.1 |
 | React DOM | 18.3.1 | ^18.3.1 |
 | TypeScript | 5.9.3 | ^5 |
 | Prisma (CLI) | 5.22.0 | ^5.16.1 |
 | @prisma/client | 5.22.0 | ^5.16.1 |
-| Electron | 41.10.6 | 41.10.6 |
-| Vitest | 4.1.11 | 4.1.11 |
-| OS | linux x64 | — |
+| Electron | 44.9.3 | 44.9.3 |
+| Vitest | 4.1.12 | 4.1.12 |
+| OS | win32 x64 | — |
 
 ### Tests (suite standard `npm test`, reproductible sans service externe)
 
 | Champ | Valeur |
 |---|---|
-| Test files | 351 |
-| Tests discovered | 4272 |
-| Tests passed | 3420 |
-| Tests failed | 3 |
-| Tests skipped | 849 |
+| Test files | 365 |
+| Tests discovered | 4424 |
+| Tests passed | 4390 |
+| Tests failed | 0 |
+| Tests skipped | 34 |
 
-Commit : `e28acd8` · Branche : `arena/55edbdc1-garageflowsv2` · Généré (UTC) : `2026-10-18T18:33:28.129Z`
+Commit : `577ae19` · Branche : `main` · Généré (UTC) : `2026-10-23T10:11:19.141Z`
 
 <!-- END AUTO-GENERATED BASELINE -->
 

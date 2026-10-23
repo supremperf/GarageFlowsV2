@@ -1,0 +1,43 @@
+﻿executable        : C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\dist\win-unpacked\GarageFlows.exe
+taille            : 246840832 octets
+CWD vide          : C:\Users\Mathys\AppData\Local\Temp\gf-m5-cwd-0f533a3ac8b64235b5f7369b8258f9bd
+profil utilisateur: C:\Users\Mathys\AppData\Roaming\GarageFlow
+
+base metier AVANT : 1241088 octets | 2026-10-17 19:15:29 | sha256=7CAF2ADB0A82BE6FC0600BDA106D791091E348E71D85AC0CBE5BDD82B76E4DCF
+
+----- demarrage 1 -----
+fenetre ouverte   : [GarageFlows] (PID 16832)
+titre stabilise   : [GarageFlows — Activation]
+CloseMainWindow() : True
+arret             : propre, aucun processus residuel
+
+----- demarrage 2 -----
+fenetre ouverte   : [GarageFlows] (PID 17176)
+titre stabilise   : [GarageFlows — Activation]
+CloseMainWindow() : True
+arret             : propre, aucun processus residuel
+
+base metier APRES : 1241088 octets | 2026-10-17 19:15:29 | sha256=7CAF2ADB0A82BE6FC0600BDA106D791091E348E71D85AC0CBE5BDD82B76E4DCF
+base metier inchangee : True
+
+journal applicatif (10 dernieres lignes de garageflow.log) :
+    [2026-10-23T02:11:07.425Z] userData: C:\Users\<user>\AppData\Roaming\GarageFlow
+    [2026-10-23T02:11:07.426Z] IS_DEV: false
+    [2026-10-23T02:11:07.426Z] Platform: win32 x64
+    [2026-10-23T02:11:07.427Z] Secret local prÃªt (source: install)
+    [2026-10-23T02:11:07.428Z] ClÃ© de chiffrement SMTP prÃªte (source: install)
+    [2026-10-23T02:11:08.036Z] [integrity] OK â€” 540 fichiers critiques vÃ©rifiÃ©s | paquet: 2bc9e8cc7aeb
+    [2026-10-23T02:11:08.140Z] Existing database: C:\Users\<user>\AppData\Roaming\GarageFlow\garageflow.db
+    [2026-10-23T02:11:08.182Z] Sauvegarde prÃ©-migration OK: C:\Users\<user>\AppData\Roaming\GarageFlow\backups\pre-migration\garageflows-pre-migration-20261023-041108.db
+    [2026-10-23T02:11:08.198Z] No valid license â€” showing activation window
+    [2026-10-23T02:11:23.235Z] Activation cancelled â€” quitting
+
+===== RESULTAT =====
+titreFenetre1              GarageFlows — Activation
+processus1                 5
+arretPropre1               True
+titreFenetre2              GarageFlows — Activation
+processus2                 5
+arretPropre2               True
+baseMetierInchangee        True
+RESULT=PASS

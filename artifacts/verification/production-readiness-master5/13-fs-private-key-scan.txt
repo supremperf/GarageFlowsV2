@@ -1,0 +1,7 @@
+fichiers rencontrés        : 3100
+fichiers texte analysés    : 2715
+fichiers binaires ignorés  : 385
+fichiers .pem/.key/.p12/.pfx: 0 
+anomalies de parcours      : 0 
+MATIÈRE DE CLÉ PRIVÉE      : 0 
+RESULT=PASS

@@ -1,0 +1,505 @@
+[m6] copie : C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e
+[m6] variables fournies : DATABASE_URL DIRECT_URL NEXTAUTH_SECRET NEXTAUTH_URL BASE_URL E2E_EMAIL E2E_PASSWORD E2E_LICENSE GF_TEST_LICENSE RATE_LIMIT_*
+[m6] licence de TEST : GF2.eyJhbGciOiJFUzI1… (empreinte de clé 613c89fb5ff6fa6c…)
+[e2e:setup] url=http://localhost:3200/ cookies=next-auth.csrf-token,next-auth.callback-url,next-auth.session-token,gf_session,gf_license_validated,gf_license_type
+
+Running 144 tests using 8 workers
+
+
+  [dark]
+
+  [true-tone]
+
+  [night-shift]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+
+  [light]
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  Capture : C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\test-results\inspection-contrast-Contrô-1b2ac--de-la-modale-thème-sombre--mobile-portrait-small\controle-vehicule-theme-sombre.png
+  ok   6 [mobile-portrait-small] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche (8.9s)
+  ok   4 [mobile-portrait-small] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche (9.2s)
+  ok   2 [mobile-portrait-small] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche (9.3s)
+  ok   5 [mobile-portrait-small] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche (8.9s)
+  ok   1 [mobile-portrait-small] › e2e\inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles (9.3s)
+  ok   7 [mobile-portrait-small] › e2e\inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut (9.2s)
+  ok   3 [mobile-portrait-small] › e2e\inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre) (9.3s)
+  x    8 [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning (13.0s)
+  -   16 [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  -   17 [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  -   18 [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  -   19 [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  -   20 [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  -   21 [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  -   22 [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  -   23 [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  ok  10 [mobile-portrait-small] › e2e\responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal (6.1s)
+  ok  11 [mobile-portrait-small] › e2e\responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning) (6.1s)
+  ok   9 [mobile-portrait-small] › e2e\responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé (6.2s)
+  ok  14 [mobile-portrait-small] › e2e\responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait (6.2s)
+  ok  13 [mobile-portrait-small] › e2e\responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md (8.1s)
+  ok  15 [mobile-portrait-small] › e2e\responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules (8.2s)
+  ok  12 [mobile-portrait-small] › e2e\responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile) (8.6s)
+
+  [light]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  [true-tone]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  [night-shift]
+
+  [dark]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+  ok  24 [mobile-portrait-small] › e2e\responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation (10.1s)
+  ok  28 [mobile-portrait] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche (34.9s)
+  ok  26 [mobile-portrait] › e2e\inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut (35.1s)
+  ok  30 [mobile-portrait] › e2e\inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles (33.4s)
+  ok  25 [mobile-portrait] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche (35.1s)
+  ok  27 [mobile-portrait] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche (35.0s)
+  ok  31 [mobile-portrait] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche (33.4s)
+
+  Capture : C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\test-results\inspection-contrast-Contrô-1b2ac--de-la-modale-thème-sombre--mobile-portrait\controle-vehicule-theme-sombre.png
+  ok  37 [mobile-portrait] › e2e\responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé (6.3s)
+  ok  32 [mobile-portrait] › e2e\responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning) (6.3s)
+  ok  34 [mobile-portrait] › e2e\responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait (6.3s)
+  ok  33 [mobile-portrait] › e2e\responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal (6.9s)
+  ok  36 [mobile-portrait] › e2e\responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md (15.9s)
+  ok  35 [mobile-portrait] › e2e\responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile) (16.8s)
+  ok  38 [mobile-portrait] › e2e\responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules (15.7s)
+  ok  39 [mobile-portrait] › e2e\responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation (16.7s)
+  x   29 [mobile-portrait] › e2e\inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre) (34.9s)
+
+  [light]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  [night-shift]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  [true-tone]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  [dark]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+  ok  40 [mobile-landscape] › e2e\inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut (5.8s)
+  ok  42 [mobile-landscape] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche (6.0s)
+
+  Capture : C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\test-results\inspection-contrast-Contrô-1b2ac--de-la-modale-thème-sombre--mobile-landscape\controle-vehicule-theme-sombre.png
+  ok  45 [mobile-landscape] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche (6.2s)
+  ok  43 [mobile-landscape] › e2e\inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles (6.4s)
+  ok  41 [mobile-landscape] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche (6.3s)
+  ok  46 [mobile-landscape] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche (6.5s)
+  ok  44 [mobile-landscape] › e2e\inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre) (7.1s)
+  x   47 [mobile-portrait] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning (7.4s)
+  -   55 [mobile-portrait] › e2e\planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  -   56 [mobile-portrait] › e2e\planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  -   57 [mobile-portrait] › e2e\planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  -   58 [mobile-portrait] › e2e\planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  -   59 [mobile-portrait] › e2e\planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  -   60 [mobile-portrait] › e2e\planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  -   61 [mobile-portrait] › e2e\planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  -   62 [mobile-portrait] › e2e\planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  ok  51 [mobile-landscape] › e2e\responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning) (3.7s)
+  ok  54 [mobile-landscape] › e2e\responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait (3.3s)
+  ok  49 [mobile-landscape] › e2e\responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal (4.7s)
+  ok  50 [mobile-landscape] › e2e\responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé (4.4s)
+  x   48 [mobile-landscape] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning (5.4s)
+  -   68 [mobile-landscape] › e2e\planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  -   69 [mobile-landscape] › e2e\planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  -   70 [mobile-landscape] › e2e\planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  -   71 [mobile-landscape] › e2e\planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  -   72 [mobile-landscape] › e2e\planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  -   73 [mobile-landscape] › e2e\planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  -   74 [mobile-landscape] › e2e\planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  -   75 [mobile-landscape] › e2e\planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  ok  52 [mobile-landscape] › e2e\responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md (6.4s)
+  ok  53 [mobile-landscape] › e2e\responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile) (6.9s)
+  ok  64 [mobile-landscape] › e2e\responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation (5.7s)
+
+  [light]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+  ok  67 [tablet-portrait] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche (4.6s)
+
+  [dark]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+  ok  65 [tablet-portrait] › e2e\inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut (6.9s)
+  ok  66 [tablet-portrait] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche (6.5s)
+  ok  63 [mobile-landscape] › e2e\responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules (9.4s)
+
+  [night-shift]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+  ok  76 [tablet-portrait] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche (6.6s)
+
+  [true-tone]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+  ok  78 [tablet-portrait] › e2e\inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles (6.3s)
+  ok  77 [tablet-portrait] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche (6.4s)
+
+  Capture : C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\test-results\inspection-contrast-Contrô-1b2ac--de-la-modale-thème-sombre--tablet-portrait\controle-vehicule-theme-sombre.png
+  ok  81 [tablet-portrait] › e2e\responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal (3.1s)
+  ok  82 [tablet-portrait] › e2e\responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé (3.2s)
+  ok  80 [tablet-portrait] › e2e\inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre) (5.0s)
+  x   79 [tablet-portrait] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning (6.1s)
+  -   89 [tablet-portrait] › e2e\planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  -   90 [tablet-portrait] › e2e\planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  -   91 [tablet-portrait] › e2e\planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  -   92 [tablet-portrait] › e2e\planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  -   93 [tablet-portrait] › e2e\planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  -   94 [tablet-portrait] › e2e\planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  -   95 [tablet-portrait] › e2e\planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  -   96 [tablet-portrait] › e2e\planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  ok  83 [tablet-portrait] › e2e\responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md (5.2s)
+  -   85 [tablet-portrait] › e2e\responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait
+  -   84 [tablet-portrait] › e2e\responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile)
+  ok  88 [tablet-portrait] › e2e\responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation (3.8s)
+  -   86 [tablet-portrait] › e2e\responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules
+  ok  87 [tablet-portrait] › e2e\responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning) (4.4s)
+
+  [dark]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+  ok  97 [tablet-landscape] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche (3.9s)
+  ok  98 [tablet-landscape] › e2e\inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut (3.8s)
+
+  [light]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  [night-shift]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  [true-tone]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+  ok  99 [tablet-landscape] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche (5.4s)
+  ok 104 [tablet-landscape] › e2e\responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal (4.1s)
+  ok 102 [tablet-landscape] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche (4.9s)
+  ok 100 [tablet-landscape] › e2e\inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles (5.2s)
+
+  Capture : C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\test-results\inspection-contrast-Contrô-1b2ac--de-la-modale-thème-sombre--tablet-landscape\controle-vehicule-theme-sombre.png
+  ok 105 [tablet-landscape] › e2e\responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé (4.2s)
+  ok 103 [tablet-landscape] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche (5.0s)
+  ok 101 [tablet-landscape] › e2e\inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre) (5.8s)
+  x  106 [tablet-landscape] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning (4.8s)
+  -  113 [tablet-landscape] › e2e\planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  -  114 [tablet-landscape] › e2e\planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  -  115 [tablet-landscape] › e2e\planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  -  116 [tablet-landscape] › e2e\planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  -  117 [tablet-landscape] › e2e\planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  -  118 [tablet-landscape] › e2e\planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  -  119 [tablet-landscape] › e2e\planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  -  120 [tablet-landscape] › e2e\planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+
+  [dark]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+  -  111 [tablet-landscape] › e2e\responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules
+  -  109 [tablet-landscape] › e2e\responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile)
+  ok 108 [tablet-landscape] › e2e\responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning) (5.0s)
+  ok 107 [tablet-landscape] › e2e\responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md (5.1s)
+  -  110 [tablet-landscape] › e2e\responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait
+  ok 112 [tablet-landscape] › e2e\responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation (4.8s)
+  ok 122 [desktop] › e2e\inspection-contrast.spec.ts:163:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › l’application applique bien class="dark" au thème par défaut (2.3s)
+  ok 121 [desktop] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « dark » : les 4 champs sont lisibles sur la carte blanche (2.4s)
+  ok 123 [desktop] › e2e\responsive.spec.ts:41:7 › Page de connexion — responsive › aucun débordement horizontal (2.1s)
+  ok 124 [desktop] › e2e\responsive.spec.ts:46:7 › Page de connexion — responsive › le formulaire de connexion est visible et non coupé (2.2s)
+
+  [true-tone]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  [night-shift]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  [light]
+    clientName     « Pauline »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    vehicleModel   « Renault Twingo »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    licensePlate   « FZ-319-BZ »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    mileage        « 75000 »  rgb(15, 23, 42) sur rgb(255, 255, 255) → 17.85:1
+    nested         « Observation »  rgb(15, 23, 42) sur rgb(236, 253, 245) → 16.95:1
+
+  Capture : C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\test-results\inspection-contrast-Contrô-1b2ac--de-la-modale-thème-sombre--desktop\controle-vehicule-theme-sombre.png
+  ok 126 [desktop] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « true-tone » : les 4 champs sont lisibles sur la carte blanche (3.8s)
+  ok 128 [desktop] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « light » : les 4 champs sont lisibles sur la carte blanche (3.8s)
+  ok 132 [desktop] › e2e\responsive.spec.ts:79:7 › Application — responsive › la barre de navigation mobile est présente sous md (4.1s)
+  ok 125 [desktop] › e2e\inspection-contrast.spec.ts:190:9 › Contrôle véhicule — contraste des champs (mesure Chromium) › thème « night-shift » : les 4 champs sont lisibles sur la carte blanche (4.0s)
+  ok 131 [desktop] › e2e\inspection-contrast.spec.ts:218:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › les valeurs de la spécification sont affichées et lisibles (3.6s)
+  ok 129 [desktop] › e2e\responsive.spec.ts:75:7 › Application — responsive › aucun débordement horizontal global (planning) (4.3s)
+  ok 127 [desktop] › e2e\inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre) (4.1s)
+  x  130 [desktop] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning (4.6s)
+  -  137 [desktop] › e2e\planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe
+  -  138 [desktop] › e2e\planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite
+  -  139 [desktop] › e2e\planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide
+  -  140 [desktop] › e2e\planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe
+  -  141 [desktop] › e2e\planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état
+  -  142 [desktop] › e2e\planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention
+  -  143 [desktop] › e2e\planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle
+  -  144 [desktop] › e2e\planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut
+  -  133 [desktop] › e2e\responsive.spec.ts:114:7 › Application — responsive › le menu « Plus » ouvre tous les modules
+  -  135 [desktop] › e2e\responsive.spec.ts:91:7 › Application — responsive › ouverture et fermeture de l’assistant IA (mobile)
+  -  134 [desktop] › e2e\responsive.spec.ts:101:7 › Application — responsive › accès aux autres mécaniciens en portrait
+  ok 136 [desktop] › e2e\responsive.spec.ts:128:7 › Application — responsive › adaptation au changement d’orientation (6.2s)
+
+
+  1) [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+
+    Error: effectif insuffisant (5 < 20) : préparez le jeu de recette avant d'exécuter ce scénario
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 20
+    Received:    5
+
+      66 |       liste.length,
+      67 |       `effectif insuffisant (${liste.length} < ${minimum}) : préparez le jeu de recette avant d'exécuter ce scénario`,
+    > 68 |     ).toBeGreaterThanOrEqual(minimum)
+         |       ^
+      69 |   }
+      70 |
+      71 |   const precedents = (page: Page) => page.getByRole('button', { name: 'Mécaniciens précédents' })
+        at garantirEffectif (C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:68:7)
+        at C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:79:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-mobile-portrait-small\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-mobile-portrait-small\error-context.md
+
+  2) [mobile-portrait] › e2e\inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre) 
+
+    Test timeout of 30000ms exceeded.
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\inspection-contrast-Contrô-1b2ac--de-la-modale-thème-sombre--mobile-portrait\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\inspection-contrast-Contrô-1b2ac--de-la-modale-thème-sombre--mobile-portrait\error-context.md
+
+  3) [mobile-portrait] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+
+    Error: effectif insuffisant (5 < 20) : préparez le jeu de recette avant d'exécuter ce scénario
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 20
+    Received:    5
+
+      66 |       liste.length,
+      67 |       `effectif insuffisant (${liste.length} < ${minimum}) : préparez le jeu de recette avant d'exécuter ce scénario`,
+    > 68 |     ).toBeGreaterThanOrEqual(minimum)
+         |       ^
+      69 |   }
+      70 |
+      71 |   const precedents = (page: Page) => page.getByRole('button', { name: 'Mécaniciens précédents' })
+        at garantirEffectif (C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:68:7)
+        at C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:79:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-mobile-portrait\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-mobile-portrait\error-context.md
+
+  4) [mobile-landscape] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+
+    Error: effectif insuffisant (5 < 20) : préparez le jeu de recette avant d'exécuter ce scénario
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 20
+    Received:    5
+
+      66 |       liste.length,
+      67 |       `effectif insuffisant (${liste.length} < ${minimum}) : préparez le jeu de recette avant d'exécuter ce scénario`,
+    > 68 |     ).toBeGreaterThanOrEqual(minimum)
+         |       ^
+      69 |   }
+      70 |
+      71 |   const precedents = (page: Page) => page.getByRole('button', { name: 'Mécaniciens précédents' })
+        at garantirEffectif (C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:68:7)
+        at C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:79:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-mobile-landscape\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-mobile-landscape\error-context.md
+
+  5) [tablet-portrait] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+
+    Error: effectif insuffisant (5 < 20) : préparez le jeu de recette avant d'exécuter ce scénario
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 20
+    Received:    5
+
+      66 |       liste.length,
+      67 |       `effectif insuffisant (${liste.length} < ${minimum}) : préparez le jeu de recette avant d'exécuter ce scénario`,
+    > 68 |     ).toBeGreaterThanOrEqual(minimum)
+         |       ^
+      69 |   }
+      70 |
+      71 |   const precedents = (page: Page) => page.getByRole('button', { name: 'Mécaniciens précédents' })
+        at garantirEffectif (C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:68:7)
+        at C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:79:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-tablet-portrait\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-tablet-portrait\error-context.md
+
+  6) [tablet-landscape] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+
+    Error: effectif insuffisant (5 < 20) : préparez le jeu de recette avant d'exécuter ce scénario
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 20
+    Received:    5
+
+      66 |       liste.length,
+      67 |       `effectif insuffisant (${liste.length} < ${minimum}) : préparez le jeu de recette avant d'exécuter ce scénario`,
+    > 68 |     ).toBeGreaterThanOrEqual(minimum)
+         |       ^
+      69 |   }
+      70 |
+      71 |   const precedents = (page: Page) => page.getByRole('button', { name: 'Mécaniciens précédents' })
+        at garantirEffectif (C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:68:7)
+        at C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:79:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-tablet-landscape\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-tablet-landscape\error-context.md
+
+  7) [desktop] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+
+    Error: effectif insuffisant (5 < 20) : préparez le jeu de recette avant d'exécuter ce scénario
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 20
+    Received:    5
+
+      66 |       liste.length,
+      67 |       `effectif insuffisant (${liste.length} < ${minimum}) : préparez le jeu de recette avant d'exécuter ce scénario`,
+    > 68 |     ).toBeGreaterThanOrEqual(minimum)
+         |       ^
+      69 |   }
+      70 |
+      71 |   const precedents = (page: Page) => page.getByRole('button', { name: 'Mécaniciens précédents' })
+        at garantirEffectif (C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:68:7)
+        at C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e\e2e\planning-mechanics.spec.ts:79:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\planning-mechanics-plannin-c42c9-n-HAUT-À-DROITE-du-planning-desktop\error-context.md
+
+  7 failed
+    [mobile-portrait-small] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+    [mobile-portrait] › e2e\inspection-contrast.spec.ts:233:7 › Contrôle véhicule — contraste des champs (mesure Chromium) › capture visuelle de la modale (thème sombre) 
+    [mobile-portrait] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+    [mobile-landscape] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+    [tablet-portrait] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+    [tablet-landscape] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+    [desktop] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning 
+  9 skipped
+  48 did not run
+  80 passed (6.6m)
+EXIT=1

@@ -1,0 +1,31 @@
+=== HWID V1 — préservation vérifiée (MASTER 5) ===
+
+-- algorithme inchangé (lecture de src/lib/license/hwid-v1.ts) --
+23: *      de domaine « GF-HWID-V1\n » (toutes les clés TOUJOURS présentes, vide si
+35:export const HWID_V1_PREFIX = 'HWID1-'
+46:export const HWID_V1_CANONICAL_KEYS = ['cpu', 'diskSerial', 'mac', 'machineId', 'platform'] as const
+49:export function normalizeHwidField(value: string | null | undefined): string {
+51:    .normalize('NFC')
+57:/** Produit le HWID V1 canonique « HWID1-<sha256hex> » à partir des champs. */
+59:  const lines = HWID_V1_CANONICAL_KEYS.map((k) => `${k}=${normalizeHwidField(fields[k])}`)
+60:  const serialized = 'GF-HWID-V1\n' + lines.join('\n')
+61:  const digest = crypto.createHash('sha256').update(Buffer.from(serialized, 'utf8')).digest('hex')
+
+-- identité Node <-> Python sur les 5 vecteurs committés --
+Python scripts/hwid_v1.py conforme : 5 / 5
+
+-- suites Vitest HWID --
+ Test Files  2 passed (2)
+      Tests  23 passed (23)
+
+-- clé publique de licence --
+type   : ec | courbe : prime256v1
+SHA-256 du SPKI : b16d2e1bf6b9662f9748e009c0cf88770ab602233ee546895ac352f808bc3d9d
+
+-- ancrages --
+> node scripts/sync-public-key.mjs --check
+
+✅ sync:public-key — 3 ancrages déjà alignés sur keys/public.pem (b16d2e1bf6b9662f…)
+> node scripts/check-public-key.mjs
+
+✅ check:public-key — 2 consommateurs internes alignés sur keys/public.pem (b16d2e1bf6b9662f…)

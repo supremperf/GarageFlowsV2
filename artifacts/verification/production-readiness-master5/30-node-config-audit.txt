@@ -1,0 +1,44 @@
+########## npm run test:config ##########
+  duration_ms: 0.5348
+  type: 'test'
+  ...
+1..245
+# tests 245
+# suites 0
+# pass 245
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 80334.1322
+EXIT=0
+
+########## npm run test:audit ##########
+  duration_ms: 1.2716
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5804.3299
+EXIT=0
+
+########## npm run test:config:auto ##########
+  duration_ms: 191.5937
+  type: 'test'
+  ...
+1..119
+# tests 119
+# suites 0
+# pass 119
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 44844.4144
+EXIT=0

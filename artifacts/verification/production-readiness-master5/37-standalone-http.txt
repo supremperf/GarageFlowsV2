@@ -1,0 +1,35 @@
+▶ base de contrôle : gf_standalone_9bb73361052c
+▶ Redis : instance Upstash de PREVIEW (hote humble-gelding-137819.upstash.io)
+▶ migrations serveur…
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+▶ démarrage de .next/standalone/server.js …
+
+===== REQUÊTES HTTP RÉELLES sur le serveur autonome =====
+200  10ms    /api/health                point de santé
+200  133ms   /login                     page de connexion (rendu de production)
+307  20ms    /                          racine → redirection vers /login  → http://localhost:4133/login?callbackUrl=%2F
+200  17ms    /api/ping                  ping
+401  324ms   /api/clients               API privée sans session
+308  6ms     /portal                    ancienne URL portail → redirection permanente  → /clients
+307  2ms     /clients                   portail client sans chemin → redirection  → /clients/login
+307  20ms    /chemin-qui-nexiste-pas    404 applicatif  → http://localhost:4133/login?callbackUrl=%2Fchemin-qui-nexiste-pas
+
+===== EN-TÊTES DE SÉCURITÉ sur /login =====
+Content-Security-Policy  : default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'sel…
+Strict-Transport-Security: max-age=63072000; includeSubDomains
+X-Frame-Options          : DENY
+X-Content-Type-Options   : nosniff
+unsafe-eval dans la CSP  : false (doit être false en production)
+
+===== JOURNAL DU SERVEUR (extrait) =====
+   ▲ Next.js 15.5.28
+   - Local:        http://127.0.0.1:4133
+   - Network:      http://127.0.0.1:4133
+ ✓ Starting...
+ ✓ Ready in 399ms
+[2026-10-23T02:35:53.629Z] [INFO] AUTH {"step":"AUTH_STEP_0_ROUTE_LOADED","result":"ok"}
+
+RESULT=PASS
+base de contrôle supprimée : gf_standalone_9bb73361052c

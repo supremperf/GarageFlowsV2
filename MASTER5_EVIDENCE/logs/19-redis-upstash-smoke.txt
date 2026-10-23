@@ -1,0 +1,11 @@
+[env] 32 variable(s) PREVIEW chargée(s) : DATABASE_URL DATABASE_URL_UNPOOLED KV_REST_API_READ_ONLY_TOKEN KV_REST_API_TOKEN KV_REST_API_URL KV_URL NEON_AUTH_BASE_URL NEON_PROJECT_ID NX_DAEMON PGDATABASE PGHOST PGHOST_UNPOOLED PGPASSWORD PGUSER POSTGRES_DATABASE POSTGRES_HOST POSTGRES_PASSWORD POSTGRES_PRISMA_URL POSTGRES_URL POSTGRES_URL_NON_POOLING POSTGRES_URL_NO_SSL POSTGRES_USER REDIS_URL TURBO_CACHE TURBO_DOWNLOAD_LOCAL_ENABLED TURBO_REMOTE_ONLY TURBO_RUN_SUMMARY VERCEL VERCEL_ENV VERCEL_OIDC_TOKEN VERCEL_TARGET_ENV VITE_NEON_AUTH_URL
+[env] psql ajouté au PATH : true
+PASS  connexion + authentification (PING)  -> PONG
+PASS  écriture puis lecture (SET/GET)  -> valeur-de-controle
+PASS  incrément atomique (INCR) — base du comptage de débit  -> 1 puis 2
+PASS  expiration réelle (EXPIRE + TTL + disparition)  -> TTL=1s puis clé absente
+PASS  fenêtre glissante de limitation (INCR + EXPIRE NX, 3 requêtes max)  -> autorisé, autorisé, autorisé, refusé, refusé
+PASS  comportement en cas d'INDISPONIBILITÉ (jeton invalide ⇒ refus explicite)  -> HTTP 401 (authentification appliquée, aucun accès sans jeton valide)
+[nettoyage] 3/4 clé(s) de contrôle supprimée(s) (préfixe gf-m5-smoke:a9eba03213ad:)
+[nettoyage] clé(s) résiduelle(s) sous le préfixe : 0
+RESULT=PASS

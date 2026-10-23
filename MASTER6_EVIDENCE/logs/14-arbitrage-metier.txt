@@ -1,0 +1,33 @@
+[m6] copie : C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e
+[m6] variables fournies : DATABASE_URL DIRECT_URL NEXTAUTH_SECRET NEXTAUTH_URL BASE_URL E2E_EMAIL E2E_PASSWORD E2E_LICENSE GF_TEST_LICENSE RATE_LIMIT_*
+[m6] licence de TEST : GF2.eyJhbGciOiJFUzI1… (empreinte de clé 613c89fb5ff6fa6c…)
+[arbitrage] session réutilisée — url=http://localhost:3200/
+
+═══ Arbitrage 3 — correction manuelle de stock ═══
+PASS  [stock] création de pièce (quantité 10)  → HTTP 201
+PASS  [stock] correction SANS expectedQuantity → refusée  → HTTP 400 EXPECTED_QUANTITY_REQUIRED
+PASS  [stock] correction AVEC expectedQuantity → acceptée  → HTTP 200, quantité = 7
+PASS  [stock] quantité observée périmée → conflit refusé  → HTTP 409 STOCK_CONFLICT
+
+═══ Arbitrage 1 — suppression / archivage clients et véhicules ═══
+PASS  [clients] création  → HTTP 201
+PASS  [vehicules] création rattachée  → HTTP 201
+NOTE  [clients] DELETE sur un client SANS historique  → HTTP 405 (405 = méthode non exposée)
+NOTE  [vehicules] DELETE sur un véhicule SANS historique  → HTTP 405 (405 = méthode non exposée)
+NOTE  [clients] champ « archivedAt » accepté par PATCH  → HTTP 200, présent en lecture : false
+NOTE  [clients] champ « deletedAt » accepté par PATCH  → HTTP 200, présent en lecture : false
+NOTE  [clients] champ « archived » accepté par PATCH  → HTTP 200, présent en lecture : false
+NOTE  [clients] champ « isArchived » accepté par PATCH  → HTTP 200, présent en lecture : false
+PASS  [facturation] facture créée pour ce client  → HTTP 201
+NOTE  [clients] DELETE sur un client AVEC facture  → HTTP 405 — le modèle le refuserait de toute façon (FK Restrict)
+
+═══ Arbitrage 2 — copilote IA ═══
+PASS  [copilote] réponse obtenue  → HTTP 200
+NOTE  [copilote] forme de la réponse  → ["type","intent","message","confidence","slots","understanding","planning"]
+NOTE  [copilote] compréhension déclarée  → local (local = moteur déterministe, llm = modèle externe)
+NOTE  [copilote] deux appels identiques → même réponse  → true (true = déterministe)
+NOTE  [copilote] point de rapport /api/copilot/report  → HTTP 200
+NOTE  [copilote] diagnostics administrateur  → HTTP 500 {"error":"Configuration serveur incomplète (GARAGEFLOW_API_KEY)."}
+
+==== 8/8 contrôles OK, 12 constats ====
+RESULT=PASS

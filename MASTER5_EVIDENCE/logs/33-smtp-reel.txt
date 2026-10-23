@@ -1,0 +1,29 @@
+=== Sonde SMTP RÉELLE — serveur SMTP local jetable, code d'envoi du produit ===
+Architecture : aucune variable SMTP_* ; identifiants PAR GARAGE chiffrés au repos
+               (Garage.smtpHost/smtpPort/smtpUser/smtpPass/smtpFrom/smtpSecure,
+               chiffrement AES-256-GCM via GF_SMTP_CIPHER_KEY, enveloppe GFSEC1:).
+Limite      : l'ACHEMINEMENT externe (SPF/DKIM/DMARC, réputation, boîte réelle)
+               n'est PAS vérifié — aucun serveur SMTP de test autorisé fourni.
+
+
+ RUN  v4.1.12 C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2
+
+stderr | .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > un refus du serveur n’est jamais présenté comme un succès
+[mail] envoi refusé par le serveur SMTP {
+  garageId: 'cmvkc5l3w0002s3cotrj4lz67',
+  host: '127.0.0.1',
+  erreur: 'Message failed: 554 5.7.1 Message refusé par la sonde (cas de rejet)'
+}
+
+ ✓ .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > le mot de passe est stocké CHIFFRÉ au repos (enveloppe GFSEC1) 4ms
+ ✓ .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > envoie réellement le message et présente l’authentification 32ms
+ ✓ .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > une configuration incomplète est signalée sans exception 2ms
+ ✓ .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > un refus du serveur n’est jamais présenté comme un succès 18ms
+ ✓ .tmp-smtp-probe/smtp-reel.test.ts > SMTP par garage — envoi réel contre un serveur local > une clé de chiffrement modifiée rend le secret illisible et bloque l’envoi 3ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  04:13:21
+   Duration  735ms (transform 161ms, setup 0ms, import 383ms, tests 99ms, environment 0ms)
+
+EXIT=0

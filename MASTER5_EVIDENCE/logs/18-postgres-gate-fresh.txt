@@ -1,0 +1,102 @@
+[env] 33 variable(s) PREVIEW chargée(s) : DATABASE_URL DATABASE_URL_UNPOOLED KV_REST_API_READ_ONLY_TOKEN KV_REST_API_TOKEN KV_REST_API_URL KV_URL NEON_AUTH_BASE_URL NEON_PROJECT_ID NX_DAEMON PGDATABASE PGHOST PGHOST_UNPOOLED PGPASSWORD PGUSER POSTGRES_DATABASE POSTGRES_HOST POSTGRES_PASSWORD POSTGRES_PRISMA_URL POSTGRES_URL POSTGRES_URL_NON_POOLING POSTGRES_URL_NO_SSL POSTGRES_USER REDIS_URL TEST_POSTGRES_URL TURBO_CACHE TURBO_DOWNLOAD_LOCAL_ENABLED TURBO_REMOTE_ONLY TURBO_RUN_SUMMARY VERCEL VERCEL_ENV VERCEL_OIDC_TOKEN VERCEL_TARGET_ENV VITE_NEON_AUTH_URL
+[env] psql ajouté au PATH : true
+▶  Vérification/création de la base cible…
+ℹ️   Base « gf_gate_check_4932ccf019deb8b9 » déjà présente.
+▶  prisma migrate deploy…
+Environment variables loaded from .env
+Prisma schema loaded from prisma\server\schema.prisma
+Datasource "db": PostgreSQL database "gf_gate_check_4932ccf019deb8b9", schema "public" at "ep-curly-dream-b9qlnziv.c-7.eu-central-1.aws.neon.tech"
+
+22 migrations found in prisma/migrations
+
+Applying migration `20260730120000_init_server`
+Applying migration `20260730160000_link_license_garage`
+Applying migration `20260730180000_premium_modules`
+Applying migration `20260730200000_enterprise_portal`
+Applying migration `20260804000000_mechanic_licenses`
+Applying migration `20260804120000_link_repairtypepart_garage`
+Applying migration `20260804130000_add_part_jobpart_indexes`
+Applying migration `20260805000000_job_timer_accumulated`
+Applying migration `20260806000000_einvoicing_phase2`
+Applying migration `20260806100000_money_cents`
+Applying migration `20260806300000_money_reconcile_float_sources`
+Applying migration `20260807000000_money_scaled_units`
+Applying migration `20260807100000_money_drop_floats`
+Applying migration `20260808000000_fk_indexes`
+Applying migration `20260810000000_desktop_cloud_sync`
+Applying migration `20260811000000_invoice_stock_sync`
+Applying migration `20260813000000_job_tombstone`
+Applying migration `20260813120000_mechanic_avatar_archive`
+Applying migration `20260813140000_portal_access_lifecycle`
+Applying migration `20260814090000_portal_pending_email`
+Applying migration `20260814200000_workshop_half_hours`
+Applying migration `20261014000000_jobpart_snapshot_defaults`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260730120000_init_server/
+    └─ migration.sql
+  └─ 20260730160000_link_license_garage/
+    └─ migration.sql
+  └─ 20260730180000_premium_modules/
+    └─ migration.sql
+  └─ 20260730200000_enterprise_portal/
+    └─ migration.sql
+  └─ 20260804000000_mechanic_licenses/
+    └─ migration.sql
+  └─ 20260804120000_link_repairtypepart_garage/
+    └─ migration.sql
+  └─ 20260804130000_add_part_jobpart_indexes/
+    └─ migration.sql
+  └─ 20260805000000_job_timer_accumulated/
+    └─ migration.sql
+  └─ 20260806000000_einvoicing_phase2/
+    └─ migration.sql
+  └─ 20260806100000_money_cents/
+    └─ migration.sql
+  └─ 20260806300000_money_reconcile_float_sources/
+    └─ migration.sql
+  └─ 20260807000000_money_scaled_units/
+    └─ migration.sql
+  └─ 20260807100000_money_drop_floats/
+    └─ migration.sql
+  └─ 20260808000000_fk_indexes/
+    └─ migration.sql
+  └─ 20260810000000_desktop_cloud_sync/
+    └─ migration.sql
+  └─ 20260811000000_invoice_stock_sync/
+    └─ migration.sql
+  └─ 20260813000000_job_tombstone/
+    └─ migration.sql
+  └─ 20260813120000_mechanic_avatar_archive/
+    └─ migration.sql
+  └─ 20260813140000_portal_access_lifecycle/
+    └─ migration.sql
+  └─ 20260814090000_portal_pending_email/
+    └─ migration.sql
+  └─ 20260814200000_workshop_half_hours/
+    └─ migration.sql
+  └─ 20261014000000_jobpart_snapshot_defaults/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+▶  prisma migrate status…
+Environment variables loaded from .env
+Prisma schema loaded from prisma\server\schema.prisma
+Datasource "db": PostgreSQL database "gf_gate_check_4932ccf019deb8b9", schema "public" at "ep-curly-dream-b9qlnziv.c-7.eu-central-1.aws.neon.tech"
+
+22 migrations found in prisma/migrations
+
+Database schema is up to date!
+▶  Migration JSON monétaire v1 → v2 (scripts/migrate-money-json.ts)…
+✅ Migration JSON v2 PostgreSQL terminée :
+   • WorkOrder migrés          : 0
+   • WorkOrder déjà en v2      : 0
+   • WorkOrder signés (gelés)  : 0 — JSON verbatim conservé (exception légale documentée)
+   • PurchaseOrder migrés      : 0
+   • PurchaseOrder déjà en v2  : 0
+▶  Smoke test CRUD (LicenseKey + LicenseDevice)…
+✅  Base serveur PostgreSQL valide : migrations appliquées, contraintes et cascade vérifiées.
+✅ migrations serveur rejouées sur une base vierge (gf_gate_check_4932ccf019deb8b9) + smoke test OK
+EXIT=0

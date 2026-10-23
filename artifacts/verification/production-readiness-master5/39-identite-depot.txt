@@ -1,0 +1,49 @@
+=== Identité du dépôt — MASTER 5 ===
+date_utc=2026-10-23T04:22:40Z
+
+--- racine du dépôt ---
+C:/Users/Mathys/Desktop/GarageFlowsV2-arena-388085e0-garageflowsv2
+--- branche ---
+main
+--- commit HEAD ---
+0a00c64296846ae48285bec6b6f0c691ad592f78
+--- historique ---
+0a00c64 Corrections MASTER 5 : Prisma, Vitest, TypeScript, build, licences, portabilite
+7c93676 Instantané initial du dépôt GarageFlows dédié (MASTER 5)
+--- remotes (doit être vide : dépôt LOCAL, aucun push) ---
+(nombre de remotes : 0)
+--- fichiers suivis ---
+2907
+
+--- SOURCES MODIFIÉES depuis le commit (doit être vide) ---
+(fichiers suivis modifiés : 0)
+
+--- NON SUIVIS, et où ils se trouvent ---
+MASTER5_EVIDENCE/logs/38-windows-dist-clean-tree.txt
+MASTER5_EVIDENCE/logs/39-repository-identity.txt
+(non suivis HORS MASTER5_EVIDENCE/ : 0)
+
+--- exclusions vérifiées ---
+node_modules           IGNORÉ
+.next                  IGNORÉ
+.env                   IGNORÉ
+.env.local             IGNORÉ
+keys/public.pem        IGNORÉ
+src/generated          IGNORÉ
+prisma/dev.db          IGNORÉ
+prisma/e2e.db          IGNORÉ
+dist/ (motif)          présent dans .gitignore
+
+--- fichiers que le contrôle GF-DUR-044 doit voir ---
+.env.example                                                   SUIVI
+src/lib/__tests__/secrets-jamais-distribues.test.ts            SUIVI
+scripts/check-artifact-secrets.mjs                             SUIVI
+electron/preload.js                                            SUIVI
+prisma/schema.prisma                                           SUIVI
+configuation automatique/config.js                             SUIVI
+
+CONCLUSION : aucune source suivie ne diffère du commit ; les seuls fichiers non
+suivis sont les journaux de preuves, produits APRÈS le commit par construction.
+SOURCES_IDENTIQUES_AU_COMMIT=OUI
+REPOSITORY_BASE=PASS
+RELEASE_DEPUIS_ETAT_IDENTIFIE=PASS

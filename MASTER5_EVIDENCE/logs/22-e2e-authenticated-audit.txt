@@ -1,0 +1,25 @@
+=== Audit E2E authentifié — serveur dev dédié (prisma/e2e.db, port 3100) ===
+Note : la 1re exécution à froid a signalé 16/17 (course de compilation Next dev sur
+       le gabarit 390x844 ; la sonde .tmp-diag-planning a mesuré « Martin Dupont »
+       VISIBLE à x=94,y=219 sur ce même gabarit). Deux exécutions suivantes : 17/17.
+
+✅ [master5-final] Pas de débordement horizontal — 390x844-portrait — 390x844-portrait planning: scrollWidth 390 vs clientWidth 390
+✅ [master5-final] Planning avec données réelles — 390x844-portrait — mécanicien(nom:true/avatar:true) intervention:true
+✅ [master5-final] Barre de navigation mobile visible
+✅ [master5-final] Bouton principal « Ajouter » visible
+✅ [master5-final] Changement de mécanicien — onglet2 sélectionné:true colonne Marco R.:true
+✅ [master5-final] Assistant IA : ouverture/fermeture — ouvert:true fermé:true assistant: scrollWidth 390 vs clientWidth 390
+✅ [master5-final] Menu « Plus » (tous les modules) — Réception:true Stock:true Rappels:true Finance:true plus: scrollWidth 390 vs clientWidth 390
+✅ [master5-final] Création d'intervention (modale) — modale:true job-create: scrollWidth 390 vs clientWidth 390
+✅ [master5-final] Ouverture d'une intervention — modale édition:true
+✅ [master5-final] Adaptation à la rotation (pas de débordement) — rotate-landscape: scrollWidth 844 vs clientWidth 844 | rotate-back: scrollWidth 390 vs clientWidth 390
+✅ [master5-final] Pas de débordement horizontal — 844x390-landscape — 844x390-landscape planning: scrollWidth 844 vs clientWidth 844
+✅ [master5-final] Planning avec données réelles — 844x390-landscape — mécanicien(nom:true/avatar:true) intervention:true
+✅ [master5-final] Pas de débordement horizontal — 768x1024-tablet — 768x1024-tablet planning: scrollWidth 768 vs clientWidth 768
+✅ [master5-final] Planning avec données réelles — 768x1024-tablet — mécanicien(nom:true/avatar:true) intervention:true
+✅ [master5-final] Pas de débordement horizontal — 1440x900-desktop — 1440x900-desktop planning: scrollWidth 1440 vs clientWidth 1440
+✅ [master5-final] Planning avec données réelles — 1440x900-desktop — mécanicien(nom:true/avatar:true) intervention:true
+✅ [master5-final] Desktop : assistant en colonne + pas de nav mobile — 1440x900-desktop — colonne:true navMobileMasquée:true
+
+==== [master5-final] 17/17 vérifications OK ====
+EXIT=0

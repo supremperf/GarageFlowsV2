@@ -1,0 +1,19 @@
+=== Le test rejoué SEUL sur son gabarit (méthode de e2e/README.md) ===
+[m6] copie : C:\Users\Mathys\Desktop\GarageFlowsV2-arena-388085e0-garageflowsv2\.tmp-m6-e2e
+[m6] variables fournies : DATABASE_URL DIRECT_URL NEXTAUTH_SECRET NEXTAUTH_URL BASE_URL E2E_EMAIL E2E_PASSWORD E2E_LICENSE GF_TEST_LICENSE RATE_LIMIT_*
+[m6] licence de TEST : GF2.eyJhbGciOiJFUzI1… (empreinte de clé 613c89fb5ff6fa6c…)
+
+Running 9 tests using 1 worker
+
+  ok 1 [mobile-landscape] › e2e\planning-mechanics.spec.ts:85:7 › planning — fenêtre de mécaniciens et navigation › les flèches sont en HAUT À GAUCHE et en HAUT À DROITE du planning (5.7s)
+  ok 2 [mobile-landscape] › e2e\planning-mechanics.spec.ts:107:7 › planning — fenêtre de mécaniciens et navigation › la position des flèches ne bouge pas quand on change de groupe (5.1s)
+  ok 3 [mobile-landscape] › e2e\planning-mechanics.spec.ts:121:7 › planning — fenêtre de mécaniciens et navigation › au premier groupe la flèche gauche est désactivée, au dernier la droite (6.7s)
+  ok 4 [mobile-landscape] › e2e\planning-mechanics.spec.ts:133:7 › planning — fenêtre de mécaniciens et navigation › tous les mécaniciens sont atteignables, aucun doublon, aucun groupe vide (7.3s)
+  ok 5 [mobile-landscape] › e2e\planning-mechanics.spec.ts:147:7 › planning — fenêtre de mécaniciens et navigation › la molette fait défiler le planning, elle ne change PAS de groupe (5.1s)
+  ok 6 [mobile-landscape] › e2e\planning-mechanics.spec.ts:158:7 › planning — fenêtre de mécaniciens et navigation › des clics rapides répétés ne cassent pas l’état (6.5s)
+  ok 7 [mobile-landscape] › e2e\planning-mechanics.spec.ts:177:7 › planning — fenêtre de mécaniciens et navigation › naviguer ne réattribue AUCUNE intervention (6.9s)
+  ok 8 [mobile-landscape] › e2e\planning-mechanics.spec.ts:197:7 › planning — fenêtre de mécaniciens et navigation › le nombre de colonnes suit la largeur réelle (8.3s)
+  ok 9 [mobile-landscape] › e2e\planning-mechanics.spec.ts:214:7 › planning — fenêtre de mécaniciens et navigation › sur mobile les flèches restent en haut (4.7s)
+
+  9 passed (1.0m)
+EXIT=0

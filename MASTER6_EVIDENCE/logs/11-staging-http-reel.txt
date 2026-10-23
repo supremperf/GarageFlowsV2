@@ -1,0 +1,64 @@
+▶ services de STAGING utilisés
+  PostgreSQL : Neon Preview (hôte ep-curly-dream-b9qlnziv.c-7.eu-central-1.aws.neon.tech)
+  Redis      : Upstash Preview (hôte humble-gelding-137819.upstash.io)
+
+▶ migrations serveur sur la base de staging…
+  No pending migrations to apply.
+▶ démarrage du serveur de PRODUCTION (.next/standalone)…
+
+===== ENDPOINTS ESSENTIELS (mode production, services de staging) =====
+PASS  [santé] GET /api/health  → 200  {"status":"ok"}
+PASS  [santé] GET /api/ping  → 200
+PASS  [auth] GET / sans session → redirection  → 307  → http://localhost:4155/login?callbackUrl=%2F
+PASS  [auth] GET /login  → 200  9442 octets
+PASS  [auth] GET /api/auth/providers  → 200
+PASS  [auth] GET /api/auth/csrf  → 200  jeton CSRF émis
+PASS  [autorisation] GET /api/clients sans session  → 401
+PASS  [autorisation] GET /api/vehicles sans session  → 401
+PASS  [autorisation] GET /api/jobs sans session  → 401
+PASS  [autorisation] GET /api/invoices sans session  → 401
+PASS  [autorisation] GET /api/parts sans session  → 401
+PASS  [autorisation] GET /api/mechanics sans session  → 401
+PASS  [autorisation] GET /api/garages sans session  → 401
+PASS  [autorisation] GET /api/quotes sans session  → 401
+PASS  [autorisation] GET /api/work-orders sans session  → 401
+PASS  [autorisation] GET /api/finance sans session  → 401
+PASS  [autorisation] GET /api/stats sans session  → 401
+PASS  [licence] GET /api/license/status sans session  → 200
+PASS  [licence] POST activate avec jeton invalide → refus  → 400  {"ok":false,"code":"VALIDATION_ERROR","reason":"Licence manquante"}
+PASS  [portail] GET /clients → redirection  → 307  → /clients/login
+PASS  [portail] GET /portal → redirection permanente  → 308  → /clients
+PASS  [cron] POST file e-invoicing sans secret → refus  → 401  {"ok":false,"code":"UNAUTHORIZED"}
+PASS  [cron] POST file e-invoicing avec mauvais secret → refus  → 401  {"ok":false,"code":"UNAUTHORIZED"}
+PASS  [sécurité] CSP présente  → true
+PASS  [sécurité] CSP sans unsafe-eval  → false
+PASS  [sécurité] HSTS  → true
+PASS  [sécurité] X-Frame-Options DENY  → DENY
+PASS  [sécurité] X-Content-Type-Options  → nosniff
+
+===== POSTGRESQL DE STAGING, VU PAR L’APPLICATION =====
+  /api/health : {"status":"ok"}
+PASS  [postgresql] connexion directe à la base de staging  → 0  neondb | PostgreSQL 18.6 (fd34222) on aarch64-unknown-linux-gnu, compi
+PASS  [postgresql] tables du schéma public  → 0  48 tables
+
+===== REDIS DE STAGING, VU PAR LE LIMITEUR =====
+PASS  [redis] PING sur l’instance de staging  → true  PONG
+PASS  [redis] écriture puis lecture  → controle-m6
+PASS  [redis] expiration posée  → true  TTL=1
+PASS  [redis] clé de contrôle supprimée  → true
+
+===== TENUE SOUS RAFALE =====
+PASS  [tenue] 30 requêtes /api/health concurrentes  → 30  236 ms
+
+===== JOURNAL DU SERVEUR (extrait) =====
+   ▲ Next.js 15.5.28
+   - Local:        http://127.0.0.1:4155
+   - Network:      http://127.0.0.1:4155
+ ✓ Starting...
+ ✓ Ready in 400ms
+[2026-10-23T09:51:35.219Z] [INFO] AUTH {"step":"AUTH_STEP_0_ROUTE_LOADED","result":"ok"}
+[2026-10-23T09:51:38.645Z] [WARN] [einvoicing/queue] jeton refusé
+[2026-10-23T09:51:38.659Z] [WARN] [einvoicing/queue] jeton refusé
+
+==== 35/35 contrôles HTTP réels OK ====
+RESULT=PASS

@@ -1,0 +1,62 @@
+dépendances installées : 581 paquets
+
+=== Vérification STRICTE du SBOM versionné (gen-production-sbom --check) ===
+[sbom] Production closure: npx --yes npm@11.16.0 ls --omit=dev --all --json --long
+[sbom] Reading complete npm metadata, including devOptional packages
+[sbom] PASS: 133 components, installed identities, graph and notices match
+SBOM_CHECK=PASS
+
+=== Génération des notices tierces depuis le SBOM versionné ===
+[notices] 133 composants → notices-linux.md
+
+=== État des textes de licence ===
+sections de texte     : 133
+textes MANQUANTS      : 0 []
+  --- client-only@0.0.1 ---
+    ### client-only@0.0.1 — MIT
+    
+    ```
+    Texte de RÉFÉRENCE SPDX de l'identifiant « MIT » déclaré par l'éditeur dans son package.json.
+    L'éditeur ne publie AUCUNE ligne de copyright : aucun titulaire de droits n'est donc affirmé ici.
+    Source : https://spdx.org/licenses/MIT.txt
+    Référence : SPDX License List — identifiant MIT
+    SHA-256 du texte : b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0
+    
+    MIT License
+    
+    Copyright (c) <year> <copyright holders>
+  --- next-auth@4.24.15 ---
+    ### next-auth@4.24.15 — ISC
+    
+    ```
+    Source : https://raw.githubusercontent.com/nextauthjs/next-auth/next-auth%404.24.15/LICENSE
+    Référence : refs/tags/next-auth@4.24.15 (d857eec560fb99c8b18d3b22a2693b849a62d1c3)
+    SHA-256 du texte : cf5c8f6c5d858d6b0f356ee78e1796639e8cfd4c48db4f18c21ea21a973887ae
+    Le paquet publié ne contient pas son propre fichier de licence.
+    
+    ISC License
+    
+    Copyright (c) 2018-2021, Iain Collins
+    Copyright (c) 2021-2025, Better Auth Inc.
+
+=== Comparaison avec THIRD_PARTY_NOTICES.md versionné ===
+versionné : 347965 octets  sha256=d104bc4ef7c077f4…
+régénéré  : 350378 octets  sha256=24f8bd56d0b8f96f…
+identiques: false
+manquants dans le versionné : 2 ["client-only@0.0.1","next-auth@4.24.15"]
+
+=== Tests SBOM / notices ===
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 345.351935
+
+=== Installation du fichier régénéré dans /out pour reprise côté hôte ===
+24f8bd56d0b8f96f93e9e89e3a5e11ddc374ff688c3a440868db17f50ad2db16  /out/THIRD_PARTY_NOTICES.linux.md
+LINUX_NOTICES=DONE
+EXIT=0

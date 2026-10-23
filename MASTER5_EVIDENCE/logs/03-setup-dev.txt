@@ -1,0 +1,8 @@
+✅  .env créé depuis .env.example
+🔐  NEXTAUTH_SECRET généré (aléatoire, unique à cette installation).
+✅  Dossier prisma/ assuré.
+✅  Base de données créée depuis le modèle (garageflow-template.db).
+
+  ✅  NEXTAUTH_SECRET a été généré automatiquement (aléatoire).
+  Ensuite :  npm run dev
+

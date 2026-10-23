@@ -1,0 +1,117 @@
+Unable to find image 'node:22-bookworm' locally
+22-bookworm: Pulling from library/node
+2371d54c8ec8: Pulling fs layer
+8a051559ff62: Pulling fs layer
+536933331502: Pulling fs layer
+55f3510f14ae: Pulling fs layer
+fc8fca04e403: Pulling fs layer
+8145ffc7a2f0: Pulling fs layer
+e0959ba39613: Pulling fs layer
+c989958b006c: Pulling fs layer
+c989958b006c: Download complete
+2371d54c8ec8: Download complete
+55f3510f14ae: Download complete
+fc8fca04e403: Download complete
+8a051559ff62: Download complete
+be3b1abfc01b: Download complete
+e0959ba39613: Download complete
+536933331502: Download complete
+4851abe5bb82: Download complete
+8a051559ff62: Pull complete
+55f3510f14ae: Pull complete
+8145ffc7a2f0: Download complete
+e0959ba39613: Pull complete
+c989958b006c: Pull complete
+8145ffc7a2f0: Pull complete
+536933331502: Pull complete
+2371d54c8ec8: Pull complete
+fc8fca04e403: Pull complete
+Digest: sha256:63538dfe497cc29dfafdda25ada09b46db68a3f4cc205abf1f5d6bf0913f3384
+Status: Downloaded newer image for node:22-bookworm
+=== Système ===
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+NAME="Debian GNU/Linux"
+node : v22.23.4   npm : 10.9.9
+OpenSSL 3.0.22 25 Aug 2026 (Library: OpenSSL 3.0.22 25 Aug 2026)
+
+=== Copie du dépôt (sans node_modules/.next/dist) ===
+fichiers copiés : 3103
+
+=== Installation des dépendances (sans scripts) ===
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice
+
+=== Prisma : version et moteurs ===
+Environment variables loaded from .env
+prisma                  : 5.22.0
+@prisma/client          : 5.22.0
+Computed binaryTarget   : debian-openssl-3.0.x
+Operating System        : linux
+Architecture            : x64
+Node.js                 : v22.23.4
+Query Engine (Node-API) : libquery-engine 605197351a3c8bdd595af2d2a9bc3025bca48ea2 (at node_modules/@prisma/engines/libquery_engine-debian-openssl-3.0.x.so.node)
+Schema Engine           : schema-engine-cli 605197351a3c8bdd595af2d2a9bc3025bca48ea2 (at node_modules/@prisma/engines/schema-engine-debian-openssl-3.0.x)
+Schema Wasm             : @prisma/prisma-schema-wasm 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
+Default Engines Hash    : 605197351a3c8bdd595af2d2a9bc3025bca48ea2
+Studio                  : 0.503.0
+
+=== Prisma : validation et génération (les deux schémas) ===
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+The schema at prisma/schema.prisma is valid 🚀
+┌─────────────────────────────────────────────────────────┐
+│  Update available 5.22.0 -> 8.0.0-rc.26                 │
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 2.80s
+✔ Generated Prisma Client (v5.22.0) to ./src/generated/server-client in 3.73s
+
+--- moteurs présents dans le client desktop ---
+-rwxr-xr-x 1 root root 16161048 Oct 22 20:30 libquery_engine-debian-openssl-3.0.x.so.node
+-rwxr-xr-x 1 root root 19261952 Oct 22 20:30 query_engine-windows.dll.node
+
+=== Prisma : opération RÉELLE sur une base SQLite isolée (Linux) ===
+PASS  connexion + version SQLite  -> 3.45.0
+PASS  inventaire des tables  -> 45 tables / 43 modèles
+PASS  création tenant Garage isolé  -> cmvjzxee50000wl96aa3iqbk8
+PASS  CRUD Client + lecture dans transaction  -> cmvjzxeeh0003wl96p3jgankg
+PASS  relation Client -> Vehicle  -> SM-dceef
+PASS  isolation multi-tenant (filtre garageId)  -> 1 dans le tenant, 0 hors tenant
+PASS  index utilisé (EXPLAIN QUERY PLAN sur garageId)  -> SEARCH Client USING INDEX Client_garageId_idx (garageId=?)
+PASS  rollback de transaction  -> 1 == 1
+PASS  persistance après reconnexion  -> SMOKE-CLIENT-dceefb76f7
+PASS  suppression en cascade du tenant jetable  -> client et véhicule supprimés avec le garage
+RESULT=PASS
+
+=== SBOM : clôture de production Linux ===
+[sbom] Production closure: npx --yes npm@11.16.0 ls --omit=dev --all --json --long
+[sbom] Reading complete npm metadata, including devOptional packages
+[sbom] 133 production components → ../out/sbom-linux.cdx.json
+
+--- comparaison avec le SBOM versionné ---
+versionné : 133  régénéré Linux : 133
+uniquement versionné : []
+uniquement régénéré  : []
+
+=== Notices : état des textes de licence ===
+node:fs:440
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open '/out/notices-linux.md'
+    at Object.readFileSync (node:fs:440:20)
+    at [eval]:3:12
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:446:12
+    at [eval]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:444:60)
+    at evalFunction (node:internal/process/execution:279:30)
+    at evalTypeScript (node:internal/process/execution:291:3)
+    at node:internal/main/eval_string:74:3 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/out/notices-linux.md'
+}
+
+Node.js v22.23.4
+EXIT=1

@@ -1,0 +1,42 @@
+<claude-code-hint v="1" type="plugin" value="vercel@claude-plugins-official" />
+Vercel CLI 65.1.0 (Node.js 22.23.2)
+  Inspect         https://vercel.com/garage-flows/app.garageflows.fr/C1FGbnHRpggCVpuL6L9XA2BHHyHi
+  Preview         https://appgarageflows-gomy2ln6k-garage-flows.vercel.app
+{
+  "status": "ok",
+  "deployment": {
+    "id": "dpl_C1FGbnHRpggCVpuL6L9XA2BHHyHi",
+    "url": "https://appgarageflows-gomy2ln6k-garage-flows.vercel.app",
+    "productionUrl": null,
+    "inspectorUrl": "https://vercel.com/garage-flows/app.garageflows.fr/C1FGbnHRpggCVpuL6L9XA2BHHyHi",
+    "readyState": "READY",
+    "target": null,
+    "deploymentApiUrl": "https://api.vercel.com/v13/deployments/dpl_C1FGbnHRpggCVpuL6L9XA2BHHyHi",
+    "buildMachine": {
+      "cores": 2,
+      "memory": 8192,
+      "machine": "basic",
+      "selectionType": "fixed",
+      "selectionSource": "plan-default"
+    },
+    "deploymentProtection": [
+      "vercel_authentication"
+    ]
+  },
+  "message": "Deployment appgarageflows-gomy2ln6k-garage-flows.vercel.app ready.",
+  "next": [
+    {
+      "command": "vercel curl https://appgarageflows-gomy2ln6k-garage-flows.vercel.app",
+      "when": "Verify deployment, including when Deployment Protection is enabled"
+    },
+    {
+      "command": "vercel inspect appgarageflows-gomy2ln6k-garage-flows.vercel.app",
+      "when": "Inspect deployment"
+    },
+    {
+      "command": "vercel deploy --prod",
+      "when": "Promote to production"
+    }
+  ]
+}
+EXIT=0

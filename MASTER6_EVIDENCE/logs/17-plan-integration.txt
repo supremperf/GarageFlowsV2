@@ -1,0 +1,23 @@
+=== PLAN D'INTÉGRATION — analyse préalable ===
+date_utc=2026-10-23T10:09:33Z
+
+--- états ---
+mon HEAD local (histoire INDÉPENDANTE) : 577ae195e7ea400e45b09197baeedc295a5845a5
+origin/main                            : 483aae32d522ef0a31275ab863d9ed61b2996de3
+origin/arena/388085e0-garageflowsv2    : c5e63291eb71aee592f330c6061a924ea81c89b1
+base commune arena <-> main            : e6710cf298c1f75a1d831abb9c816f51c2cb86a9
+
+--- ce que chacun apporte ---
+commits de l'arena absents de main : 43
+commits de main absents de l'arena : 1
+
+--- RISQUE IDENTIFIÉ : fichiers suivis en amont mais IGNORÉS localement ---
+Mon .gitignore contient *.log ; or l'amont suit des journaux d'audit ajoutés
+avec -f avant cette règle. Un push de mon histoire les SUPPRIMERAIT.
+journaux d'audit concernés : 215
+
+--- DÉCISION ---
+On n'écrase RIEN. On repart de origin/arena/388085e0-garageflowsv2 (qui porte
+les 207 journaux et les 43 commits), on y applique UNIQUEMENT l'apport
+MASTER 5/6, puis on fusionne dans main — convention du dépôt (PR #13 a fusionné
+arena/7ad7aa15 dans main de la même façon).
