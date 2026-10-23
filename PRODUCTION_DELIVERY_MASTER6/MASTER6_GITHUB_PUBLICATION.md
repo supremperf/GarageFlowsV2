@@ -275,3 +275,29 @@ antérieures et indépendantes.
 - **aucun secret publié** ;
 - **aucune modification de la production** ni de la configuration Vercel ;
 - **aucun manifeste de preuve régénéré** pour masquer un écart.
+
+---
+
+## 10. Note de traçabilité : deux push, et pourquoi
+
+Un document qui enregistre le SHA d'une publication ne peut pas se trouver dans le
+commit qu'il décrit. La publication s'est donc faite en deux temps, tous deux réels
+et sans force :
+
+| Push | Plage | Contenu |
+|---|---|---|
+| 1 | **`483aae3..277e1f2`** | **la totalité du travail validé** — code, preuves, 51 commits. C'est ce commit qui a passé `release:gate` 16/16 et que la CI a évalué (run `39963071669`) |
+| 2 | **`277e1f2..cf8f8f1`** | **ce document** et le triage gitleaks — de la documentation uniquement, aucun changement de code |
+
+Le commit de référence pour le **contenu** est donc `277e1f2`. Le second push
+n'ajoute que des fichiers Markdown et un journal de preuves.
+
+Le SHA final de `main` se lit à tout moment par :
+
+```
+git ls-remote origin refs/heads/main
+gh api repos/supremperf/GarageFlowsV2/commits/main -q .sha
+```
+
+Si ce fichier a lui-même été amendé après `cf8f8f1`, c'est pour la même raison, et
+la commande ci-dessus reste la source de vérité.
