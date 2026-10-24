@@ -1,0 +1,139 @@
+=== MASTER 7 / Phase 4 — signature et empaquetage Windows ===
+
+Etat releve a nouveau, par mesure directe. Aucun certificat n'est invente, et
+aucune compilation Linux n'est presentee comme une validation Windows.
+
+--------------------------------------------------------------------------------
+1. SIGNATURE : ABSENTE, CONFIRME
+--------------------------------------------------------------------------------
+
+  Get-AuthenticodeSignature sur les deux executables distribues :
+
+    GarageFlows-Setup.exe      Status : NotSigned    251 220 180 octets
+        certificat signataire  : aucun
+    GarageFlows.exe            Status : NotSigned    246 840 832 octets
+        certificat signataire  : aucun
+
+  Certificats de signature de code dans les magasins de l'utilisateur :
+    Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert   ->   AUCUN
+
+--------------------------------------------------------------------------------
+2. POURQUOI : AUCUNE SIGNATURE N'EST CONFIGUREE
+--------------------------------------------------------------------------------
+
+  electron-builder, section `build.win` :
+
+    target              [{"target":"nsis","arch":["x64"]}]
+    certificateFile     aucun
+    certificateSubject  aucun
+    signtoolOptions     aucun
+
+  Variables d'environnement de signature :
+
+    CSC_LINK             absent
+    CSC_KEY_PASSWORD     absent
+    WIN_CSC_LINK         absent
+    WIN_CSC_KEY_PASSWORD absent
+
+  Il n'y a donc rien a corriger dans la configuration : il manque un certificat.
+
+--------------------------------------------------------------------------------
+3. CE QUI EST VERIFIE SUR L'ARTEFACT EXISTANT
+--------------------------------------------------------------------------------
+
+  Controles du projet executes sur l'artefact deja construit, SANS
+  reconstruction — donc sur l'octet exactement livre :
+
+    npm run check:artifact-secrets    OK   aucune cle privee, aucun secret
+    npm run check:artifact-fuses      OK   9 / 9 fusibles conformes
+    npm run verify:installer          OK   taille, version, type, charge utile
+
+  Fusibles Electron, detail :
+
+    RunAsNode=false
+    EnableCookieEncryption=true
+    EnableNodeOptionsEnvironmentVariable=false
+    EnableNodeCliInspectArguments=false
+    EnableEmbeddedAsarIntegrityValidation=true
+    OnlyLoadAppFromAsar=true
+    LoadBrowserProcessSpecificV8Snapshot=false
+    GrantFileProtocolExtraPrivileges=true
+    WasmTrapHandlers=true
+
+--------------------------------------------------------------------------------
+4. CIBLE NSIS : CE QU'ELLE GARANTIT DEJA
+--------------------------------------------------------------------------------
+
+    oneClick                     false   l'utilisateur voit et controle l'etape
+    perMachine                   false   installation par utilisateur
+    allowElevation               false   aucune demande de droits administrateur
+    allowToChangeInstallationDirectory  false
+    deleteAppDataOnUninstall     false   LES DONNEES UTILISATEUR SONT CONSERVEES
+                                         a la desinstallation
+    createDesktopShortcut        always
+    createStartMenuShortcut      true
+    include                      scripts/installer.nsh
+
+  Le point le plus important pour un parc installe — la non-destruction des
+  donnees a la desinstallation — est donc acquis par configuration.
+
+--------------------------------------------------------------------------------
+5. CE QUI RESTE NON JOUE, ET POURQUOI
+--------------------------------------------------------------------------------
+
+  Non execute : installation, raccourcis, entree de desinstallation, mise a
+  niveau, desinstallation, activation et HWID sur poste vierge.
+
+  Raison : ce poste heberge une installation REELLE de GarageFlows et les
+  donnees metier de l'utilisateur. L'`appId` etant partage, une installation de
+  test rendrait l'installation existante non desinstallable. La procedure
+  officielle du projet refuse d'ailleurs de s'executer ici.
+
+  Je ne peux pas creer de machine virtuelle Windows jetable depuis cette
+  session : c'est un prerequis materiel externe.
+
+  Procedure a executer sur une machine Windows propre :
+
+    Get-FileHash .\GarageFlows-Setup.exe -Algorithm SHA256   # avant d'executer
+    $env:GITHUB_ACTIONS = "true"
+    $env:RUNNER_OS = "Windows"
+    $env:GF_WINDOWS_SMOKE_ISOLATED = "1"
+    powershell -NoProfile -ExecutionPolicy Bypass -File scripts\test-windows-setup.ps1
+
+  Puis, avec une licence de test : activation, HWID, creation d'un client et
+  d'une facture, export PDF, parametres, comportement hors ligne, mise a niveau
+  depuis la version precedente, desinstallation avec verification que les
+  donnees survivent.
+
+  Preuve attendue : le JSON de resultat avec `success: true`.
+
+--------------------------------------------------------------------------------
+6. OBTENIR UN CERTIFICAT — PROCEDURE
+--------------------------------------------------------------------------------
+
+  Deux options, selon le besoin de reputation immediate :
+
+    OV  (validation d'organisation) — moins couteux. La reputation SmartScreen
+        se construit avec le volume de telechargements : les premiers clients
+        verront encore un avertissement.
+    EV  (validation etendue) — cle en HSM ou jeton materiel, reputation
+        SmartScreen immediate. Plus couteux, et impose une signature depuis une
+        machine ayant acces au materiel, donc une CI adaptee.
+
+  Mise en oeuvre, une fois le certificat obtenu :
+
+    - ne JAMAIS committer le certificat ni son mot de passe ;
+    - fournir `CSC_LINK` (chemin ou base64 du .pfx) et `CSC_KEY_PASSWORD` par
+      les secrets de la CI, jamais dans `package.json` ;
+    - reconstruire : `npm run dist` signera alors l'installateur et les
+      executables ;
+    - verifier : `Get-AuthenticodeSignature` doit renvoyer `Status: Valid`, et
+      le recu de livraison doit porter `authenticodeVerified: true`.
+
+SIGNATURE_PRESENTE=non
+CERTIFICAT_DISPONIBLE=non
+CERTIFICAT_INVENTE=non
+CONTROLES_ARTEFACT_PASSES=3/3
+FUSIBLES_CONFORMES=9/9
+DONNEES_CONSERVEES_A_LA_DESINSTALLATION=oui (par configuration)
+PARCOURS_INSTALLATION_JOUE=non — machine jetable requise

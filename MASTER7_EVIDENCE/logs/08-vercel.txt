@@ -1,0 +1,119 @@
+=== MASTER 7 / Phase 8 — Vercel et production ===
+
+date_utc : 2026-10-24
+Aucune valeur de variable d'environnement n'est affichee : seuls les NOMS le sont.
+
+--------------------------------------------------------------------------------
+1. PROJET
+--------------------------------------------------------------------------------
+
+  equipe / projet      garage-flows / app.garageflows.fr
+  identifiant          prj_D6TzGiDffWVBjXscUSSgk5re9ymP
+  proprietaire         GarageFlows
+  cree le              30 juillet 2026
+  cadriciel            Next.js
+  Node.js              24.x
+  repertoire racine    .
+
+  LIAISON GIT          AUCUNE. `vercel project inspect` ne presente aucune
+                       section Git. Consequence directe et reverifiee en
+                       MASTER 7 : un push sur `main` ne declenche AUCUN
+                       deploiement. La branche de production n'est donc pas
+                       definie cote Vercel.
+
+--------------------------------------------------------------------------------
+2. VARIABLES D'ENVIRONNEMENT — NOMS SEULEMENT
+--------------------------------------------------------------------------------
+
+  Production, type `Secret` (valeurs masquees par Vercel) :
+      GF_BACKUP_KEY, GF_SIGNATURE_SECRET, GF_SMTP_CIPHER_KEY, GF_PORTAL_SECRET,
+      DATABASE_URL, DIRECT_URL, EINVOICING_QUEUE_TOKEN, CRON_SECRET,
+      GF_PRODUCTION_DB_FINGERPRINT, UPSTASH_REDIS_REST_TOKEN,
+      UPSTASH_REDIS_REST_URL, NEXTAUTH_URL, GF_DB_MAC_SECRET,
+      DEVICE_TOKEN_PEPPER, GARAGEFLOW_API_KEY, NEXTAUTH_SECRET
+
+  Preview : jeu parallele, plus un ensemble de type `Config` injecte par les
+      integrations Neon et Upstash (DATABASE_URL, PGPASSWORD, NEON_PROJECT_ID,
+      KV_*, POSTGRES_*…).
+
+  Constats :
+    - AUCUNE variable `PRIVATE_KEY` dans aucun environnement. Cela confirme, de
+      maniere independante, que la cle privee de licence n'est plus configuree.
+    - AUCUNE variable Blob (`vercel env ls | grep -ci blob` -> 0), alors qu'un
+      jeton Blob expose est encore actif au niveau du COMPTE. Le canal n'est
+      donc pas en service cote projet.
+    - Les noms exposes dans l'historique public (`DATABASE_URL`, `DIRECT_URL`,
+      `UPSTASH_REDIS_REST_*`, `KV_*`, `POSTGRES_*`) correspondent exactement au
+      jeu `Config` de l'environnement Preview.
+
+--------------------------------------------------------------------------------
+3. DEPLOIEMENT DE PRODUCTION EN LIGNE
+--------------------------------------------------------------------------------
+
+  age          3 jours
+  URL          https://appgarageflows-e41ch5ymm-garage-flows.vercel.app
+  statut       ● Ready
+  environnement  Production
+  duree de build 3 min
+
+  Ce deploiement est ANTERIEUR a MASTER 7. Aucune de mes modifications n'y est,
+  et la production n'a pas ete touchee.
+
+--------------------------------------------------------------------------------
+4. PRODUCTION EXERCEE — MESURES HTTP REELLES
+--------------------------------------------------------------------------------
+
+  GET /               307   1,230 s    redirige vers /login
+  GET /login          200   0,286 s
+  GET /api/health     200   2,062 s    corps : {"status":"ok"}
+  GET /api/clients    401   0,590 s    authentification APPLIQUEE
+  GET /portal         308   0,153 s
+
+  Le point le plus important est le 401 sur `/api/clients` : la production
+  refuse bien une requete non authentifiee.
+
+--------------------------------------------------------------------------------
+5. POSTGRESQL, REDIS, SMTP
+--------------------------------------------------------------------------------
+
+  PostgreSQL   `DATABASE_URL` et `DIRECT_URL` sont configures en Production.
+               Je n'ai PAS interroge la base de production : hors perimetre, et
+               aucune donnee personnelle ne doit etre lue.
+               `/api/health` repondant 200 atteste que l'application atteint ses
+               dependances.
+  Redis        `UPSTASH_REDIS_REST_URL` / `_TOKEN` configures en Production. La
+               nouvelle instance est distincte de celle exposee dans
+               l'historique, dont l'hote ne resout plus (NXDOMAIN).
+  SMTP         `GF_SMTP_CIPHER_KEY` est configure : les identifiants SMTP sont
+               chiffres au repos. L'acheminement externe (SPF, DKIM, DMARC,
+               reception reelle) n'a PAS ete teste — cela exige un serveur de
+               test et une adresse destinataire autorisee, et aucun courriel
+               commercial ou client ne doit etre envoye.
+
+--------------------------------------------------------------------------------
+6. AUCUN DEPLOIEMENT N'A ETE EFFECTUE — ET POURQUOI
+--------------------------------------------------------------------------------
+
+  Le mandat demande de ne rien deployer avant validation des phases de
+  securite, puis de deployer « apres autorisation et validation ».
+
+  Deux raisons de ne pas deployer a ce stade :
+
+    1. La phase de securite n'est pas close : le jeton Vercel Blob expose
+       publiquement est TOUJOURS ACTIF. Sa revocation exige une action humaine,
+       la CLI Vercel refusant cette operation a un agent
+       (`dangerous_operation_requires_user`).
+
+    2. Le projet n'ayant aucune liaison Git, un deploiement se ferait depuis la
+       CLI et REMPLACERAIT ce qui est actuellement en ligne et sain. C'est une
+       modification de production, irreversible en pratique, qui demande votre
+       accord explicite.
+
+  La production reste donc exactement dans l'etat ou MASTER 6 l'avait laissee.
+
+LIAISON_GIT_VERCEL=aucune
+PRODUCTION_MODIFIEE_PAR_MASTER7=non
+DEPLOIEMENT_EFFECTUE=non
+PRODUCTION_EN_LIGNE=oui
+AUTHENTIFICATION_APPLIQUEE_EN_PRODUCTION=oui (401 sur /api/clients)
+VARIABLE_PRIVATE_KEY_PRESENTE=non

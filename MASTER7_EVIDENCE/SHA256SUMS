@@ -1,0 +1,10 @@
+1f730e813129113a97dec2cf4b34841cb5a595fa5883196eb72d7041fe44da7f  ./logs/09-validation-globale.txt
+31c8e6a19964f191d9ff605dca68e1941a7ad9dc01e37f27d733b9f888b7ddc6  ./logs/01-audit-initial.txt
+6b3f3adc3b8fe4bfc12db383d61f1b38ab4aacd77acd6f031925edd2b422577e  ./logs/02-secrets-historiques-classification.txt
+6c49341b9710b770ad5f24362e3fe9b0dd740a430c469fd36e2014773ea669bb  ./logs/08-vercel.txt
+6d738ce4764f8fe30944f7636cd7b64b75f3d53c779e489dd5e23b72534ca397  ./logs/07-windows-signature.txt
+88fdb2db2b1dfee97589f060bb623ada7cd0af83363520385568f748e22ca7d6  ./logs/03-revocation-blob-tentative.txt
+a2bb3d01428a4c2f3ac3b2bab42b440c7cefabb260f657d43a522ff425ce8991  ./logs/05-cryptographie-licence.txt
+c374f49598ac3dc12e43fa8617a51f1017fad236b42fea57944e9b15b42714a7  ./logs/06-licences-composants.txt
+d17ef3790956f6c5845b64e847e7c5f036306d4fd6f98be8fff661b5a83dd35c  ./outils/verifier-revocation-blob.cjs
+eeca85f106794e3e1cf94244d6fd07a1661cde7705084fad250e12ced6d3e8b0  ./logs/04-secret-scan-correction.txt

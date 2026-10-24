@@ -146,14 +146,14 @@
     "lucide-react": "^0.400.0",
     "next": "15.5.28",
     "next-auth": "^4.24.15",
-    "nodemailer": "10.1.1",
+    "nodemailer": "10.1.7",
     "prisma": "^5.16.1",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
     "tailwind-merge": "^2.4.0",
-    "zod": "^4.3.6",
+    "zod": "^4.6.7",
     "zustand": "^4.5.4"
   },
   "devDependencies": {

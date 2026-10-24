@@ -1,0 +1,207 @@
+=== MASTER 7 / Phase 7 — validation globale ===
+date_utc=2026-10-24T06:42:58Z
+commit : e839b83bcb7fba6a104b8e95d37acfd36343a7be
+
+--- 1. release:gate avec PostgreSQL 17 et Redis 7 reels ---
+════ RÉCAPITULATIF ════
+✅ TypeScript (tsc --noEmit)                                                  OK
+✅ ESLint                                                                     OK
+✅ Gardes de cohérence (check:consistency)                                    OK
+✅ Preuve de rotation des secrets                                             OK
+✅ Suite de tests (vitest) + baseline machine + baseline humaine              OK
+✅ Cohérence documentaire (post-baseline)                                     OK
+✅ Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)  OK
+✅ Migrations PostgreSQL sur base neuve + smoke test                          OK
+✅ Rate-limit distribué multi-instance (Redis réel)                           OK
+❌ Audit complet dépendances (tous niveaux)                                   ÉCHEC — exit 1
+❌ Audit runtime desktop empaqueté (Electron)                                 ÉCHEC — exit 1
+✅ Manifeste de release (commit-bound)                                        OK
+✅ Vérification d'artefact (identité + cohérence + secrets)                   OK
+✅ Empaquetage + vérification d'artefact RÉEL (ZIP extrait, sans .git)        OK
+✅ Build de production (next build)                                           OK
+✅ Budget de performance (bundle client)                                      OK
+
+❌ GATE ÉCHOUÉ : 2 échec(s) et 0 contrôle(s) obligatoire(s) non exécuté(s).
+EXIT=1
+
+    14 / 16 controles passes. Les DEUX echecs ont la MEME cause racine :
+/usr/bin/bash: line 16: audit-ci.js: command not found
+/usr/bin/bash: line 16: check-desktop-runtime-audit.mjs: command not found
+     et  executent tous deux
+    # npm audit report
+
+fast-uri  3.0.0 - 3.1.8
+Severity: moderate
+fast-uri vulnerable to URI scheme spoofing via percent-encoded scheme decoding - https://github.com/advisories/GHSA-w74x-v6f9-j3xg
+fast-uri vulnerable to improper path equivalence in relative reference normalization - https://github.com/advisories/GHSA-xhq7-xmqj-769h
+fast-uri vulnerable to host confusion via unchecked WHATWG host canonicalization - https://github.com/advisories/GHSA-wjr9-j795-jxcr
+fast-uri vulnerable to scheme injection via an unescaped first-segment colon in suffix references - https://github.com/advisories/GHSA-333x-w4r6-6crp
+fix available via `npm audit fix`
+node_modules/fast-uri
+
+undici  6.5.0 - 6.29.0 || 7.0.0 - 7.30.0
+Severity: high
+undici vulnerable to Denial of Service via unbounded memory in the EventSource parser - https://github.com/advisories/GHSA-4qv8-2p9j-2685
+undici vulnerable to Denial of Service via unbounded memory in the EventSource parser - https://github.com/advisories/GHSA-4qv8-2p9j-2685
+undici vulnerable to Subresource Integrity bypass via non-lowercase algorithm tokens - https://github.com/advisories/GHSA-f72v-6w45-q472
+undici vulnerable to Denial of Service via unhandled error on excessive content-encodings - https://github.com/advisories/GHSA-xjj6-f33q-929c
+undici vulnerable to Denial of Service via unhandled error on excessive content-encodings - https://github.com/advisories/GHSA-xjj6-f33q-929c
+fix available via `npm audit fix`
+node_modules/node-gyp/node_modules/undici
+node_modules/undici
+
+zod  <4.6.6
+Severity: high
+Zod can exhaust memory while validating oversized constrained collections - https://github.com/advisories/GHSA-mrhx-c7xc-m3w5
+fix available via `npm audit fix --force`
+Will install @vercel/blob@2.4.0, which is a breaking change
+node_modules/@vercel/cli-config/node_modules/zod
+  @vercel/cli-config  *
+  Depends on vulnerable versions of zod
+  node_modules/@vercel/cli-config
+    @vercel/oidc  >=3.6.0
+    Depends on vulnerable versions of @vercel/cli-config
+    node_modules/@vercel/oidc
+      @vercel/blob  >=2.4.1-b7027de-20260616193056
+      Depends on vulnerable versions of @vercel/oidc
+      node_modules/@vercel/blob
+
+6 vulnerabilities (1 moderate, 5 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force et rapportent les memes totaux.
+
+--- 2. la cause : des avis publies dans les dernieres 24 heures ---
+    Le meme controle etait VERT hier (MASTER 6, run du 2026-10-23) :
+        « Audit complet dependances (tous niveaux)… OK (2s) »
+    Au 2026-10-24 : LOW=0 MODERATE=3 HIGH=5 CRITICAL=0 TOTAL=8
+    # npm audit report
+
+fast-uri  3.0.0 - 3.1.8
+Severity: moderate
+fast-uri vulnerable to URI scheme spoofing via percent-encoded scheme decoding - https://github.com/advisories/GHSA-w74x-v6f9-j3xg
+fast-uri vulnerable to improper path equivalence in relative reference normalization - https://github.com/advisories/GHSA-xhq7-xmqj-769h
+fast-uri vulnerable to host confusion via unchecked WHATWG host canonicalization - https://github.com/advisories/GHSA-wjr9-j795-jxcr
+fast-uri vulnerable to scheme injection via an unescaped first-segment colon in suffix references - https://github.com/advisories/GHSA-333x-w4r6-6crp
+fix available via `npm audit fix`
+node_modules/fast-uri
+
+undici  6.5.0 - 6.29.0 || 7.0.0 - 7.30.0
+Severity: high
+undici vulnerable to Denial of Service via unbounded memory in the EventSource parser - https://github.com/advisories/GHSA-4qv8-2p9j-2685
+undici vulnerable to Denial of Service via unbounded memory in the EventSource parser - https://github.com/advisories/GHSA-4qv8-2p9j-2685
+undici vulnerable to Subresource Integrity bypass via non-lowercase algorithm tokens - https://github.com/advisories/GHSA-f72v-6w45-q472
+undici vulnerable to Denial of Service via unhandled error on excessive content-encodings - https://github.com/advisories/GHSA-xjj6-f33q-929c
+undici vulnerable to Denial of Service via unhandled error on excessive content-encodings - https://github.com/advisories/GHSA-xjj6-f33q-929c
+fix available via `npm audit fix`
+node_modules/node-gyp/node_modules/undici
+node_modules/undici
+
+zod  <4.6.6
+Severity: high
+Zod can exhaust memory while validating oversized constrained collections - https://github.com/advisories/GHSA-mrhx-c7xc-m3w5
+fix available via `npm audit fix --force`
+Will install @vercel/blob@2.4.0, which is a breaking change
+node_modules/@vercel/cli-config/node_modules/zod
+  @vercel/cli-config  *
+  Depends on vulnerable versions of zod
+  node_modules/@vercel/cli-config
+    @vercel/oidc  >=3.6.0
+    Depends on vulnerable versions of @vercel/cli-config
+    node_modules/@vercel/oidc
+      @vercel/blob  >=2.4.1-b7027de-20260616193056
+      Depends on vulnerable versions of @vercel/oidc
+      node_modules/@vercel/blob
+
+6 vulnerabilities (1 moderate, 5 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force interroge une base d'avis qui evolue : ce n'est pas une
+    regression du produit, c'est l'etat du monde qui a change.
+
+--- 3. ce que j'ai corrige : les deux expositions de PRODUCTION ---
+    zod        ^4.3.6 -> ^4.6.7   (HIGH, epuisement memoire a la validation)
+               le caret autorisait deja 4.6.7 : seul le verrou l'epinglait,
+               donc aucune montee majeure, aucun changement de contrat.
+    nodemailer 10.1.1 -> 10.1.7   (3 avis MODERATE sur addressparser, dont
+               une livraison possible vers un domaine que l'en-tete ne
+               nomme pas — directement pertinent, le produit envoie des
+               courriels). Epinglage exact PRESERVE, pas de caret introduit.
+
+    npm audit fix --force n'a PAS ete utilise. Aucune montee majeure.
+
+    audit apres correctif : LOW=0 MODERATE=1 HIGH=5 CRITICAL=0 TOTAL=6
+    (etait LOW=0 MODERATE=3 HIGH=5 CRITICAL=0 TOTAL=8)
+
+--- 4. les 6 avis restants : AUCUN ne touche le produit livre ---
+    [HIGH    ] @vercel/blob       2.8.2    dev
+    [HIGH    ] @vercel/cli-config 0.3.1    dev
+    [HIGH    ] @vercel/oidc       3.8.10   dev
+    [HIGH    ] undici            6.29.1 / 6.29.0 / 7.30.0   dev (3 copies)
+    [HIGH    ] zod               4.1.11   dev, imbriquee sous @vercel/cli-config
+    [MODERATE] fast-uri          3.1.8    dev
+
+    Point important : l'avis zod porte sur la plage < 4.6.6.
+        node_modules/zod  (PRODUCTION)                     4.6.7  -> NON AFFECTE
+        @vercel/cli-config/node_modules/zod  (dev)         4.1.11 -> affecte
+    La copie de production est donc corrigee ; seule l'imbriquee de
+    l'outillage reste vulnerable.
+
+    Toute cette chaine descend de @vercel/blob, une devDependency utilisee
+    par scripts/lib/config-cloud.cjs. Elle n'est PAS embarquee dans
+    l'installateur Windows ni deployee.
+
+--- 5. pourquoi je ne force pas le vert ---
+    Le seul correctif que npm propose est @vercel/blob@2.4.0, soit un
+    RETOUR EN ARRIERE majeur. Or :
+      - 2.8.2 est la derniere version STABLE (les 2.9.0 sont des
+        pre-publications du 2026-10-14) ;
+      - scripts/lib/config-cloud.cjs:250 documente explicitement
+        « Supported read-write token format used by @vercel/blob 2.8.2 » :
+        la regression casserait l'outillage de configuration ;
+      - le paquet est utilise, il ne peut pas etre retire.
+
+    Abaisser le seuil de l'audit est exclu : le mandat interdit de
+    desactiver un controle de securite pour obtenir un resultat vert, et
+    ce controle est volontairement « tous niveaux, sans derogation ».
+
+    La porte reste donc ROUGE sur ce controle, et c'est le resultat correct.
+
+--- 6. validation apres les deux montees de version ---
+    TypeScript           : 0 erreur
+    ESLint               : 0 erreur
+    Vitest               : 365 fichiers, 360 reussis / 5 ignores ;
+                           4424 tests, 4390 reussis / 34 ignores, 0 echec
+    test:release-safety  : # tests 197 # pass 194 # fail 0 # skipped 3 
+    secret-scan-policy   : # tests 4 # pass 4 # fail 0 
+    secret-scan-fixtures : # tests 4 # pass 4 # fail 0 
+    La suite Vitest est IDENTIQUE a la reference d'avant la montee :
+    4390 reussis, 0 echec, 34 ignores. Les deux montees n'ont rien casse.
+
+--- 7. integrite des preuves ---
+✅ MASTER4_EVIDENCE                                       disque  69/69  versionné  69/69
+✅ MASTER5_EVIDENCE                                       disque  48/48  versionné  48/48
+✅ artifacts/verification/audit-2026-10-22                disque  26/26  versionné  26/26
+✅ artifacts/verification/mission-3-2026-10-22            disque  57/57  versionné  57/57
+✅ artifacts/verification/production-readiness-2026-10-22 disque  41/41  versionné  41/41
+✅ artifacts/verification/production-readiness-master5    disque  32/32  versionné  32/32
+
+✅ preuves : 273/273 sur disque, 273/273 versionnées — 6 manifestes
+
+--- 8. readiness:final ---
+Contrôles : 25 pass, 8 bloquant(s), 33 total
+NON PRÊT POUR LA PRODUCTION
+
+GATE_CONTROLES_PASSES=14/16
+GATE_ECHECS_MEME_CAUSE=1 (npm audit, rapporte par 2 controles)
+AVIS_TOUCHANT_LE_PRODUIT_LIVRE=0
+EXPOSITIONS_DE_PRODUCTION_CORRIGEES=2 (zod HIGH, nodemailer MODERATE x3)
+MONTEES_MAJEURES=0
+AUDIT_FIX_FORCE_UTILISE=non
+SEUIL_D_AUDIT_ABAISSE=non
