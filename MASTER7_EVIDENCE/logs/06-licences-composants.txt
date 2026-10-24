@@ -1,0 +1,196 @@
+=== MASTER 7 / Phase 6 — licences des composants redistribues ===
+
+MASTER 6 annoncait « six composants distribues sans notice ». Le chiffre est
+INEXACT dans les deux sens, et la cause est structurelle. Ce journal etablit
+l'etat reel, par lecture du livrable lui-meme.
+
+--------------------------------------------------------------------------------
+1. METHODE
+--------------------------------------------------------------------------------
+
+Chaque composant a ete verifie, puis sa fiche soumise a un controle independant
+charge de la CONTESTER. 5 fiches sur 6 ont ete contestees — a juste titre pour
+l'essentiel, mais deux affirmations des controles etaient elles-memes fausses et
+ont ete ecartees apres verification directe de ma part :
+
+  « aucun document de notices n'est expedie »  -> FAUX. `THIRD_PARTY_NOTICES.md`
+      est bien livre, a la racine de `app.asar` (350 Ko, 133 sections).
+  « les 22 paquets du standalone ne portent aucune licence, donc rien n'est
+      attribue »  -> incomplet : `app.asar` contient 238 fichiers de licence.
+
+Les chiffres ci-dessous sont les miens, mesures sur `dist/win-unpacked`.
+
+--------------------------------------------------------------------------------
+2. OU SE TROUVE QUOI, DANS LE LIVRABLE
+--------------------------------------------------------------------------------
+
+L'installateur contient deux charges de nature differente :
+
+  resources/app.asar  (+ app.asar.unpacked)   le bundle Electron
+      -> 238 fichiers LICENSE/NOTICE presents
+      -> THIRD_PARTY_NOTICES.md present a la racine, 133 sections
+
+  resources/standalone/                        la sortie autonome de Next.js,
+                                               copiee par build.extraResources
+      -> 24 paquets
+      -> 0 fichier de licence. AUCUN.
+
+Le defaut porte donc sur la charge `standalone`, pas sur tout le livrable.
+
+--------------------------------------------------------------------------------
+3. ETAT DES 24 PAQUETS DE LA CHARGE STANDALONE
+--------------------------------------------------------------------------------
+
+  sans texte de licence dans le livrable ....... 24 / 24
+  sans section dans les notices livrees ........  5 / 24
+  absents du SBOM Windows ......................  4 / 24
+
+Les 19 autres sont couverts par `THIRD_PARTY_NOTICES.md`, qui EST livre :
+l'obligation d'attribution est satisfaite pour eux par cette voie.
+
+--------------------------------------------------------------------------------
+4. LES COMPOSANTS REELLEMENT SANS AUCUNE ATTRIBUTION
+--------------------------------------------------------------------------------
+
+Croisement final, tout l'artefact confondu — un composant est « attribue » s'il
+porte un texte de licence QUELQUE PART dans le livrable, OU s'il a une section
+dans les notices livrees :
+
+  paquet                            licence/asar   section notice   verdict
+  --------------------------------------------------------------------------
+  @img/sharp-win32-x64@0.35.5           OUI             non         attribue
+        /node_modules/@img/sharp-win32-x64/LICENSE
+  source-map@0.6.1                      OUI             non         attribue
+        /node_modules/next/dist/compiled/source-map/LICENSE
+  @next/swc-win32-x64-msvc@15.5.28      non             non     AUCUNE ATTRIBUTION
+  buffer-from@1.1.2                     non             non     AUCUNE ATTRIBUTION
+  source-map-support@0.5.21             non             non     AUCUNE ATTRIBUTION
+  typescript@5.9.3                      non             non     AUCUNE ATTRIBUTION
+
+  -> ce sont QUATRE composants, pas six. Deux des six que MASTER 6 listait sont
+     en realite attribues, par un fichier de licence present dans l'asar.
+
+Gravite relative : `@next/swc-win32-x64-msvc` represente environ 148 Mo d'un
+installateur de 251 Mo — la plus grosse charge expediee — et part sans texte de
+licence ni section de notice. `typescript` expedie 9,1 Mo
+(`lib/typescript.js`) dans la meme situation ; sa copie livree ne contient que
+deux fichiers, `lib/typescript.js` et `package.json`.
+
+--------------------------------------------------------------------------------
+5. LES DEUX CAUSES RACINES, MESUREES
+--------------------------------------------------------------------------------
+
+5.1 Les notices sont generees depuis le MAUVAIS inventaire
+
+    `scripts/gen-third-party-notices.mjs` prend par defaut
+    `docs/sbom/sbom-garageflowsv2.cdx.json` — l'inventaire du SERVEUR. Les
+    binaires propres a Windows n'y figurent pas, donc ils n'ont pas de section.
+    Symetriquement, les notices livrees ATTRIBUENT des composants qui ne sont
+    pas expedies sous Windows — verifie :
+
+        @img/sharp-linux-x64@0.35.5           notices=1   installe=0
+        @img/sharp-libvips-linux-x64@1.3.4    notices=2   installe=0
+        @img/sharp-linuxmusl-x64@0.35.5       notices=1   installe=0
+
+5.2 La sortie autonome de Next expedie des dependances de DEVELOPPEMENT
+
+    Verifie dans `package-lock.json` :
+
+        typescript           dev=true
+        buffer-from          dev=true
+        source-map           dev=true
+        source-map-support   dev=true
+
+    Aucun inventaire de PRODUCTION ne peut donc les contenir, alors que le
+    tracage autonome de Next les embarque. Le generateur ne pourra JAMAIS les
+    emettre tant que l'inventaire Windows ne les declare pas : le defaut est
+    structurel, ce n'est pas un oubli de redaction.
+
+--------------------------------------------------------------------------------
+6. UN BLOCAGE PREALABLE, TROUVE ET REPARE
+--------------------------------------------------------------------------------
+
+En voulant verifier le remede, j'ai decouvert que le generateur de notices NE
+POUVAIT PLUS S'EXECUTER DU TOUT :
+
+    $ node scripts/gen-third-party-notices.mjs --check
+    Error: Magasin de licences : empreinte invalide pour next-auth@4.24.15
+
+Cause : les deux textes de licence amont verrouilles par SHA-256 avaient ete
+convertis en CRLF a l'extraction — la meme classe de defaut que celle corrigee
+pour les dossiers de preuves, mais `docs/licenses/upstream/` n'etait pas protege.
+
+    next-auth@4.24.15.LICENSE.txt      807 octets, 16 CRLF   verrou invalide
+    client-only@0.0.1.MIT.spdx.txt    1087 octets,  9 CRLF   verrou invalide
+
+Reparation :
+    - `.gitattributes` declare desormais `docs/licenses/upstream/** -text` ;
+    - les deux fichiers sont retablis dans leurs octets d'origine, chacun
+      VERIFIE contre le verrou SHA-256 que le projet avait lui-meme enregistre :
+
+        next-auth@4.24.15    807 -> 791 octets   cf5c8f6c5d858d6b… = verrou OK
+        client-only@0.0.1   1087 -> 1078 octets  b85dcd3e453d0598… = verrou OK
+
+    $ node scripts/gen-third-party-notices.mjs --check
+    [notices] 133 composants → THIRD_PARTY_NOTICES.md      code 0
+
+Le verrou n'a pas ete assoupli : c'est lui qui atteste la restauration.
+
+--------------------------------------------------------------------------------
+7. LE REMEDE, CHIFFRE EN DEUX PARTIES
+--------------------------------------------------------------------------------
+
+Essai mene vers un fichier temporaire, sans toucher au livrable :
+
+    node scripts/gen-third-party-notices.mjs \
+         --sbom docs/sbom/sbom-garageflows-windows.cdx.json \
+         --out <temporaire> --product "GarageFlows Windows"
+    [notices] 129 composants
+
+    couverture obtenue :
+        @next/swc-win32-x64-msvc@15.5.28    0 -> 1   COUVERT
+        @img/sharp-win32-x64@0.35.5         0 -> 1   COUVERT
+        typescript@5.9.3                    0 -> 0   toujours absent
+        buffer-from@1.1.2                   0 -> 0   toujours absent
+        source-map-support@0.5.21           0 -> 0   toujours absent
+
+  PARTIE 1 — generer les notices Windows depuis l'inventaire WINDOWS.
+             Ferme 2 des 4 manques. Le script accepte deja `--sbom`.
+
+  PARTIE 2 — faire declarer par l'inventaire Windows ce que le tracage autonome
+             expedie reellement, y compris les dependances marquees `dev`.
+             Ferme les 3 derniers.
+
+  A NE PAS FAIRE : regenerer `THIRD_PARTY_NOTICES.md` sur ce poste. Mesure :
+             la regeneration y RETIRE 536 lignes (6 insertions, 536 suppressions),
+             parce que les paquets Linux ne sont pas installes ici et que leur
+             texte ne peut donc pas etre lu. Les notices doivent etre produites
+             PAR PLATEFORME, chacune sur l'arbre correspondant.
+             Le fichier a ete restaure a son etat versionne apres cette mesure.
+
+--------------------------------------------------------------------------------
+8. CE QUI RELEVE DU CONSEIL JURIDIQUE, PAS D'UN SCRIPT
+--------------------------------------------------------------------------------
+
+`@img/sharp-win32-x64@0.35.5` declare `Apache-2.0 AND LGPL-3.0-or-later`. Seul
+le texte Apache-2.0 est expedie ; la moitie LGPL n'est portee que par le
+`README.md`, absent des copies livrees. Par ailleurs la bibliotheque native
+liee statiquement embarque, d'apres la documentation amont, du materiel sous
+MPL-1.1 (cairo, qui impose une mise a disposition des sources), une licence de
+brevet (aom), et une dizaine d'autres regimes. Aucun inventaire du projet ne
+decrit ces sous-composants : `libvips 8.18.7`, la version reellement livree,
+ne figure nulle part dans le SBOM Windows.
+
+De meme, `typescript` embarque `ThirdPartyNoticeText.txt` (193 lignes)
+incorporant du materiel MIT, Unicode Inc., W3C et **CC-BY-4.0** — un regime
+qui impose la mention des modifications. Ce fichier n'est present dans aucun
+livrable.
+
+Aucune licence ni autorisation de redistribution n'est inventee ici. Ces points
+demandent une relecture juridique, pas une correction de script.
+
+COMPOSANTS_SANS_AUCUNE_ATTRIBUTION=4
+COMPOSANTS_ATTRIBUES_PAR_FICHIER_DANS_L_ASAR=2
+GENERATEUR_DE_NOTICES_REPARE=oui
+NOTICES_LIVREES_MODIFIEES=non
+LICENCE_INVENTEE=non

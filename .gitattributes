@@ -28,9 +28,17 @@
 # Constate pendant MASTER 6 : 45 des 48 preuves MASTER 5 apparaissaient
 # << MODIFIEES >> apres un simple checkout, uniquement a cause des CRLF.
 # Les marquer -text garantit une extraction a l octet pres, partout.
+# Textes de licence amont verrouilles par SHA-256 : une conversion de fins de
+# ligne invalide le verrou et rend `gen-third-party-notices.mjs` inexecutable.
+# Constate en MASTER 7 : les deux entrees du magasin etaient converties en CRLF,
+# et la generation des notices echouait sur « empreinte invalide ».
+docs/licenses/upstream/** -text
+
 MASTER4_EVIDENCE/** -text
 MASTER5_EVIDENCE/** -text
 MASTER6_EVIDENCE/** -text
+MASTER7_EVIDENCE/** -text
 artifacts/verification/** -text
 PRODUCTION_DELIVERY/** -text
 PRODUCTION_DELIVERY_MASTER6/** -text
+PRODUCTION_DELIVERY_MASTER7/** -text

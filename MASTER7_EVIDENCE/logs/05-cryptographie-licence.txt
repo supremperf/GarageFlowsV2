@@ -1,0 +1,172 @@
+=== MASTER 7 / Phase 3 — audit cryptographique du systeme de licences ===
+
+Aucune cle privee n'est affichee, copiee ni transmise dans ce journal.
+
+--------------------------------------------------------------------------------
+1. LE SYSTEME TEL QU'IL EST
+--------------------------------------------------------------------------------
+
+  algorithme de signature ....... ECDSA P-256 (prime256v1) + SHA-256
+  encodage de la signature ...... DER SEQUENCE (compatible Node.js <-> Python)
+  format du jeton ............... GF2.<en-tete>.<charge>.<signature>, base64url
+  en-tete ....................... {"alg":"ES256","typ":"GF-LIC","v":2}
+  identifiant de cle (kid) ...... ABSENT — verifie : aucune occurrence de `kid`
+                                  dans src/lib/license/*.ts
+
+  autorite de production ........ b16d2e1bf6b9662f9748e009c0cf88770ab602233ee546895ac352f808bc3d9d
+  source de l'empreinte ......... scripts/diagnose-license.mjs --print-public-fingerprint
+  empreinte du verificateur ..... afbed2df6d94fbccf3ce0e7e17b96116a524f8175e75587c9f96c69bd83eb894
+
+  ancrages de compilation ....... 3, tous alignes
+        node scripts/sync-public-key.mjs --check
+        -> 3 ancrages deja alignes sur keys/public.pem (b16d2e1bf6b9662f…)
+        node scripts/check-public-key.mjs
+        -> 2 consommateurs internes alignes sur keys/public.pem (b16d2e1bf6b9662f…)
+
+  empreintes retirees .......... 11 entrees dans RETIRED_FINGERPRINTS
+                                 (scripts/check-critical-files.js)
+
+  La cle publique est un ANCRAGE DE COMPILATION, sans derogation a l'execution :
+  elle est figee dans les sources (dont `electron/main.js`), et aucune variable
+  d'environnement ne peut la remplacer. C'est un choix de securite deliberate.
+
+--------------------------------------------------------------------------------
+2. VERIFICATION COTE CLIENT — OU ELLE SE JOUE EXACTEMENT
+--------------------------------------------------------------------------------
+
+`src/lib/license/verify.ts`, un seul point :
+
+  142-151   construction de la cle de verification depuis l'ancrage, avec
+            controle du type (`ec`) et de la courbe (`prime256v1`). Un ancrage
+            mal configure leve `TRUST_ANCHOR_INVALID` — ce n'est PAS confondu
+            avec une signature invalide.
+  153-166   `crypto.createVerify('SHA256')` sur `<en-tete>.<charge>`, puis
+            `verifier.verify(verificationKey, sig)`.
+  168-170   echec -> `SIGNATURE_INVALID`, message volontairement vague.
+
+Consommateurs de l'ancrage : `src/lib/license/issuer-key.ts`,
+`src/lib/license/verify.ts`, plus huit suites de tests dediees
+(dont `forgery-resistance`, `public-key-consistency`, `issuer-key`,
+`license-crosslang-format`, `license-keygen-e2e`).
+
+--------------------------------------------------------------------------------
+3. RECHERCHE DE LA CLE PRIVEE — RESULTAT
+--------------------------------------------------------------------------------
+
+Methode concluante : pour chaque materiel de cle privee trouve, DERIVER la cle
+publique et comparer son empreinte SPKI a celle de l'autorite. Un nom de fichier
+ne prouve rien.
+
+  emplacements explores ......................... 4
+  fichiers candidats examines .................... 2 090
+  cles privees EC chargeables trouvees ........... 3
+  correspondant a l'autorite de production ....... 0
+
+  ne correspond pas   ec/prime256v1   empreinte publique 613c89fb5ff6fa6c…
+      .tmp-m6-e2e/keys/private.pem
+      -> paire de TEST de MASTER 6. Son existence confirme l'isolation : la
+         licence de test ne peut pas verifier sous l'ancrage de production.
+
+  ne correspond pas   ec/prime256v1   empreinte publique 78e2626bbb5d76da…
+      Desktop/garageflows/API générées/2026-08-10_22-13-18/nouvelle-paire-licence/private.pem
+      Desktop/garageflows/important garage/API générées/2026-08-10_22-13-18/nouvelle-paire-licence/private.pem
+      -> deux copies de la MEME paire, en clair hors coffre, datees du
+         2026-08-10 — la date meme ou `GF_PRIVATE_KEY` avait ete configuree en
+         production. Elle ne correspond pourtant PAS a l'ancrage actuel.
+
+Et chez Vercel :
+
+  npx vercel env ls | grep -ci "PRIVATE_KEY"   ->   0
+
+  AUCUNE variable de cle privee dans aucun environnement (Production, Preview,
+  Development).
+
+  CLE_PRIVEE_DE_PRODUCTION_RETROUVEE = false
+
+Aucune cle n'a ete inventee, et il n'est pas affirme qu'une cle absente aurait
+ete retrouvee.
+
+--------------------------------------------------------------------------------
+4. CONSEQUENCES SUR LES LICENCES EXISTANTES
+--------------------------------------------------------------------------------
+
+  verification des licences deja emises .... INTACTE. L'ancrage public est
+        present partout, la verification hors ligne fonctionne, et les 19 tests
+        de resistance a la contrefacon passent.
+  emission de nouvelles licences ............ IMPOSSIBLE. Aucune signature ne
+        peut etre produite sans la privee correspondante.
+  renouvellement, extension de sieges ....... IMPOSSIBLE pour la meme raison.
+  revocation ................................ POSSIBLE cote serveur : la base des
+        licences porte l'etat, independamment de la signature.
+
+Un produit sous licence qui ne peut plus delivrer de licence a un nouveau client
+n'est pas commercialisable en l'etat. C'est le blocage central.
+
+--------------------------------------------------------------------------------
+5. PROCEDURE DE ROTATION AVEC TRANSITION COMPATIBLE
+--------------------------------------------------------------------------------
+
+Contrainte structurante : les jetons ne portent AUCUN `kid`. Un verificateur ne
+peut donc pas savoir quelle cle a signe un jeton — il doit les essayer.
+
+Consequence directe : la seule transition qui n'invalide AUCUNE licence existante
+est un verificateur MULTI-ANCRAGES. Elle est volontairement decrite ici, et
+VOLONTAIREMENT NON APPLIQUEE : elle touche un composant de securite central, et
+le mandat exige une decision explicite avant toute invalidation.
+
+  Principe
+      conserver l'ancrage actuel `b16d2e1b…` comme ancrage de VERIFICATION, et
+      ajouter le nouvel ancrage. Les licences deja en circulation continuent de
+      verifier sous l'ancien ; les nouvelles sont signees par la nouvelle paire.
+      Aucune licence n'est invalidee. Cout a l'execution : au pire deux
+      verifications ECDSA au lieu d'une — negligeable.
+
+  Points de travail, precisement localises
+
+      1. src/lib/license/public-key.ts
+         `_LINES` (ligne 14) et `getPublicKeyPem()` (ligne 21) exposent UNE cle.
+         Exposer en plus `getTrustedPublicKeysPem(): string[]`, ordonnee, la
+         nouvelle en tete. Conserver `getPublicKeyPem()` comme cle PRIMAIRE
+         (celle d'emission) pour ne rien casser chez les appelants.
+
+      2. src/lib/license/verify.ts, lignes 142-170
+         construire un tableau de cles de verification ; n'echouer en
+         `TRUST_ANCHOR_INVALID` que si AUCUNE n'est chargeable ; accepter a la
+         premiere signature valide ; conserver `SIGNATURE_INVALID` vague.
+
+      3. electron/main.js, ancrage `_PK`
+         meme liste, pour que le poste verifie hors ligne les deux generations.
+
+      4. REFERENCE_FP, scripts/sync-public-key.mjs, scripts/check-public-key.mjs
+         passer d'une empreinte unique a un ENSEMBLE d'empreintes de confiance,
+         et faire echouer le controle si une empreinte inconnue apparait.
+
+      5. emission (keygen Python + src/lib/license/issuer-key.ts)
+         signer EXCLUSIVEMENT avec la nouvelle privee. Ne jamais reintroduire
+         une ancienne privee dans la chaine d'emission.
+
+      6. huit suites de tests a etendre, sans en affaiblir aucune. En
+         particulier `forgery-resistance` doit continuer a REJETER une cle
+         etrangere : la liste d'ancrages de confiance ne doit jamais devenir
+         « accepte n'importe quelle cle P-256 ».
+
+      7. retirer l'ancien ancrage plus tard seulement, lorsque toutes les
+         licences signees par lui auront expire — la plus lointaine connue
+         expire en 1816525068 (horodatage Unix de la licence exposee), soit
+         environ juillet 2027.
+
+  Ce qu'il ne faut pas faire
+      - executer `keys:sync` pour debloquer un test : cela remplacerait
+        l'autorite que verifient les postes deja deployes ;
+      - reutiliser la paire `78e2626b…` trouvee sur le Bureau : elle est en clair
+        hors coffre, et son exposition eventuelle est inconnue ;
+      - rotation simple sans multi-ancrages : elle invaliderait toutes les
+        licences en circulation.
+
+  Information manquante pour arbitrer
+      le nombre de licences reellement actives en PRODUCTION. Le staging en
+      contient 0 ; la base de production n'a pas ete interrogee — hors perimetre.
+
+ROTATION_APPLIQUEE=non
+LICENCES_EXISTANTES_INVALIDEES=0
+CLE_INVENTEE=non
