@@ -19,7 +19,7 @@ Preuve : `MASTER7_EVIDENCE/logs/09-validation-globale.txt`.
 | `tests/secret-scan-policy` | **4 / 4** — inchangé |
 | `tests/secret-scan-fixtures` | **4 / 4** — nouveau |
 | suites « configuation automatique » | **119 / 119** |
-| intégrité des preuves | **273 / 273**, sur disque et en versionné |
+| intégrité des preuves | **284 / 284** sur 7 manifestes, sur disque et en versionné |
 | `check:consistency` | **OK** |
 | `check:artifact-secrets` · `check:artifact-fuses` · `verify:installer` | **OK** sur l'octet livré |
 | **`release:gate`** | **14 / 16** — deux échecs, une seule cause |
