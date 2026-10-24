@@ -33,10 +33,13 @@ Preuve : `MASTER7_EVIDENCE/logs/09-validation-globale.txt`.
 | **Secret scan (Gitleaks)** | `d18fb81` | **✓ succès** — `findings=0; scannerExit=0` *(était en échec avec 6 signalements)* |
 | Native base (TypeScript, build, budget JS) | `d18fb81` | **succès** |
 | E2E (Playwright — responsive) | `d18fb81` | **succès** |
-| Full dependency tree | `d18fb81` | **succès** *(avant les nouveaux avis)* |
+| Full dependency tree | `d18fb81` | **succès** — run du 2026-10-23, **avant** la publication des nouveaux avis |
+| Full dependency tree | `91ba4b2` | **échec** — la CI voit désormais les mêmes avis que mon audit local (§5) |
 | Type-check, Lint & Test | `d18fb81` | **succès** |
 
 **Le job de scan de secrets, rouge depuis MASTER 6, est passé au vert** — sans affaiblir la politique. C'est le gain principal de cette mission côté CI.
+
+**Corroboration indépendante.** Le job *Full dependency tree* était vert sur `d18fb81` (2026-10-23) et rouge sur `91ba4b2` (2026-10-24), sur un `npm ci` neuf à chaque fois. La CI confirme donc, sans mon intervention, que la cause est la **publication de nouveaux avis**, pas une modification du code.
 
 Reste rouge en CI : *Authenticated browser validation (approved staging only)*, qui refuse de démarrer faute des secrets de dépôt `BASE_URL`, `E2E_EMAIL`, `E2E_PASSWORD`, `E2E_LICENSE` et de la variable `E2E_NON_PRODUCTION`. **C'est un refus volontaire *fail-closed*, antérieur à MASTER 7**, et c'est une configuration de dépôt que seul le propriétaire peut poser.
 
